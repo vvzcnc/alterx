@@ -127,3 +127,21 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Logging
+log/
+*.log
+*.history
+
+# Prefs
+*.prefs
+*.ini
+position.txt
+*.var
+*.bak
+*.tbl
+
+#linuxcnc
+*.halscope
+*.hal
+macros/

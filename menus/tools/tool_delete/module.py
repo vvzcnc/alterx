@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+# -*- coding:UTF-8 -*-
+
+import time,os
+
+from qtvcp import logger
+_logger = logger.getLogger(__name__)
+
+from PyQt5 import QtCore, QtWidgets,QtGui
+from qtvcp.core import Tool
+
+TOOL = Tool()
+
+class func:
+    def __init__(self,button,that):
+        self.that = that
+        self.button = button
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        if os.path.isfile("%s/icon.png"%dir_path):
+            self.button.setStyleSheet("image:url('%s/icon.png')"%dir_path)
+        else:
+            self.button.setStyleSheet("color:black")
+            self.button.setText("")
+
+    def execute(self):
+        _logger.info( "Button ToolDelete clicked" )
+        selection = self.that.widgets.tooloffsetview.currentIndex()
+
+        name = self.that.dialogs.getText("Delete tool?", "Enter 'y' to delete tool %s:" %str(self.that.widgets.tooloffsetview.tablemodel.arraydata[selection.row()][1]))
+        if name == 'y':
+            array = self.that.widgets.tooloffsetview.tablemodel.arraydata
+            try:
+                array.pop(selection.row())
+            except:
+                pass
+            error = TOOL.SAVE_TOOLFILE(TOOL.CONVERT_TO_STANDARD_TYPE(array))
+            
