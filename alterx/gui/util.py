@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# AlterX GUI - mainwindow
+# AlterX GUI - util
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #

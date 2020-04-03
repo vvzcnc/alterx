@@ -26,66 +26,44 @@ from alterx.common.compat import *
 from alterx.common import *
 from alterx.gui.util import *
 from alterx.gui.widgets import *
+from alterx.core.callback import CALLBACK
+from alterx.core.main import MAIN
 
-class BottomLayout(QHBoxLayout):
-	def __init__(self, parent=None, ):
-		QHBoxLayout.__init__(self, parent)
+class ManualWidget(QWidget):
+	def __init__(self, parent=None):
+		QWidget.__init__(self, parent)
+		dro_layout = QVBoxLayout()
+		for i, axis in enumerate("xyza"):
+			dro_layout.addLayout(DROLayout(i,axis))
+		dro_layout.addStretch()
+		self.setLayout(dro_layout)
 
-class DROLayout(QHBoxLayout):
-	def __init__(self, num, name, parent=None):
-		QHBoxLayout.__init__(self, parent)
-
-		drolabel_name = QLabel(name)
-		self.addWidget(drolabel_name,1)
-
+class MDIWidget(QWidget):
+	def __init__(self, parent=None):
+		QWidget.__init__(self, parent)
 		v1 = QVBoxLayout()
-
-		drolabel_act = QLabel(name)
-		drolabel_act.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-		v1.addWidget(drolabel_act)
-		
+		mdiList = QListWidget()
+		v1.addWidget(mdiList)
+		g1 = QGroupBox()
+		g1.setTitle(_("Program"))
+		v2 = QVBoxLayout()
+		filename = QLabel("Filename: ")
+		v2.addWidget(filename)
 		h1 = QHBoxLayout()
-		drolabel_dtg = QLabel(name)
-		drolabel_sec = QLabel(name)
-		drolabel_sec.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-		h1.addWidget(drolabel_dtg)
-		h1.addWidget(drolabel_sec)
-		v1.addLayout(h1)
-
-		self.addLayout(v1,12)
-
-class ToolWidget(QGroupBox):
-	def __init__(self, parent=None):
-		QGroupBox.__init__(self, parent)
-
-class GCodeWidget(QGroupBox):
-	def __init__(self, parent=None):
-		QGroupBox.__init__(self, parent)
-
-class SpindleWidget(QGroupBox):
-	def __init__(self, parent=None):
-		QGroupBox.__init__(self, parent)
-
-class FeedWidget(QGroupBox):
-	def __init__(self, parent=None):
-		QGroupBox.__init__(self, parent)
-
-class JOGWidget(QGroupBox):
-	def __init__(self, parent=None):
-		QGroupBox.__init__(self, parent)
-
-class AxisWidget(QGroupBox):
-	def __init__(self, parent=None):
-		QGroupBox.__init__(self, parent)
-
+		lines = QLabel("Lines: ")
+		progress = QLabel("Progress: ")
+		h1.addWidget(lines)
+		h1.addWidget(progress)
+		v2.addLayout(h1)
+		g1.setLayout(v2)
+		v1.addWidget(g1)
+		self.setLayout(v1)
 
 class MainWindow(QWidget):
-	TITLE = _("Awlsim PLC v{}",VERSION_STRING)
+	TITLE = _("Alterx v{}",VERSION_STRING)
 
 	@classmethod
 	def start(cls):
-		# Set basic qapp-details.
-		# This is important for QSettings.
 		QApplication.setOrganizationName("alterx")
 		QApplication.setOrganizationDomain(ALTERX_HOME_DOMAIN)
 		QApplication.setApplicationName("alterx-gui")
@@ -101,42 +79,43 @@ class MainWindow(QWidget):
 	def __init__(self, parent=None):
 		QWidget.__init__(self, parent)
 
+		#Main layout
 		self.mainLayout = MainLayout(self)
 
-		dro_layout = QVBoxLayout()
-		for i, axis in enumerate("xyza"):
-			dro_layout.addLayout(DROLayout(i,axis))
-		dro_layout.addStretch()
+		CALLBACK.setup(MAIN)
+		MAIN.setup(self.mainLayout)
 
-		droWidget = QWidget()
-		droWidget.setLayout(dro_layout)
-		self.mainLayout.centralWidgets.addWidget(droWidget)
+		#Page 0 - Manual
+		manualWidget = ManualWidget()
+		self.mainLayout.centralWidgets.addWidget(manualWidget)
+		manualButtons = BottomWidget(0,"manual",['exit','space'])
+		self.mainLayout.bottomWidgets.addWidget(manualButtons)
 
-		tool_widget = ToolWidget()
-		active_codes_widget = GCodeWidget()
-		spindle_widget = SpindleWidget()
-		feedrate_widget = FeedWidget()
-		jog_widget = JOGWidget()
-		axis_widget = AxisWidget()
+		#Page 1 - MDI
+		mdiWidget = MDIWidget()
+		self.mainLayout.centralWidgets.addWidget(mdiWidget)
 
-		self.mainLayout.infoLayout.addWidget(axis_widget)
-		self.mainLayout.infoLayout.addWidget(jog_widget)
-		self.mainLayout.infoLayout.addWidget(feedrate_widget)
-		self.mainLayout.infoLayout.addWidget(spindle_widget)
-		self.mainLayout.infoLayout.addWidget(active_codes_widget)
-		self.mainLayout.infoLayout.addWidget(tool_widget)
-		self.mainLayout.infoLayout.addStretch()
+		#Page 2 - Auto
+		#self.mainLayout.centralWidgets.addWidget(autoWidget)
 
-		self.mainLayout.leftLayout.load(("Abort","Equipment","Load","Homing","Offset","Tools"))
-		self.mainLayout.rightLayout.load(("Manual","MDI","Auto","Settings","Tabs","Machine"))
-        	
-		bbtn = QWidget()
-		bbtnlay = QHBoxLayout()
-		bbtnlay.setContentsMargins(0,0,0,0)
-		bbtnlay.setSpacing(2)
-		bbtn.setLayout(bbtnlay)
-		self.mainLayout.bottomWidgets.addWidget(bbtn)
-		for i in range(11):
-			btn = QPushButton("test %d"%i)
-			btn.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
-			bbtn.layout().addWidget(btn)
+		#Page 3 - Settings
+		#self.mainLayout.centralWidgets.addWidget(settingsWidget)
+
+		#Page 4 - Tabs
+		#self.mainLayout.centralWidgets.addWidget(tabsWidget)
+
+		#Page 5 - Display
+		#self.mainLayout.centralWidgets.addWidget(displayWidget)
+
+		#Page 6 - Load
+		#self.mainLayout.centralWidgets.addWidget(loadWidget)
+
+		#Page 7 - Edit
+		#self.mainLayout.centralWidgets.addWidget(editWidget)
+
+		#Page 8 - Offset
+		#self.mainLayout.centralWidgets.addWidget(offsetWidget)
+
+		#Page 9 - Tool
+		#self.mainLayout.centralWidgets.addWidget(toolWidget)
+       	

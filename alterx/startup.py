@@ -26,6 +26,7 @@ from alterx.common.compat import *
 from alterx.common.util import *
 from alterx.common.locale import _
 import getopt
+from alterx.core.linuxcnc import UPDATER
 
 def usage():
 	print(_("AlterX version {}",VERSION_STRING))
@@ -45,20 +46,25 @@ def usage():
 
 opt_loglevel = Logging.LOG_INFO
 opt_lang = None
+ini = None
 
 try:
+	if(sys.argv[1]=="-ini"):
+		sys.argv[1]="--ini"
 	(opts, args) = getopt.getopt(sys.argv[1:],
-		"hL:l:",
-		[ "help", "loglevel=", "lang="])
+		"hL:l:i:",
+		[ "help", "loglevel=", "lang=","ini="])
 except getopt.GetoptError as e:
 	printError(str(e))
 	usage()
 	sys.exit(ExitCodes.EXIT_ERR_CMDLINE)
+
 for (o, v) in opts:
 	if o in ("-h", "--help"):
 		usage()
 		sys.exit(ExitCodes.EXIT_OK)
 	if o in ("-L", "--loglevel"):
+
 		try:	
 			opt_loglevel = int(v)
 		except ValueError:
@@ -71,9 +77,13 @@ Logging.setPrefix("alterx-gui: ")
 Logging.setLoglevel(opt_loglevel)
 _.setup(opt_lang)
 
+printVerbose(_("Loglevel: {}",opt_loglevel))
+
 from alterx.gui.mainwindow import *
 
 qapp = QApplication(sys.argv)
+
+UPDATER.start()
 
 printInfo(_('Using {} GUI framework',getGuiFrameworkName()) )
 
@@ -83,7 +93,7 @@ QToolTip.setFont(getDefaultFixedFont())
 
 # Install a handler for unhandled exceptions.
 def __unhandledExceptionHook(etype, value, tb):
-	text = _("alterx-gui: ABORTING due to unhandled exception:")
+	text = _("Alterx: ABORTING due to unhandled exception:")
 	print(text, file=sys.stderr)
 	__orig_excepthook(etype, value, tb)
 	# Try to clean up now.
@@ -93,7 +103,7 @@ def __unhandledExceptionHook(etype, value, tb):
 		import traceback
 		QMessageBox.critical(
 			None,
-			_("alterx-gui: Unhandled exception"),
+			_("Alterx: Unhandled exception"),
 			text + "\n\n\n" + "".join(traceback.format_exception(etype, value, tb)),
 			QMessageBox.Ok,
 			QMessageBox.Ok)

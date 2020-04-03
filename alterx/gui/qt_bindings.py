@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 #
-# AWL simulator - QT bindings wrapper
+# AlterX GUI - QT bindings
 #
-# Copyright 2015-2018 Michael Buesch <m@bues.ch>
+# Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import os
 
 
 def __frameworkError(msg):
-	printError(_("awlsim-gui ERROR: {}" , msg))
+	printError(_("alterx ERROR: {}" , msg))
 	try:
 		if osIsWindows:
 			input(_("Press enter to exit."))
