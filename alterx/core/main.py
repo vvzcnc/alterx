@@ -39,41 +39,54 @@ class Main():
 		printVerbose(_("LinuxCNC state {}",data))
 	
 #------ Button callbacks ------#
-	def btn_abort_callback(self):
-		print("abort")
+	def btn_abort_callback(self,button):
+		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
+		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
-	def btn_equipment_callback(self):
-		print("abort")
+	def btn_equipment_callback(self,button):
+		#self.p.centralWidgets.setCurrentWidget(button.centralWidget)
+		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
-	def btn_load_callback(self):
-		print("abort")
+	def btn_load_callback(self,button):
+		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
+		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
-	def btn_homing_callback(self):
-		print("abort")
+	def btn_homing_callback(self,button):
+		#self.p.centralWidgets.setCurrentWidget(button.centralWidget)
+		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
-	def btn_offset_callback(self):
-		print("abort")
+	def btn_offset_callback(self,button):
+		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
+		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
-	def btn_tools_callback(self):
-		print("abort")
+	def btn_tools_callback(self,button):
+		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
+		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
-	def btn_manual_callback(self):
-		self.p.centralWidgets.setCurrentIndex(0)
+	def btn_manual_callback(self,button):
+		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
+		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
-	def btn_mdi_callback(self):
-		self.p.centralWidgets.setCurrentIndex(1)
+	def btn_mdi_callback(self,button):
+		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
+		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
-	def btn_auto_callback(self):
-		self.p.centralWidgets.setCurrentIndex(2)
+	def btn_auto_callback(self,button):
+		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
+		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
-	def btn_settings_callback(self):
-		print("abort")
+	def btn_settings_callback(self,button):
+		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
+		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
-	def btn_tabs_callback(self):
-		print("abort")
+	def btn_tabs_callback(self,button):
+		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
+		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
-	def btn_machine_callback(self):
+	def btn_machine_callback(self,button):
 		COMMAND.state(LINUXCNC.STATE_ESTOP_RESET)
 		COMMAND.state(LINUXCNC.STATE_ON)
+		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
+		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
 MAIN = Main()

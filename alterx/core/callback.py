@@ -35,32 +35,32 @@ class Callback():
 	def bottom_button_callback(self, item):
 		print("bottom")
 
-	def side_button_callback(self, item):
+	def side_button_callback(self, button):
 		if self.parent:
-			if item == "abort":
-				self.parent.btn_abort_callback()
-			elif item == "equipment":
-				self.parent.btn_equipment_callback()
-			elif item == "load":
-				self.parent.btn_load_callback()
-			elif item == "homing":
-				self.parent.btn_homing_callback()
-			elif item == "offset":
-				self.parent.btn_offset_callback()
-			elif item == "tools":
-				self.parent.btn_tools_callback()
-			elif item == "manual":
-				self.parent.btn_manual_callback()
-			elif item == "mdi":
-				self.parent.btn_mdi_callback()
-			elif item == "auto":
-				self.parent.btn_auto_callback()
-			elif item == "settings":
-				self.parent.btn_settings_callback()
-			elif item == "tabs":
-				self.parent.btn_tabs_callback()
-			elif item == "machine":
-				self.parent.btn_machine_callback()
+			if button.label == "abort":
+				self.parent.btn_abort_callback(button)
+			elif button.label == "equipment":
+				self.parent.btn_equipment_callback(button)
+			elif button.label == "load":
+				self.parent.btn_load_callback(button)
+			elif button.label == "homing":
+				self.parent.btn_homing_callback(button)
+			elif button.label == "offset":
+				self.parent.btn_offset_callback(button)
+			elif button.label == "tool":
+				self.parent.btn_tools_callback(button)
+			elif button.label == "manual":
+				self.parent.btn_manual_callback(button)
+			elif button.label == "mdi":
+				self.parent.btn_mdi_callback(button)
+			elif button.label == "auto":
+				self.parent.btn_auto_callback(button)
+			elif button.label == "settings":
+				self.parent.btn_settings_callback(button)
+			elif button.label == "tabs":
+				self.parent.btn_tabs_callback(button)
+			elif button.label == "machine":
+				self.parent.btn_machine_callback(button)
 			else:
 				printError(_("Unknown button"))
 		else:

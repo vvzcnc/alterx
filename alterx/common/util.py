@@ -62,7 +62,7 @@ class Logging(object):
 				    cls.LOG_INFO,
 				    cls.LOG_VERBOSE,
 				    cls.LOG_DEBUG):
-			raise AwlSimError("Invalid log level '%d'" % loglevel)
+			raise AlterXError("Invalid log level '%d'" % loglevel)
 		cls.loglevel = loglevel
 
 	@classmethod

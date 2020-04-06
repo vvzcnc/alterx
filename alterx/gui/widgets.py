@@ -48,13 +48,23 @@ class BottomButton(QPushButton):
 			timer.start(1000)
 
 class BottomWidget(QWidget):
-	def __init__(self, stack, layout_name, menu_names=[]):
+	def __init__(self, layout_name):
 		QWidget.__init__(self)
 		layout = QHBoxLayout()
 		layout.setContentsMargins(0,0,0,0)
 		layout.setSpacing(2)
 		self.setLayout(layout)
+		
+		menu_names=[]
+		try:
+			menu_names=getattr(globals()[layout_name],'buttons_order')
+			if not isinstance(menu_names, list):
+				menu_names=[]
+				raise Exception("'buttons_order' is not a list")
+		except Exception as e:
+			printError(_('Invalid buttons order list for menu {}, {}',layout_name,e))
 
+		last_btn = 0
 		for btn_number, name in enumerate(menu_names):
 			btn = BottomButton("btn_%s_%d"%(layout_name,btn_number))
 
@@ -62,26 +72,29 @@ class BottomWidget(QWidget):
 				menu = getattr(globals()[layout_name],name).module.func(btn)
 			elif name != None:
 				menu = None
-				printError(_("No menu module with name: menus.{}.{}",(layout_name,name)))
+				printError(_("No menu module with name: menus.{}.{}",layout_name,name))
 			else:
 				return
 
 			btn.setup(menu)
 			layout.addWidget(btn)
+			last_btn = btn_number+1
 
-class SideLayout(QVBoxLayout):
-	def __init__(self, parent=None):
-		QVBoxLayout.__init__(self, parent)
-		self.setContentsMargins(0,0,0,0)
-		self.setSpacing(2)
+		for btn_number in range(last_btn,11):
+			btn = BottomButton("btn_%s_%d"%(layout_name,btn_number))
+			btn.setText("")
+			layout.addWidget(btn)
 
-	def load(self, data):
-		for i, item in enumerate(data):
-			btn = QPushButton("%s"%(item))
-			btn.setObjectName("btn_%s_%d"%(item,i))
-			btn.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
-			btn.clicked.connect(partial(c.side_button_callback,item))
-			self.addWidget(btn)
+class SideButton(QPushButton):
+	def __init__(self, label, centralWidget=None, bottomWidget=None, parent=None):
+		QPushButton.__init__(self, "btn_%s"%(label), parent)
+		self.centralWidget = centralWidget
+		self.botttomWidget = bottomWidget
+		self.label = label
+
+		self.setObjectName("btn_%s"%(label))
+		self.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
+		self.clicked.connect(partial(c.side_button_callback,self))
 
 class BottomLayout(QHBoxLayout):
 	def __init__(self, parent=None, ):
@@ -96,19 +109,28 @@ class DROLayout(QHBoxLayout):
 
 		v1 = QVBoxLayout()
 
-		drolabel_act = QLabel(name)
-		drolabel_act.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-		v1.addWidget(drolabel_act)
+		self.drolabel_act = QLabel(name)
+		self.drolabel_act.setObjectName("lbl_dro_act_%s"%(name))
+		self.drolabel_act.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+		v1.addWidget(self.drolabel_act)
 		
 		h1 = QHBoxLayout()
-		drolabel_dtg = QLabel(name)
-		drolabel_sec = QLabel(name)
-		drolabel_sec.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-		h1.addWidget(drolabel_dtg)
-		h1.addWidget(drolabel_sec)
+		self.drolabel_dtg = QLabel(name)
+		self.drolabel_dtg.setObjectName("lbl_dro_dtg_%s"%(name))
+		self.drolabel_ferror = QLabel(name)
+		self.drolabel_ferror.setObjectName("lbl_dro_ferror_%s"%(name))
+		self.drolabel_ferror.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+		h1.addWidget(self.drolabel_dtg)
+		h1.addWidget(self.drolabel_ferror)
 		v1.addLayout(h1)
 
 		self.addLayout(v1,12)
+		UPDATER.connect("axis", lambda axis: self.update_position(axis[num]))
+
+	def update_position(self, stat):
+		self.drolabel_act.setText('{:10.4f}'.format(stat['input'])) #set 'output' to see commanded position
+		self.drolabel_dtg.setText('{:10.4f}'.format(stat['output']-stat['input'])) 
+		self.drolabel_ferror.setText('{:10.4f}'.format(stat['ferror_current'])) 
 
 class HSeparator(QFrame):
 	def __init__(self, parent=None):
@@ -199,10 +221,20 @@ class AxisWidget(QGroupBox):
 	def __init__(self, parent=None):
 		QGroupBox.__init__(self, parent)
 		self.setTitle(_("Axis"))
+		self.coordinates = INI.find('TRAJ','COORDINATES') or []
 		h1 = QHBoxLayout()
-		self.drolabel = QLabel("X Y Z A B C U V W")
+		self.drolabel = QLabel(self.coordinates)
+		self.drolabel.setObjectName("lbl_dro_all")
 		h1.addWidget(self.drolabel)
-		self.setLayout(h1)
+		self.setLayout(h1)		
+		UPDATER.connect("axis", lambda axis: self.update_position(axis))
+
+	def update_position(self, stat):
+		text = ""
+		for i,axis in enumerate(self.coordinates.split(' ')):
+			text += '{}:{:10.4f}  '.format(axis,stat[i]['input'])
+			
+		self.drolabel.setText(text) 
 
 class MainLayout(QVBoxLayout):
 	def __init__(self, parent=None):
@@ -210,10 +242,13 @@ class MainLayout(QVBoxLayout):
 
 		h1 = QHBoxLayout()
 
-		leftLayout = SideLayout()
-		rightLayout = SideLayout()
-		leftLayout.load(("abort","equipment","load","homing","offset","tools"))
-		rightLayout.load(("manual","mdi","auto","settings","tabs","machine"))
+		self.leftLayout = QVBoxLayout()
+		self.leftLayout.setContentsMargins(0,0,0,0)
+		self.leftLayout.setSpacing(2)
+
+		self.rightLayout = QVBoxLayout()
+		self.rightLayout.setContentsMargins(0,0,0,0)
+		self.rightLayout.setSpacing(2)
 
 		h2 = QHBoxLayout()
 		h2.setContentsMargins(5,0,5,5)
@@ -245,9 +280,9 @@ class MainLayout(QVBoxLayout):
 
 		h2.addLayout(infoLayout,2)
 		
-		h1.addLayout(leftLayout,1)
+		h1.addLayout(self.leftLayout,1)
 		h1.addLayout(h2,9)
-		h1.addLayout(rightLayout,1)
+		h1.addLayout(self.rightLayout,1)
 		self.addLayout(h1,6)
 		
 		self.bottomWidgets = QStackedWidget()

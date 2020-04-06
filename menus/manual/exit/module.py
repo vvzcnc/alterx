@@ -40,7 +40,7 @@ class func:
 			button.setStyleSheet("color:black")
 
 	def execute(self):
-		printVerbose( "Button exit clicked" )
+		printVerbose( _("Button exit clicked") )
 
 		sys.exit()
 
