@@ -84,6 +84,7 @@ if __guiFramework == "pyside2":
 		from PySide2.QtCore import *
 		from PySide2.QtGui import *
 		from PySide2.QtWidgets import *
+		from PySide2.Qsci import *
 	except ImportError as e:
 		__frameworkError(_("Failed to import PySide2 modules:\n {}" , str(e)))
 elif __guiFramework == "pyqt5":
@@ -91,6 +92,7 @@ elif __guiFramework == "pyqt5":
 		from PyQt5.QtCore import *
 		from PyQt5.QtGui import *
 		from PyQt5.QtWidgets import *
+		from PyQt5.Qsci import *
 	except ImportError as e:
 		__frameworkError(_("Failed to import PyQt5 modules:\n {}" , str(e)))
 	__testQStringAPI(globals())

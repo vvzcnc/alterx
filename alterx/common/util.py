@@ -110,16 +110,16 @@ class Logging(object):
 			cls.__print(sys.stderr, text)
 
 def printDebug(text):
-	Logging.printDebug(text)
+	Logging.printDebug("[DEBUG]" + text)
 
 def printVerbose(text):
-	Logging.printVerbose(text)
+	Logging.printVerbose("[VERBOSE]" + text)
 
 def printInfo(text):
-	Logging.printInfo(text)
+	Logging.printInfo("[INFO]" + text)
 
 def printWarning(text):
-	Logging.printWarning(text)
+	Logging.printWarning("[WARNING]" + text)
 
 def printError(text):
-	Logging.printError(text)
+	Logging.printError("[ERROR]" + text)

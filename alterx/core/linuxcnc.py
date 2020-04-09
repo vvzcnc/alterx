@@ -21,7 +21,7 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-__all__ = ['STAT','COMMAND','ERROR','INI','UPDATER','LINUXCNC']
+__all__ = ['STAT','COMMAND','ERROR','INI','UPDATER','LINUXCNC','INFO']
 
 from alterx.common.locale import _
 from alterx.common.compat import *
@@ -33,6 +33,7 @@ import time
 
 try:
 	import linuxcnc as LINUXCNC
+
 	STAT = LINUXCNC.stat()
 	COMMAND = LINUXCNC.command()
 	ERROR = LINUXCNC.error_channel()
@@ -41,6 +42,19 @@ try:
 
 except Exception as e:
 	printError(_("Failed to import LinuxCNC module: '{}'",e))
+
+class linuxcnc_info():
+	def __init__(self):
+		if INI.find('TRAJ','LINEAR_UNITS') in ('mm','metric'):
+			self.machine_is_metric = True
+		else:
+			self.machine_is_metric = False
+
+		self.coordinates = INI.find('TRAJ','COORDINATES').split(' ')
+
+		self.machine_is_lathe = True if INI.find('DISPLAY','LATHE') else False
+
+INFO = linuxcnc_info()
 
 class linuxcnc_poll(QThread):
 	def run(self):
@@ -63,6 +77,29 @@ class linuxcnc_poll(QThread):
 							for h in self._observers[s]:
 								h(stat_old[s])
 
+			for key in self.custom_signals:
+				if self.custom_signals[key] != self.custom_signals_old[key]:
+					self.custom_signals_old[key] = self.custom_signals[key]
+					if key in self._observers:
+						for h in self._observers[s]:
+							h(self.custom_signals_old[key])
+				
+	def emit(self, name, value=None):
+		if name in self.custom_signals:
+			if not value:
+				value = not self.custom_signals[name]
+
+			self.custom_signals[name] = value
+		else:
+			printError(_("Signal '{}' no exist",name))
+
+	def add(self,name,value=False):
+		if name not in self.custom_signals:
+			self.custom_signals[name] = value
+			self.custom_signals_old[name] = value
+		else:
+			printError(_("Signal '{}' already exist",name))
+
 	def connect(self,name,handler):
 		if name in self._observers:
 			self._observers[name].append(handler)
@@ -73,6 +110,8 @@ class linuxcnc_poll(QThread):
 		QThread.__init__(self)
 		self.running = True
 		self._observers = {}
+		self.custom_signals = {}
+		self.custom_signals_old = {}
 		
 	def __del__(self):
 		self.running = False

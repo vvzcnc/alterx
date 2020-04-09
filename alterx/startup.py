@@ -73,7 +73,7 @@ for (o, v) in opts:
 	if o in ("-l", "--lang"):
 		opt_lang = str(v)
 
-Logging.setPrefix("alterx-gui: ")
+Logging.setPrefix("AlterX: ")
 Logging.setLoglevel(opt_loglevel)
 _.setup(opt_lang)
 

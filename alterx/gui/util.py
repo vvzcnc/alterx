@@ -25,6 +25,7 @@ from alterx.common.locale import _
 from alterx.gui.qt_bindings import *
 from alterx.common.blocker import *
 
+import pkg_resources
 import sys
 import traceback
 import xml.sax.saxutils as saxutils
@@ -32,6 +33,7 @@ import xml.sax.saxutils as saxutils
 ALTERX_HOME_DOMAIN = ""
 ALTERX_HOME_URL = "https://" + ALTERX_HOME_DOMAIN
 
+IMAGE_DIR = pkg_resources.resource_filename("alterx", "images")
 
 # Convert an integer to a dual-string
 def intToDualString(value, bitWidth):

@@ -24,6 +24,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from alterx.common.locale import _
 from alterx.common.compat import *
 from alterx.common import *
+
 from alterx.gui.util import *
 from alterx.core.callback import CALLBACK as c
 from alterx.core.linuxcnc import *
@@ -93,6 +94,12 @@ class SideButton(QPushButton):
 		self.label = label
 
 		self.setObjectName("btn_%s"%(label))
+		icon = os.path.join(IMAGE_DIR,"mainmenu","%s.png"%label)
+		if os.path.isfile(icon):
+			self.setIcon(QIcon(icon))
+			self.setIconSize(QSize(90,90))
+			self.setText("")
+
 		self.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
 		self.clicked.connect(partial(c.side_button_callback,self))
 
