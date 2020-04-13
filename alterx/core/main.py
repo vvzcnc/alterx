@@ -33,11 +33,27 @@ class Main():
 	def setup(self, parent):
 		self.p = parent
 		UPDATER.connect("task_state", self.task_state_handler)
+		UPDATER.connect("task_mode", self.task_mode_handler)
+		UPDATER.connect("homed", self.homed_handler)
+		UPDATER.connect("file", self.load_program_handler)
+		UPDATER.connect("program_units", self.change_units_handler)
 
 #------ Global handlers ------#
 	def task_state_handler(self,data):
 		printVerbose(_("LinuxCNC state {}",data))
-	
+
+	def task_mode_handler(self,data):
+		printVerbose(_("LinuxCNC mode {}",data))
+
+	def homed_handler(self,data):
+		printVerbose(_("LinuxCNC homed {}",data))
+
+	def load_program_handler(self,data):
+                printInfo(_('Loaded: {}',data))
+
+	def change_units_handler(self,data):
+                printInfo(_('Units: {}',data))
+
 #------ Button callbacks ------#
 	def btn_abort_callback(self,button):
 		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
@@ -64,14 +80,17 @@ class Main():
 		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
 	def btn_manual_callback(self,button):
+		COMMAND.mode(LINUXCNC.MODE_MANUAL)
 		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
 		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
 	def btn_mdi_callback(self,button):
+		COMMAND.mode(LINUXCNC.MODE_MDI)
 		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
 		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
 	def btn_auto_callback(self,button):
+		COMMAND.mode(LINUXCNC.MODE_AUTO)
 		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
 		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 

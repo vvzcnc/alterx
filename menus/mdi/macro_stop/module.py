@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# AlterX GUI - exit widget
+# AlterX GUI - macro stop widget
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
@@ -26,6 +26,8 @@ from alterx.common.compat import *
 from alterx.common import *
 from alterx.gui.util import *
 
+from alterx.core.linuxcnc import COMMAND
+
 class func:
 	def __init__(self,button):
 		dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -38,8 +40,6 @@ class func:
 			button.setStyleSheet("color:black")
 
 	def execute(self):
-		printVerbose( _("Button exit clicked") )
+		printVerbose( _("Button macro stop clicked") )
 
-		sys.exit()
-
-		#os.system('sudo /sbin/poweroff')
+		COMMAND.abort()

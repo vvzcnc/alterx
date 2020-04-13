@@ -39,18 +39,13 @@ class OriginOffsetView(QTableView):
                 self.axisletters = ["x", "y", "z", "a", "b", "c", "u", "v", "w"]
                 self.current_system = "G54"
                 self.current_tool = 0
-                self.metric_display = True
+                self.metric_display = INFO.get_metric()
                 self.mm_text_template = '{:10.3f}'
                 self.imperial_text_template = '{:9.4f}'
                 self.setEnabled(False)
                 self.table = self.createTable()
 
           	self.MACHINE_UNIT_CONVERSION_9 = [1.0/25.4]*3+[1]*3+[1.0/25.4]*3
-
-		UPDATER.add("reload-offsets")
-                UPDATER.connect('reload-offsets', self.reload_offsets)
-                UPDATER.connect('program_units', lambda w, data: self.metricMode(data))
-                UPDATER.connect('g5x_index', self._convert_system)
 
                 conversion = {0:"X", 1:"Y", 2:"Z", 3:"A", 4:"B", 5:"C", 6:"U", 7:"V", 8:"W"}
                 for num, let in conversion.iteritems():
@@ -60,14 +55,22 @@ class OriginOffsetView(QTableView):
 
 		self.reload_offsets()
 
-        def _convert_system(self, w, data):
+		UPDATER.add("reload-offsets")
+                UPDATER.connect('reload-offsets', self.reload_offsets)
+                UPDATER.connect('program_units', self.metricMode)
+                UPDATER.connect('g5x_index', self._convert_system)
+
+        def _convert_system(self, data):
                 convert = ("None", "G54", "G55", "G56", "G57", "G58", "G59", "G59.1", "G59.2", "G59.3")
                 self.current_system = convert[int(data)]
 
         def currentTool(self, data):
                 self.current_tool = data
+
         def metricMode(self, state):
-                self.metric_display = state
+		if self.metric_display != INFO.get_metric():
+			self.metric_display = INFO.get_metric()
+			self.reload_offsets()
 
         def createTable(self):
                 # create blank taple array
@@ -126,7 +129,7 @@ class OriginOffsetView(QTableView):
 		return map(lambda x,y: x*y, v, c)
 
         # Reload the offsets into display
-        def reload_offsets(self):
+        def reload_offsets(self,state=None):
                 g54, g55, g56, g57, g58, g59, g59_1, g59_2, g59_3 = self.read_file()
                 if g54 is None: return
 
@@ -170,7 +173,7 @@ class OriginOffsetView(QTableView):
                                                 self.tabledata[row][column] = " "
                                 else:
                                         self.tabledata[row][column] = tmpl.format(i[column])
-                self.tablemodel.layoutChanged.emit()
+                self.tablemodel.layoutUpdate.emit()
 
         # We read the var file directly
         # and pull out the info we need
@@ -266,6 +269,8 @@ class OriginOffsetView(QTableView):
 # offset model
 #########################################
 class OffsetModel(QAbstractTableModel):
+	layoutUpdate = pyqtSignal()
+
         def __init__(self, datain, headerdata, vheaderdata, parent=None):
                 """
                 Args:
@@ -276,6 +281,10 @@ class OffsetModel(QAbstractTableModel):
                 self.arraydata = datain
                 self.headerdata = headerdata
                 self.Vheaderdata = vheaderdata
+		self.layoutUpdate.connect(self.update)
+
+	def update(self):
+		self.layoutChanged.emit()
 
         def rowCount(self, parent):
                 return len(self.arraydata)

@@ -134,8 +134,9 @@ class FileManager(QWidget):
                 if fname is None: 
                         return
                 if fname:
+			COMMAND.abort()
+                        printVerbose(_('Loading: {}',fname))
                         COMMAND.program_open(fname)
-                        printInfo(_('Loaded: {}',fname))
 
         def up(self):
                 self.select_row('up')

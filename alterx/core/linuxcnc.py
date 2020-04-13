@@ -54,11 +54,15 @@ class linuxcnc_info():
 
 		self.machine_is_lathe = True if INI.find('DISPLAY','LATHE') else False
 
+		self.get_metric = lambda: False if STAT.program_units == 1 else True
+
 INFO = linuxcnc_info()
 
 class linuxcnc_poll(QThread):
+	#'One to many' item check
 	def run(self):
 		stat_old = {}
+
 		while self.running == True:
 			time.sleep(0.1)
 
@@ -75,24 +79,39 @@ class linuxcnc_poll(QThread):
 						stat_old[s] = getattr(STAT,s)
 						if s in self._observers:
 							for h in self._observers[s]:
-								h(stat_old[s])
+								try:
+									h(stat_old[s])
+								except Exception as e:
+									printError(_("Failed to execute '{}' handler {}: '{}'",s,h,e))
 
 			for key in self.custom_signals:
-				if self.custom_signals[key] != self.custom_signals_old[key]:
+				if self.custom_signals[key] != self.custom_signals_old[key] and key in self._observers:
 					self.custom_signals_old[key] = self.custom_signals[key]
-					if key in self._observers:
-						for h in self._observers[s]:
+
+					for h in self._observers[key]:
+						try:
 							h(self.custom_signals_old[key])
+						except Exception as e:
+							printError(_("Failed to execute '{}' handler {}: '{}'",key,h,e))
+
+	#'Many to one' item check
+	def check(self,key): 
+		if key in self.custom_signals and self.custom_signals[key] != self.custom_signals_old[key]:
+			self.custom_signals_old[key] = self.custom_signals[key]
+			return True
+		return False
 				
+	#Emit custom signal		
 	def emit(self, name, value=None):
 		if name in self.custom_signals:
 			if not value:
 				value = not self.custom_signals[name]
-
+			
 			self.custom_signals[name] = value
 		else:
 			printError(_("Signal '{}' no exist",name))
 
+	#Create custom signal in database
 	def add(self,name,value=False):
 		if name not in self.custom_signals:
 			self.custom_signals[name] = value
@@ -100,6 +119,7 @@ class linuxcnc_poll(QThread):
 		else:
 			printError(_("Signal '{}' already exist",name))
 
+	#Add signal to 'one to many' database
 	def connect(self,name,handler):
 		if name in self._observers:
 			self._observers[name].append(handler)

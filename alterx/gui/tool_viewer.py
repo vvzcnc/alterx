@@ -32,7 +32,7 @@ import operator
 
 class ToolOffsetView(QTableView):
         def __init__(self, parent=None):
-                super(ToolOffsetView, self).__init__(parent)
+                QTableView.__init__(self,parent)
                 self.setAlternatingRowColors(True)
 
 		self.toolfile = INI.find('EMCIO','TOOL_TABLE') or '.tool_table'
@@ -41,45 +41,52 @@ class ToolOffsetView(QTableView):
                 self.editing_flag = False
                 self.current_system = None
                 self.current_tool = 0
-                self.metric_display = False
+                self.metric_display = INFO.get_metric()
                 self.mm_text_template = '%10.3f'
                 self.imperial_text_template = '%9.4f'
                 self.setEnabled(False)
+		self.table = self.createTable()
+        
+		self.MACHINE_UNIT_CONVERSION = [1.0/25.4]*6+[1]*3+[1.0/25.4]*4
 
-                # create table
-                self.createAllView()
-
-                UPDATER.connect('program_units', lambda data: self.metricMode(data))
-                UPDATER.connect('tool_in_spindle', lambda data: self.currentTool(data))
-		UPDATER.connect('tool_table', self.update)
                 conversion = {5:"Y", 6:'Y', 7:"Z", 8:'Z', 9:"A", 10:"B", 11:"C", 12:"U", 13:"V", 14:"W"}
                 for num, let in conversion.iteritems():
                         if let in INFO.coordinates:
                                 continue
                         self.hideColumn(num)
+
                 if not INFO.machine_is_lathe:
                         for i in (4,6,8,16,17,18):
                                 self.hideColumn(i)
                 else:
                         self.hideColumn(15)
 
-		#COMMAND.load_tool_table()
-		data = self.reload_tool_file()
-		if data is not None:
-			self.tablemodel.update(data)
+		self.reload_tools()
+
+		UPDATER.add("reload-tools")
+                UPDATER.connect('reload-tools', self.reload_tools)
+                UPDATER.connect('program_units', self.metricMode)
+                UPDATER.connect('tool_in_spindle', self.currentTool)
 
         def currentTool(self, data):
                 self.current_tool = data
-        def metricMode(self, state):
-                self.metric_display = state
 
-        def createAllView(self):
-                # create the view
-                self.setSelectionMode(QAbstractItemView.SingleSelection)
-                #self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        def metricMode(self, state):
+		if self.metric_display != INFO.get_metric():
+			self.metric_display = INFO.get_metric()
+			self.reload_tools()
+
+        def createTable(self):
+                # create blank taple array
+		tabledata = [[QCheckBox(),0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'No Tool']]
+
+		# create the view
+		self.setSelectionMode(QAbstractItemView.SingleSelection)
 
                 # set the table model
-                self.tablemodel = ToolModel(self)
+                header = ['Select','tool','pocket','X','X Wear', 'Y', 'Y Wear', 'Z', 'Z Wear', 'A', 'B', 'C', 'U', 'V', 'W', 'Diameter', 'Front Angle', 'Back Angle','Orientation','Comment']
+                vheader = []
+                self.tablemodel = ToolModel(tabledata, header, vheader, self)
                 self.setModel(self.tablemodel)
                 self.clicked.connect(self.showSelection)
                 #self.dataChanged.connect(self.selection_changed)
@@ -108,12 +115,29 @@ class ToolOffsetView(QTableView):
                 text = cellContent
                 printDebug(_('Text: {}, Row: {}, Column: {}',text, item.row(), item.column()))
 
-        #############################################################
+	def convert_units(self,v):
+		c = self.MACHINE_UNIT_CONVERSION
+		return map(lambda x,y: x*y, v, c)
 
-	def update(self):
+   	def reload_tools(self,state=None):
 		data = self.reload_tool_file()
-		if data is not None:
-			self.tablemodel.update(data)
+
+		if data in (None, []):
+	                data = [[QCheckBox(),0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'No Tool']]
+		else:		
+			data = self.convert_to_wear_type(data)
+
+	        for line in data:
+                        if line[0] != QCheckBox:
+                                line[0] = QCheckBox()
+
+                	if self.metric_display != INFO.machine_is_metric:
+				line[3:16] = self.convert_units(line[3:16])
+
+                self.tablemodel.layoutUpdate.emit(data)
+
+                self.resizeColumnsToContents()
+                self.resizeRowsToContents()
 
         def reload_tool_file(self):
 		KEYWORDS = ['T', 'P', 'X', 'Y', 'Z', 'A', 'B', 'C', 'U', 'V', 'W', 'D', 'I', 'J', 'Q', ';']
@@ -139,7 +163,7 @@ class ToolOffsetView(QTableView):
                                 line = rawline.rstrip(comment)
                         else:
                                 line = rawline
-                        array = [0, 0,'0','0','0','0','0','0','0','0','0','0','0','0', 0,comment]
+                        array = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,comment]
                         wear_flag = False
                         # search beginning of each word for keyword letters
                         # if i = ';' that is the comment and we have already added it
@@ -170,9 +194,9 @@ class ToolOffsetView(QTableView):
                                                 else:
                                                         try:
                                                                 if float(word.lstrip(i)) < 0.000001:
-                                                                        array[offset]= ("0")
+                                                                        array[offset]= 0
                                                                 else:
-                                                                        array[offset]= ("%10.4f" % float(word.lstrip(i)))
+                                                                        array[offset]= float(word.lstrip(i))
                                                         except:
                                                                 printError(_("Toolfile float access: {}",self.toolfile))
                                                 break
@@ -185,7 +209,7 @@ class ToolOffsetView(QTableView):
                 if toolinfo_flag:
                         self.toolinfo = temp
                 else:
-                        self.toolinfo = [0, 0,'0','0','0','0','0','0','0','0','0','0','0','0', 0,'No Tool']
+                        self.toolinfo = [0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,'No Tool']
                 return (tool_model, wear_model)
 
         def save_tool_file(self, new_model, delete=()):
@@ -224,14 +248,61 @@ class ToolOffsetView(QTableView):
                         printError(_("Reloading of tool table into linuxcnc: {}",self.toolfile))
                         return True
 
+        def convert_to_wear_type(self, data):
+                if data is None:
+                        data = ([],[])
+                if not INFO.machine_is_lathe:
+                        maintool = data[0] + data[1]
+                        weartool = []
+                else:
+                        maintool = data[0]
+                        weartool = data[1]
+                #print 'main',data
+                tool_num_list = {}
+                full_tool_list = []
+                for rnum, row in enumerate(maintool):
+                        new_line = [False, 0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'No Tool']
+                        valuesInRow = [ value for value in row ]
+                        for cnum,i in enumerate(valuesInRow):
+                                if cnum == 0:
+                                        # keep a dict of actual tools numbers vrs row index
+                                        tool_num_list[i] = rnum
+                                if cnum in(0,1,2):
+                                        # transfer these positions directly to new line (offset by 1 for checkbox)
+                                        new_line[cnum +1] = i
+                                elif cnum == 3:
+                                        # move Y past x wear position
+                                        new_line[5] = i
+                                elif cnum == 4:
+                                        # move z past y wear position
+                                        new_line[7] = i
+                                elif cnum in(5,6,7,8,9,10,11,12,13,14,15):
+                                        # a;; the rest past z wear position
+                                        new_line[cnum+4] = i
+                        full_tool_list.append(new_line)
+                        #print 'row',row
+                        #print 'new row',new_line
+                # any tool number over 10000 is a wear offset
+                # It's already been separated in the weartool variable.
+                # now we pull the values we need out and put it in our
+                # full tool list's  tool variable's parent tool row
+                # eg 10001 goes to tool 1, 10002 goes to tool 2 etc
+                for rnum, row in enumerate(weartool):
+                        values = [ value for value in row ]
+                        parent_tool = tool_num_list[( values[0]-10000)]
+                        full_tool_list[parent_tool][4] = values[2]
+                        full_tool_list[parent_tool][6] = values[3]
+                        full_tool_list[parent_tool][8] = values[4]
+                return full_tool_list
+
         def convert_to_standard_type(self, data):
                 if data is None:
                         data = ([])
                 tool_wear_list = []                   
                 full_tool_list = []
                 for rnum, row in enumerate(data):
-                        new_line = [0, 0,'0','0','0','0','0','0','0','0','0','0','0','0', 0,'']
-                        new_wear_line = [0, 0,'0','0','0','0','0','0','0','0','0','0','0','0', 0,'Wear Offset']
+                        new_line = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'']
+                        new_wear_line = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'Wear Offset']
                         wear_flag = False
                         values = [ value for value in row ]
                         for cnum,i in enumerate(values):
@@ -273,7 +344,7 @@ class ToolOffsetView(QTableView):
                 self.editing_flag = True
                 row = new.row()
                 col = new.column()
-                data = self.tablemodel.data(new)
+                data = self.tablemodel.arraydata[row][col]
                 printDebug(_('Entered data:{} {}', data, row,col))
                 # now update linuxcnc to the change
                 try:
@@ -285,10 +356,11 @@ class ToolOffsetView(QTableView):
                                         raise
                                 COMMAND.mdi('g43')
 				UPDATER.emit('reload-display')
-                                #self.tablemodel.update()
+	    			self.reload_table()
                                 #self.resizeColumnsToContents()
                 except Exception as e:
-                        printError(_("Offsetpage widget error: MDI call error, ",e))
+                        printError(_("Offsetpage widget error: MDI call error, {}",e))
+			self.reload_table()
                 self.editing_flag = False
 
         def add_tool(self):
@@ -310,7 +382,9 @@ class ToolOffsetView(QTableView):
 # tool model
 #########################################
 class ToolModel(QAbstractTableModel):
-        def __init__(self, datain, parent=None):
+	layoutUpdate = pyqtSignal(list)
+
+        def __init__(self, datain, headerdata, vheaderdata, parent=None):
                 """
                 Args:
                         datain: a list of lists\n
@@ -318,11 +392,14 @@ class ToolModel(QAbstractTableModel):
                 """
                 QAbstractTableModel.__init__(self,parent)
                 self.text_template = '%.4f'
-                self.headerdata = ['Select','tool','pocket','X','X Wear', 'Y', 'Y Wear', 'Z', 'Z Wear', 'A', 'B', 'C', 'U', 'V', 'W', 'Diameter', 'Front Angle', 'Back Angle','Orientation','Comment']
-                self.vheaderdata = []
-                self.arraydata = [[0, 0,'0','0','0','0','0','0','0','0','0','0','0','0','0','0', 0,'No Tool']]
+                self.arraydata = datain
+                self.headerdata = headerdata
+                self.Vheaderdata = vheaderdata
+		self.layoutUpdate.connect(self.update)
 
-                self.update(None)
+	def update(self,data):
+		self.arraydata = data
+		self.layoutChanged.emit()
 
         # make a list of all the checked tools
         def listCheckedTools(self):
@@ -331,65 +408,6 @@ class ToolModel(QAbstractTableModel):
                         if row[0].isChecked():
                                 checkedlist.append(row[1])
                 return checkedlist
-
-        def convert_to_wear_type(self, data):
-                if data is None:
-                        data = ([],[])
-                if not INFO.machine_is_lathe:
-                        maintool = data[0] + data[1]
-                        weartool = []
-                else:
-                        maintool = data[0]
-                        weartool = data[1]
-                #print 'main',data
-                tool_num_list = {}
-                full_tool_list = []
-                for rnum, row in enumerate(maintool):
-                        new_line = [False, 0, 0,'0','0','0','0','0','0','0','0','0','0','0','0','0','0','0', 0,'No Tool']
-                        valuesInRow = [ value for value in row ]
-                        for cnum,i in enumerate(valuesInRow):
-                                if cnum == 0:
-                                        # keep a dict of actual tools numbers vrs row index
-                                        tool_num_list[i] = rnum
-                                if cnum in(0,1,2):
-                                        # transfer these positions directly to new line (offset by 1 for checkbox)
-                                        new_line[cnum +1] = i
-                                elif cnum == 3:
-                                        # move Y past x wear position
-                                        new_line[5] = i
-                                elif cnum == 4:
-                                        # move z past y wear position
-                                        new_line[7] = i
-                                elif cnum in(5,6,7,8,9,10,11,12,13,14,15):
-                                        # a;; the rest past z wear position
-                                        new_line[cnum+4] = i
-                        full_tool_list.append(new_line)
-                        #print 'row',row
-                        #print 'new row',new_line
-                # any tool number over 10000 is a wear offset
-                # It's already been separated in the weartool variable.
-                # now we pull the values we need out and put it in our
-                # full tool list's  tool variable's parent tool row
-                # eg 10001 goes to tool 1, 10002 goes to tool 2 etc
-                for rnum, row in enumerate(weartool):
-                        values = [ value for value in row ]
-                        parent_tool = tool_num_list[( values[0]-10000)]
-                        full_tool_list[parent_tool][4] = values[2]
-                        full_tool_list[parent_tool][6] = values[3]
-                        full_tool_list[parent_tool][8] = values[4]
-                return full_tool_list
-
-        # update the internal array from STATUS's toolfile read array
-        # we make sure the first array is switched to a QCheckbox widget
-        def update(self, models):
-                data = self.convert_to_wear_type(models)
-                if data in (None, []):
-                        data = [[QCheckBox(),0, 0,'0','0','0','0','0','0','0','0','0','0','0','0','0','0', 0,'No Tool']]
-                for line in data:
-                                if line[0] != QCheckBox:
-                                        line[0] = QCheckBox()
-                self.arraydata = data
-                self.layoutChanged.emit()
 
         # Returns the number of rows under the given parent.
         # When the parent is valid it means that rowCount is

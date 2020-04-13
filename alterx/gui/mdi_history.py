@@ -90,7 +90,7 @@ class MDIHistory(QWidget):
                         if self.MDI.hasFocus():
                                 self.select_row('last')
                 except:
-                        LOG.debug('File path is not valid: {}'.format(fp))
+                        printDebug(_('File path is not valid: {}',fp))
 
         def selectionChanged(self,old, new):
                 cmd = self.getSelected()
@@ -111,7 +111,8 @@ class MDIHistory(QWidget):
                 cmd = self.getSelected()
                 self.MDI.setText(cmd)
                 self.MDI.submit()
-                self.select_row('down')
+		self.model.appendRow(QStandardItem(cmd))
+                #self.select_row('down')
 
         def run_command(self):
                 self.MDILine.submit()

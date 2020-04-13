@@ -38,9 +38,7 @@ warnings.filterwarnings("default")
 
 import thread
 import gobject
-
-import linuxcnc
-import gremlin
+from gremlin import Gremlin
 import rs274.glcanon
 
 gobject.threads_init()
@@ -54,20 +52,13 @@ def run_gtk(self):
         except:
                 pass
 
-
-class modded_gremlin(gremlin.Gremlin):
+class modded_gremlin(Gremlin):
         def __init__(self,  *a, **kw):
-                gremlin.Gremlin.__init__(self, INI)
+                Gremlin.__init__(self, INI)
                 self._reload_filename = None
                 self.enable_dro = True
                 self.colors['overlay_background'] = (0.0, 0.0, 0.0)
                 self.colors['back'] = (0.0, 0.0, 0.0)
-
-		UPDATER.connect("file", self.fileloaded)
-		
-		UPDATER.add("reload-display")
-		UPDATER.connect("reload-display", self.reloadfile)
-		UPDATER.connect("program_units", self.set_metric_units)              
 
         def set_metric_units(self,state):
                 self.metric_units  = state
@@ -91,9 +82,10 @@ class modded_gremlin(gremlin.Gremlin):
         def reloadfile(self,w):
                 dist = self.get_zoom_distance()
                 try:
-                        self.fileloaded(None,self._reload_filename)
+                        self.fileloaded(self._reload_filename)
                         self.set_zoom_distance(dist)
-                except:
+                except Exception as e:
+			printError(_('HAL Gremlin reload error: {}',e))
                         pass
 
         def fileloaded(self,f):
@@ -101,7 +93,7 @@ class modded_gremlin(gremlin.Gremlin):
                 try:
                         self._load(f)
                 except AttributeError as e:
-                           #AttributeError: 'NoneType' object has no attribute 'gl_end'
+                        #AttributeError: 'NoneType' object has no attribute 'gl_end'
                         printError(_('HAL Gremlin continuing after exception'))
 
         @rs274.glcanon.with_context
@@ -260,6 +252,25 @@ class PathViewer(QWidget):
                 self.gremlin.metric_units = False
                 self.setview('p')
 
+		UPDATER.add("display-clear")
+		UPDATER.add("display-view-p")
+		UPDATER.add("display-view-x")
+		UPDATER.add("display-view-y")
+		UPDATER.add("display-view-z")
+		UPDATER.add("display-view-zp")
+		UPDATER.add("display-view-zm")
+
+		UPDATER.connect("display-clear",lambda s: self.clear_plot())
+		UPDATER.connect("display-view-p",lambda s: self.setview('p'))
+		UPDATER.connect("display-view-x",lambda s: self.setview('x'))
+		UPDATER.connect("display-view-y",lambda s: self.setview('y'))
+		UPDATER.connect("display-view-z",lambda s: self.setview('z'))
+		UPDATER.connect("display-view-zp",lambda s: self.zoomin())
+		UPDATER.connect("display-view-zm",lambda s: self.zoomout())
+
+		UPDATER.connect("file", self.load)
+
+
         # Embed a X11 window into a QT window using X window ID
         def embed_plug(self, WID):
                 self.haveContainer = True
@@ -283,6 +294,21 @@ class PathViewer(QWidget):
                 return True
 
         # property getter/setters
+	#FILE
+	def load(self,file):
+		self.gremlin._reload_filename = file
+		self.gremlin.reloadfile(None)
+
+	#ZOOM
+	def zoomin(self):
+		self.gremlin.zoomin()
+
+	def zoomout(self):
+		self.gremlin.zoomout()
+
+	# PLOT
+	def clear_plot(self):
+		self.gremlin.clear_live_plotter()
 
         # VIEW
         def setview(self, view):

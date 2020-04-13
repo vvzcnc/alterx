@@ -87,11 +87,12 @@ class BottomWidget(QWidget):
 			layout.addWidget(btn)
 
 class SideButton(QPushButton):
-	def __init__(self, label, centralWidget=None, bottomWidget=None, parent=None):
+	def __init__(self, label, centralWidget=None, bottomWidget=None, checkHandler=[], parent=None,):
 		QPushButton.__init__(self, "btn_%s"%(label), parent)
 		self.centralWidget = centralWidget
 		self.botttomWidget = bottomWidget
 		self.label = label
+		self.checkHandler = checkHandler
 
 		self.setObjectName("btn_%s"%(label))
 		icon = os.path.join(IMAGE_DIR,"mainmenu","%s.png"%label)
@@ -102,6 +103,22 @@ class SideButton(QPushButton):
 
 		self.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
 		self.clicked.connect(partial(c.side_button_callback,self))
+
+		
+		checkList = ["task_state","homed","task_mode"]
+		self.checkState = [True,True,True]
+		for index,check in enumerate(checkHandler):
+			if check:
+				UPDATER.connect(checkList[index], lambda s,c=check,i=index: self.checkDisable(True if s == c else False,i))
+
+	def checkDisable(self,state,index):
+		self.checkState[index]=state
+		
+		if self.checkState == [True,True,True]:
+			self.setEnabled(True)
+		else:
+			self.setEnabled(False)
+
 
 class BottomLayout(QHBoxLayout):
 	def __init__(self, parent=None, ):

@@ -27,7 +27,7 @@ from alterx.common import *
 
 from alterx.gui.util import *
 from alterx.gui.widgets import *
-from alterx.gui.path_viewer import *
+from alterx.gui.path_viewer_qt import *
 from alterx.gui.mdi_history import *
 from alterx.gui.gcode_editor import *
 from alterx.gui.file_manager import *
@@ -79,26 +79,32 @@ class MainWindow(QWidget):
 		CALLBACK.setup(MAIN)
 		MAIN.setup(self.mainLayout)
 
+		ON_STATE = [LINUXCNC.STATE_ON]
+		HOMED_STATE = ON_STATE + [(1,)*len(INFO.coordinates)+(0,)*(9-len(INFO.coordinates))]
+		MDI_STATE = HOMED_STATE + [LINUXCNC.MODE_MDI]
+		AUTO_STATE = HOMED_STATE + [LINUXCNC.MODE_AUTO]
+
+
 		#Page 0 - Manual
 		manualWidget = ManualWidget()
 		self.mainLayout.centralWidgets.addWidget(manualWidget)
 		manualButtons = BottomWidget("manual")
 		self.mainLayout.bottomWidgets.addWidget(manualButtons)
-		self.mainLayout.rightLayout.addWidget(SideButton("manual",manualWidget,manualButtons))
+		self.mainLayout.rightLayout.addWidget(SideButton("manual",manualWidget,manualButtons,ON_STATE))
 
 		#Page 1 - MDI
 		mdiWidget = MDIHistory()
 		self.mainLayout.centralWidgets.addWidget(mdiWidget)
 		mdiButtons = BottomWidget("mdi")
 		self.mainLayout.bottomWidgets.addWidget(mdiButtons)
-		self.mainLayout.rightLayout.addWidget(SideButton("mdi",mdiWidget,mdiButtons))
+		self.mainLayout.rightLayout.addWidget(SideButton("mdi",mdiWidget,mdiButtons,HOMED_STATE))
 
 		#Page 2 - Auto
 		autoWidget = GcodeWidget()
 		self.mainLayout.centralWidgets.addWidget(autoWidget)
 		autoButtons = BottomWidget("auto")
 		self.mainLayout.bottomWidgets.addWidget(autoButtons)
-		self.mainLayout.rightLayout.addWidget(SideButton("auto",autoWidget,autoButtons))
+		self.mainLayout.rightLayout.addWidget(SideButton("auto",autoWidget,autoButtons,HOMED_STATE))
 
 		#Page 3 - Settings
 		settingsWidget = SettingsWidget()
@@ -112,7 +118,7 @@ class MainWindow(QWidget):
 		self.mainLayout.centralWidgets.addWidget(tabsWidget)
 		tabsButtons = BottomWidget("tabs")
 		self.mainLayout.bottomWidgets.addWidget(tabsButtons)
-		self.mainLayout.rightLayout.addWidget(SideButton("tabs",tabsWidget,tabsButtons))
+		self.mainLayout.rightLayout.addWidget(SideButton("tabs",tabsWidget,tabsButtons,ON_STATE))
 
 		#Button MACHINE
 		self.mainLayout.rightLayout.addWidget(SideButton("machine",manualWidget,manualButtons))
@@ -122,19 +128,19 @@ class MainWindow(QWidget):
 		self.mainLayout.centralWidgets.addWidget(displayWidget)
 		displayButtons = BottomWidget("display")
 		self.mainLayout.bottomWidgets.addWidget(displayButtons)
-		self.mainLayout.leftLayout.addWidget(SideButton("abort",displayWidget,displayButtons))
+		self.mainLayout.leftLayout.addWidget(SideButton("abort",displayWidget,displayButtons,ON_STATE))
 
 		#Button EQUIPMENT
 		equipmentButtons = BottomWidget("equipment")
 		self.mainLayout.bottomWidgets.addWidget(equipmentButtons)
-		self.mainLayout.leftLayout.addWidget(SideButton("equipment",None,equipmentButtons))
+		self.mainLayout.leftLayout.addWidget(SideButton("equipment",None,equipmentButtons,ON_STATE))
 
 		#Page 6 - Load
 		loadWidget = FileManager()
 		self.mainLayout.centralWidgets.addWidget(loadWidget)
 		loadButtons = BottomWidget("load")
 		self.mainLayout.bottomWidgets.addWidget(loadButtons)
-		self.mainLayout.leftLayout.addWidget(SideButton("load",loadWidget,loadButtons))
+		self.mainLayout.leftLayout.addWidget(SideButton("load",loadWidget,loadButtons,AUTO_STATE))
 
 		#Page 7 - Edit
 		editWidget = GcodeEditor()
@@ -145,19 +151,20 @@ class MainWindow(QWidget):
 		#Button HOMING
 		homingButtons = BottomWidget("homing")
 		self.mainLayout.bottomWidgets.addWidget(homingButtons)
-		self.mainLayout.leftLayout.addWidget(SideButton("homing",None,homingButtons))
+		self.mainLayout.leftLayout.addWidget(SideButton("homing",None,homingButtons,ON_STATE+[None,LINUXCNC.MODE_MANUAL]))
 
 		#Page 8 - Offset
 		offsetWidget = OriginOffsetView()
 		self.mainLayout.centralWidgets.addWidget(offsetWidget)
 		offsetButtons = BottomWidget("offset")
 		self.mainLayout.bottomWidgets.addWidget(offsetButtons)
-		self.mainLayout.leftLayout.addWidget(SideButton("offset",offsetWidget,offsetButtons))
+		self.mainLayout.leftLayout.addWidget(SideButton("offset",offsetWidget,offsetButtons,MDI_STATE))
 
 		#Page 9 - Tool
 		toolWidget = ToolOffsetView()
 		self.mainLayout.centralWidgets.addWidget(toolWidget)
 		toolButtons = BottomWidget("tool")
 		self.mainLayout.bottomWidgets.addWidget(toolButtons)
-		self.mainLayout.leftLayout.addWidget(SideButton("tool",toolWidget,toolButtons))
-       	
+		self.mainLayout.leftLayout.addWidget(SideButton("tool",toolWidget,toolButtons,MDI_STATE))
+
+		UPDATER.start()

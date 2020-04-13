@@ -26,7 +26,6 @@ from alterx.common.compat import *
 from alterx.common.util import *
 from alterx.common.locale import _
 import getopt
-from alterx.core.linuxcnc import UPDATER
 
 def usage():
 	print(_("AlterX version {}",VERSION_STRING))
@@ -83,8 +82,6 @@ from alterx.gui.mainwindow import *
 
 qapp = QApplication(sys.argv)
 
-UPDATER.start()
-
 printInfo(_('Using {} GUI framework',getGuiFrameworkName()) )
 
 # Create the main window.
@@ -96,8 +93,6 @@ def __unhandledExceptionHook(etype, value, tb):
 	text = _("Alterx: ABORTING due to unhandled exception:")
 	print(text, file=sys.stderr)
 	__orig_excepthook(etype, value, tb)
-	# Try to clean up now.
-	guiShutdownCleanup()
 	# Try to show an error message box.
 	with suppressAllExc:
 		import traceback
