@@ -1,26 +1,52 @@
 #!/usr/bin/env python
-# -*- coding:UTF-8 -*-
+# -*- coding:UTF-8 -*-# -*- coding: utf-8 -*-
+#
+# AlterX GUI - program step
+#
+# Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
 
-import time,os,linuxcnc
+from __future__ import division, absolute_import, print_function, unicode_literals
 
-from qtvcp import logger
-_logger = logger.getLogger(__name__)
-
-from PyQt5 import QtCore, QtWidgets,QtGui
+from alterx.common.locale import _
+from alterx.common.compat import *
+from alterx.common import *
+from alterx.gui.util import *
+from alterx.core.linuxcnc import *
 
 class func:
-    def __init__(self,button,that):
-        self.that = that
-        self.button = button
+	def __init__(self,button):
+		self.button = button
 
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        if os.path.isfile("%s/icon.png"%dir_path):
-            self.button.setStyleSheet("image:url('%s/icon.png')"%dir_path)
-        else:
-            self.button.setStyleSheet("color:black")
-            self.button.setText("")
+		UPDATER.connect("interp_state",self.update_status)
 
-    def execute(self):
-        _logger.info( "Button Step clicked" )
-        self.that.command.auto( linuxcnc.AUTO_STEP )
+		dir_path = os.path.dirname(os.path.realpath(__file__))
 
+		if os.path.isfile("%s/icon.png"%dir_path):
+			self.button.setIcon(QIcon("%s/icon.png"%dir_path))
+			self.button.setIconSize(QSize(90,90))
+			self.button.setText("")
+		else:
+			self.button.setStyleSheet("color:black")
+
+	def execute(self):
+		printVerbose(_("Button Step clicked"))
+
+		COMMAND.auto(LINUXCNC.AUTO_STEP)
+
+	def update_status(self,status):
+		self.button.setEnabled(False if status == LINUXCNC.INTERP_READING or status == LINUXCNC.INTERP_WAITING else True)

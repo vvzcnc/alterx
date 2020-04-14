@@ -41,4 +41,4 @@ class func:
 
 	def execute(self):
 		printVerbose( _("Button zoom plus clicked") )
-		UPDATER.emit("display-view-zp")
+		UPDATER.emit("display_zoomin")

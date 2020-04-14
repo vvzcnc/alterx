@@ -3,3 +3,8 @@
 
 from . import flood
 from . import mist
+
+buttons_order = [
+	'flood',
+	'mist',
+	]

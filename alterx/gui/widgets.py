@@ -228,6 +228,12 @@ class FeedWidget(QGroupBox):
 class JOGWidget(QGroupBox):
 	def __init__(self, parent=None):
 		QGroupBox.__init__(self, parent)
+
+		UPDATER.add('jog_increment')
+		UPDATER.add('jog_activate')
+		UPDATER.add('jog_continuous')
+		UPDATER.add('jog_encoder')
+
 		self.setTitle(_("JOG"))
 		v1 = QVBoxLayout()
 		self.jog_linear = QLabel("JOG linear: 0")

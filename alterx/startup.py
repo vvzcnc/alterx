@@ -90,7 +90,7 @@ QToolTip.setFont(getDefaultFixedFont())
 
 # Install a handler for unhandled exceptions.
 def __unhandledExceptionHook(etype, value, tb):
-	text = _("Alterx: ABORTING due to unhandled exception:")
+	text = _("AlterX: ABORTING due to unhandled exception:")
 	print(text, file=sys.stderr)
 	__orig_excepthook(etype, value, tb)
 	# Try to show an error message box.
@@ -98,7 +98,7 @@ def __unhandledExceptionHook(etype, value, tb):
 		import traceback
 		QMessageBox.critical(
 			None,
-			_("Alterx: Unhandled exception"),
+			_("AlterX: Unhandled exception"),
 			text + "\n\n\n" + "".join(traceback.format_exception(etype, value, tb)),
 			QMessageBox.Ok,
 			QMessageBox.Ok)

@@ -41,4 +41,4 @@ class func:
 
 	def execute(self):
 		printVerbose( _("Button delete view clicked") )
-		UPDATER.emit("display-clear")
+		UPDATER.emit("display_clear")

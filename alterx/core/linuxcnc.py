@@ -21,10 +21,11 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-__all__ = ['STAT','COMMAND','ERROR','INI','UPDATER','LINUXCNC','INFO']
+__all__ = ['STAT','COMMAND','ERROR','INI','UPDATER','LINUXCNC','INFO','PREF']
 
 from alterx.common.locale import _
 from alterx.common.compat import *
+from alterx.common.preferences import *
 from alterx.common import *
 from alterx.gui.qt_bindings import *
 
@@ -43,8 +44,12 @@ try:
 except Exception as e:
 	printError(_("Failed to import LinuxCNC module: '{}'",e))
 
+PREF = Preferences(INI.find("DISPLAY", "PREFERENCE_FILE_PATH"))
+
 class linuxcnc_info():
 	def __init__(self):
+		
+
 		if INI.find('TRAJ','LINEAR_UNITS') in ('mm','metric'):
 			self.machine_is_metric = True
 		else:
@@ -84,27 +89,27 @@ class linuxcnc_poll(QThread):
 								except Exception as e:
 									printError(_("Failed to execute '{}' handler {}: '{}'",s,h,e))
 
-			for key in self.custom_signals:
-				if self.custom_signals[key] != self.custom_signals_old[key] and key in self._observers:
-					self.custom_signals_old[key] = self.custom_signals[key]
+			for name in self.custom_signals:
+				if self.custom_signals[name] != self.custom_signals_old[name] and name in self._observers:
+					self.custom_signals_old[name] = self.custom_signals[name]
 
-					for h in self._observers[key]:
+					for h in self._observers[name]:
 						try:
-							h(self.custom_signals_old[key])
+							h(self.custom_signals_old[name])
 						except Exception as e:
-							printError(_("Failed to execute '{}' handler {}: '{}'",key,h,e))
+							printError(_("Failed to execute '{}' handler {}: '{}'",name,h,e))
 
 	#'Many to one' item check
-	def check(self,key): 
-		if key in self.custom_signals and self.custom_signals[key] != self.custom_signals_old[key]:
-			self.custom_signals_old[key] = self.custom_signals[key]
+	def check(self,name): 
+		if name in self.custom_signals and self.custom_signals[name] != self.custom_signals_old[name]:
+			self.custom_signals_old[name] = self.custom_signals[name]
 			return True
 		return False
 				
 	#Emit custom signal		
 	def emit(self, name, value=None):
 		if name in self.custom_signals:
-			if not value:
+			if value is None and self.custom_signals[name] == self.custom_signals_old[name]:
 				value = not self.custom_signals[name]
 			
 			self.custom_signals[name] = value
@@ -125,6 +130,13 @@ class linuxcnc_poll(QThread):
 			self._observers[name].append(handler)
 		else:
 			self._observers[name] = [handler]
+
+	def __getattr__(self, name):
+		try:
+			return self.custom_signals[name]
+		except Exception as e:
+			printError(_("Failed get atribute {}: {}",name,e))
+		return None
 
 	def __init__(self):
 		QThread.__init__(self)

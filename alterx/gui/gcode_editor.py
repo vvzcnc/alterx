@@ -272,7 +272,7 @@ class GcodeDisplay(EditorBase):
 		self.last_line = 0
 
 		UPDATER.connect("file", self.load_program)
-		UPDATER.connect("current_line", self.highlight_line)
+		UPDATER.connect("motion_line", self.highlight_line)
 
         def load_program(self, filename=None):
                 self.load_text(filename)
@@ -340,7 +340,7 @@ class GcodeWidget(QWidget):
 		self.editor.emit_file = self.emit_file
 
         def emit_percent(self, percent):
-                self.progress.setText(_('Progress: {}%',percent))
+                self.progress.setText(_('Progress: {:2.2f}%',percent))
 
         def emit_file(self, fn,ln):
                 self.filename.setText(_('Filename: {}',fn))

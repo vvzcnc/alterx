@@ -57,13 +57,10 @@ class PathViewer(QWidget):
         def __init__(self, parent=None):
                 QWidget.__init__(self, parent)
 
-		UPDATER.add("display-clear")
-		UPDATER.add("display-view-p")
-		UPDATER.add("display-view-x")
-		UPDATER.add("display-view-y")
-		UPDATER.add("display-view-z")
-		UPDATER.add("display-view-zp")
-		UPDATER.add("display-view-zm")
+		UPDATER.add("display_clear")
+		UPDATER.add("display_view")
+		UPDATER.add("display_zoomin")
+		UPDATER.add("display_zoomout")
 
                 self.glWidget = graphics_plot()
   
@@ -187,25 +184,16 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
                 except:
                         return
 
- 		if UPDATER.check("display-clear"):
+ 		if UPDATER.check("display_clear"):
 			self.clear_live_plotter()
 
-		if UPDATER.check("display-view-p"):
-		        self.set_view_p()
+		if UPDATER.check("display_view"):
+			getattr(self, 'set_view_%s' % UPDATER.display_view)()
 
-		if UPDATER.check("display-view-x"):
-		        self.set_view_x()
-
-		if UPDATER.check("display-view-y"):
-		        self.set_view_y()
-
-		if UPDATER.check("display-view-z"):
-		        self.set_view_z()
-
-		if UPDATER.check("display-view-zp"):
+		if UPDATER.check("display_zoomin"):
 			self.zoomin()
 
-		if UPDATER.check("display-view-zm"):
+		if UPDATER.check("display_zoomout"):
 			self.zoomout()
 
 		if self._current_file != s.file:

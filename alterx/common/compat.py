@@ -32,10 +32,11 @@ __all__ = [
 	"osIsWindows",
 	"osIsPosix",
 	"osIsLinux",
+	"ConfigParser",
 ]
 
 # Convenient operating system identifiers
-if os.name == "java": #@nocov
+if os.name == "java":
 	import java.lang.System
 	__osName = java.lang.System.getProperty("os.name").lower()
 	osIsWindows = __osName.startswith("windows")
@@ -66,3 +67,23 @@ if not hasattr(contextlib, "nullcontext"):
 		def __exit__(self, *unused):
 			pass
 	contextlib.nullcontext = _nullcontext
+
+# isPy3Compat is True, if the interpreter is Python 3 compatible.
+isPy3Compat = sys.version_info[0] == 3
+
+# isPy2Compat is True, if the interpreter is Python 2 compatible.
+isPy2Compat = sys.version_info[0] == 2
+
+# Python 2/3 helper selection
+def py23(py2, py3): 
+	if isPy3Compat:
+		return py3
+	if isPy2Compat:
+		return py2
+	raise Exception("Failed to detect Python version")
+
+if isPy2Compat:
+	from ConfigParser import ConfigParser
+else:
+	from configparser import ConfigParser
+

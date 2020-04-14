@@ -41,4 +41,4 @@ class func:
 
 	def execute(self):
 		printVerbose( _("Button set view Y clicked") )
-		UPDATER.emit("display-view-y")
+		UPDATER.emit("display_view",'y')
