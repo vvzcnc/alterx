@@ -26,7 +26,7 @@ from alterx.common.compat import *
 from alterx.common import *
 
 from alterx.gui.util import *
-from alterx.core.callback import CALLBACK as c
+from alterx.core.main import MAIN
 from alterx.core.linuxcnc import *
 
 from menus import *
@@ -68,6 +68,12 @@ class BottomWidget(QWidget):
 		last_btn = 0
 		for btn_number, name in enumerate(menu_names):
 			btn = BottomButton("btn_%s_%d"%(layout_name,btn_number))
+			layout.addWidget(btn)
+			last_btn = btn_number+1
+
+			if name is None:
+				btn.setText("")
+				continue
 
 			if "menus.%s.%s"%(layout_name,name) in sys.modules.keys():
 				menu = getattr(globals()[layout_name],name).module.func(btn)
@@ -78,8 +84,6 @@ class BottomWidget(QWidget):
 				return
 
 			btn.setup(menu)
-			layout.addWidget(btn)
-			last_btn = btn_number+1
 
 		for btn_number in range(last_btn,11):
 			btn = BottomButton("btn_%s_%d"%(layout_name,btn_number))
@@ -102,7 +106,7 @@ class SideButton(QPushButton):
 			self.setText("")
 
 		self.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
-		self.clicked.connect(partial(c.side_button_callback,self))
+		self.clicked.connect(partial(MAIN.side_button_callback,self))
 
 		
 		checkList = ["task_state","homed","task_mode"]

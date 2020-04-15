@@ -33,7 +33,6 @@ from alterx.gui.gcode_editor import *
 from alterx.gui.file_manager import *
 from alterx.gui.offset_viewer import *
 from alterx.gui.tool_viewer import *
-from alterx.core.callback import CALLBACK
 from alterx.core.main import MAIN
 
 class ManualWidget(QWidget):
@@ -76,7 +75,6 @@ class MainWindow(QWidget):
 		#Main layout
 		self.mainLayout = MainLayout(self)
 
-		CALLBACK.setup(MAIN)
 		MAIN.setup(self.mainLayout)
 
 		ON_STATE = [LINUXCNC.STATE_ON]
@@ -147,6 +145,7 @@ class MainWindow(QWidget):
 		self.mainLayout.centralWidgets.addWidget(editWidget)
 		editButtons = BottomWidget("edit")
 		self.mainLayout.bottomWidgets.addWidget(editButtons)
+		UPDATER.connect("edit_page",lambda s: MAIN.btn_edit_callback(editWidget,editButtons))
 
 		#Button HOMING
 		homingButtons = BottomWidget("homing")
@@ -167,4 +166,4 @@ class MainWindow(QWidget):
 		self.mainLayout.bottomWidgets.addWidget(toolButtons)
 		self.mainLayout.leftLayout.addWidget(SideButton("tool",toolWidget,toolButtons,MDI_STATE))
 
-		UPDATER.start()
+		UPDATER.start(100)

@@ -11,10 +11,12 @@ from . import from_line
 
 buttons_order = [
 	'run',
+	'from_line',
+	'step',
+	None,
 	'pause',
 	'stop',
-	'step',
+	None,
 	'opt_stops',
 	'opt_blocks',
-	'from_line',
 	]

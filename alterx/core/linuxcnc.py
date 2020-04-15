@@ -48,8 +48,6 @@ PREF = Preferences(INI.find("DISPLAY", "PREFERENCE_FILE_PATH"))
 
 class linuxcnc_info():
 	def __init__(self):
-		
-
 		if INI.find('TRAJ','LINEAR_UNITS') in ('mm','metric'):
 			self.machine_is_metric = True
 		else:
@@ -63,41 +61,40 @@ class linuxcnc_info():
 
 INFO = linuxcnc_info()
 
-class linuxcnc_poll(QThread):
+class linuxcnc_poll(QTimer):
 	#'One to many' item check
 	def run(self):
-		stat_old = {}
+		#while self.running == True:
+		#	time.sleep(0.1)
 
-		while self.running == True:
-			time.sleep(0.1)
+		try:
+			STAT.poll()
+			ERROR.poll()
+		except LINUXCNC.error, detail:
+			printError(_("Failed to poll LinuxCNC stat: '{}'",detail))
+			#continue
+			return
 
-			try:
-				STAT.poll()
-				ERROR.poll()
-			except LINUXCNC.error, detail:
-				printError(_("Failed to poll LinuxCNC stat: '{}'",detail))
-				continue
+		for s in dir(STAT):
+			if not s.startswith('_'):
+				if s not in self.stat_old or self.stat_old[s] != getattr(STAT,s):
+					self.stat_old[s] = getattr(STAT,s)
+					if s in self._observers:
+						for h in self._observers[s]:
+							try:
+								h(self.stat_old[s])
+							except Exception as e:
+								printError(_("Failed to execute '{}' handler {}: '{}'",s,h,e))
 
-			for s in dir(STAT):
-				if not s.startswith('_'):
-					if s not in stat_old or stat_old[s] != getattr(STAT,s):
-						stat_old[s] = getattr(STAT,s)
-						if s in self._observers:
-							for h in self._observers[s]:
-								try:
-									h(stat_old[s])
-								except Exception as e:
-									printError(_("Failed to execute '{}' handler {}: '{}'",s,h,e))
+		for name in self.custom_signals:
+			if self.custom_signals[name] != self.custom_signals_old[name] and name in self._observers:
+				self.custom_signals_old[name] = self.custom_signals[name]
 
-			for name in self.custom_signals:
-				if self.custom_signals[name] != self.custom_signals_old[name] and name in self._observers:
-					self.custom_signals_old[name] = self.custom_signals[name]
-
-					for h in self._observers[name]:
-						try:
-							h(self.custom_signals_old[name])
-						except Exception as e:
-							printError(_("Failed to execute '{}' handler {}: '{}'",name,h,e))
+				for h in self._observers[name]:
+					try:
+						h(self.custom_signals_old[name])
+					except Exception as e:
+						printError(_("Failed to execute '{}' handler {}: '{}'",name,h,e))
 
 	#'Many to one' item check
 	def check(self,name): 
@@ -114,7 +111,7 @@ class linuxcnc_poll(QThread):
 			
 			self.custom_signals[name] = value
 		else:
-			printError(_("Signal '{}' no exist",name))
+			printError(_("Failed emit signal. Signal '{}' no exist",name))
 
 	#Create custom signal in database
 	def add(self,name,value=False):
@@ -122,7 +119,7 @@ class linuxcnc_poll(QThread):
 			self.custom_signals[name] = value
 			self.custom_signals_old[name] = value
 		else:
-			printError(_("Signal '{}' already exist",name))
+			printError(_("Failed add signal. Signal '{}' already exist",name))
 
 	#Add signal to 'one to many' database
 	def connect(self,name,handler):
@@ -139,14 +136,16 @@ class linuxcnc_poll(QThread):
 		return None
 
 	def __init__(self):
-		QThread.__init__(self)
-		self.running = True
+		QTimer.__init__(self)
+		self.timeout.connect(self.run)
+		#self.running = True
+		self.stat_old = {}
 		self._observers = {}
 		self.custom_signals = {}
 		self.custom_signals_old = {}
 		
 	def __del__(self):
-		self.running = False
+		#self.running = False
 		self.wait()
 
 UPDATER = linuxcnc_poll()

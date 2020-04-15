@@ -1,54 +1,44 @@
 #!/usr/bin/env python
-# -*- coding:UTF-8 -*-
+# -*- coding:UTF-8 -*-# -*- coding: utf-8 -*-
+#
+# AlterX GUI - geditor save
+#
+# Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
 
-import time,os
+from __future__ import division, absolute_import, print_function, unicode_literals
 
-from qtvcp import logger
-_logger = logger.getLogger(__name__)
-
-from PyQt5 import QtCore, QtWidgets,QtGui
+from alterx.common.locale import _
+from alterx.common.compat import *
+from alterx.common import *
+from alterx.gui.util import *
+from alterx.core.linuxcnc import UPDATER
 
 class func:
-    def __init__(self,button,that):
-        self.that = that
-        self.button = button
+	def __init__(self,button):
+		dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        if os.path.isfile("%s/icon.png"%dir_path):
-            self.button.setStyleSheet("image:url('%s/icon.png')"%dir_path)
-        else:
-            self.button.setStyleSheet("color:black")
-            self.button.setText("")
+		if os.path.isfile("%s/icon.png"%dir_path):
+			button.setIcon(QIcon("%s/icon.png"%dir_path))
+			button.setIconSize(QSize(90,90))
+			button.setText("")
+		else:
+			button.setStyleSheet("color:black")
 
-    def execute(self):
-        _logger.info( "Button Save clicked" )
-        
-        if self.that.widgets.gcode_editor.editor._last_filename:
-            name = os.path.basename(self.that.widgets.gcode_editor.editor._last_filename)
-            path = os.path.dirname(self.that.widgets.gcode_editor.editor._last_filename)
-        else:
-            name = self.that.dialogs.getText("Enter value", "Enter filename:")
-            path = self.that.widgets.filemanager.model.filePath(self.that.widgets.filemanager.list.selectionModel().currentIndex())
-            path = os.path.dirname(path)
-
-        if name != None and name != "":
-
-            if path == None or path == "":
-                path = self.that.widgets.filemanager.default_path
-
-            source = self.that.widgets.gcode_editor.editor.text()
-            if len(name.split('.'))<2:
-                name = name + '.ngc'
-
-            try:
-                outfile = open("%s/%s"%(path,name),'w')
-                outfile.write(source)
-            except Exception as e:
-                _logger.error( "Save file error: %s"%e )
-            finally:
-                outfile.close()
-
-            _logger.error( "path file error: %s"%path )
-            _logger.error( "name file error: %s"%name )
-            self.that._warning_msg("Saved to:%s/%s"%(" "+path,name+" "))
-
+	def execute(self):
+		printVerbose( _("Button geditor save clicked") )
+		UPDATER.emit("geditor_save")

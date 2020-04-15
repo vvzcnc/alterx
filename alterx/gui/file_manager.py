@@ -32,8 +32,11 @@ class FileManager(QWidget):
         def __init__(self, parent=None):
                 QWidget.__init__(self,parent)
 
-                self.default_path = (os.path.join(os.path.expanduser('~'), 'linuxcnc/nc_files/examples'))
-                self.user_path = (os.path.join('/media'))
+		UPDATER.add("fileman_current_path")
+
+                self.default_path = os.path.expanduser(INI.find("DISPLAY","PROGRAM_PREFIX") or "~/linuxcnc/nc_files/")
+                self.user_path = os.path.expanduser(INI.find("DISPLAY","JUMP_TO") or "~/")
+
                 self.currentPath = None
 
                 self.setGeometry(10, 10, 640, 480)
@@ -57,21 +60,7 @@ class FileManager(QWidget):
                 self.cb.addItems(sorted({'*.ngc','*.py','*'}))
                 #self.cb.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
 
-                self.button = QPushButton()
-                self.button.setText('Media')
-                self.button.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
-                self.button.setToolTip('Jump to Media directory')
-                self.button.clicked.connect(self.onMediaClicked)
-
-                self.button2 = QPushButton()
-                self.button2.setText('User')
-                self.button2.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
-                self.button2.setToolTip('Jump to linuxcnc directory')
-                self.button2.clicked.connect(self.onUserClicked)
-
                 hbox = QHBoxLayout()
-                hbox.addWidget(self.button)
-                hbox.addWidget(self.button2)
                 hbox.addWidget(self.cb)
 
                 windowLayout = QVBoxLayout()
@@ -79,8 +68,34 @@ class FileManager(QWidget):
                 windowLayout.addLayout(hbox)
                 self.setLayout(windowLayout)
 
+		UPDATER.add("fileman_prev")
+		UPDATER.add("fileman_next")
+		UPDATER.add("fileman_select")
+		UPDATER.add("fileman_delete")
+		UPDATER.add("fileman_home")
+		UPDATER.add("fileman_jump")
+
+		UPDATER.connect("fileman_prev",lambda s: self.up())
+		UPDATER.connect("fileman_next",lambda s: self.down())
+		UPDATER.connect("fileman_select",lambda s: self.load())
+		UPDATER.connect("fileman_delete",lambda s: self.deleteSelected())
+		UPDATER.connect("fileman_home",lambda s: self.updateDirectoryView(self.default_path))
+		UPDATER.connect("fileman_jump",lambda s: self.updateDirectoryView(self.user_path))
+
+        def deleteSelected(self):
+		row = self.list.selectionModel().currentIndex()
+		dir_path = self.model.filePath(row)
+		try:
+			if os.path.isfile(dir_path):
+				os.remove(dir_path)
+			else:
+				os.rmdir(dir_path)
+		except Exception as e:
+			printError(_("Failed to delete path {}: {}",dir_path,e))
+
         def updateDirectoryView(self, path):
                 self.list.setRootIndex(self.model.setRootPath(path))
+		UPDATER.emit("fileman_current_path",path)
 
         def filterChanged(self, text):
                 self.model.setNameFilters([text])
@@ -93,12 +108,6 @@ class FileManager(QWidget):
                         return
                 root_index = self.model.setRootPath(dir_path)
                 self.list.setRootIndex(root_index)
-
-        def onMediaClicked(self):
-                self.updateDirectoryView(self.user_path)
-
-        def onUserClicked(self):
-                self.updateDirectoryView(self.default_path)
 
         def select_row(self, style):
                 style = style.lower()

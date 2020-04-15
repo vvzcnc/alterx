@@ -250,7 +250,7 @@ class EditorBase(QsciScintilla):
                 self.setModified(False)
 
         def save_text(self):
-                with open(self.filepath + 'text', "w") as text_file:
+                with open(self.filepath, "w") as text_file:
                         text_file.write(self.text())
 
         def replace_text(self, text):
@@ -355,10 +355,66 @@ class GcodeEditor(QWidget):
 
                 lay = QVBoxLayout()
                 lay.setContentsMargins(0,0,0,0)
-                self.setLayout(lay)
 
                 self.editor = GcodeDisplay(self)
                 self.editor.setReadOnly(False)
                 self.editor.setModified(False)
-
                 lay.addWidget(self.editor)
+
+		self.filename = QLabel(_("Filename: "))
+		lay.addWidget(self.filename)
+
+		hlay = QHBoxLayout()
+		lay.addLayout(hlay)
+
+		self.search = ""
+		self.replace = ""
+
+		self.search_label = QLabel(_("Search: {}",self.search))
+		hlay.addWidget(self.search_label)
+		self.replace_label = QLabel(_("Replace: {}",self.replace))
+		hlay.addWidget(self.replace_label)
+
+                self.setLayout(lay)		
+
+		self.editor.emit_file = self.emit_file
+
+		UPDATER.add("geditor_new")
+		UPDATER.add("geditor_save")
+		UPDATER.add("geditor_undo")
+		UPDATER.add("geditor_redo")
+		UPDATER.add("geditor_search")
+		UPDATER.add("geditor_replace")
+		UPDATER.add("geditor_set_search")
+		UPDATER.add("geditor_set_replace")
+
+		UPDATER.connect("geditor_save",self.save_file)
+		UPDATER.connect("geditor_new",lambda s:self.new_file())
+		UPDATER.connect("geditor_undo",lambda s:self.editor.undo())
+		UPDATER.connect("geditor_redo",lambda s:self.editor.redo())
+		UPDATER.connect("geditor_search",lambda s:self.editor.search_next())
+		UPDATER.connect("geditor_replace",lambda s:self.editor.replace_text(self.replace))
+		UPDATER.connect("geditor_set_search",self.set_search)
+		UPDATER.connect("geditor_set_replace",self.set_replace)
+		
+	def save_file(self,path):
+		if type(path) is not bool:
+			self.editor.filepath = path
+		self.editor.save_text()
+
+	def new_file(self):
+		self.editor.filepath = None
+		self.editor.new_text()
+		self.filename.setText(_('Filename: {}',""))
+
+	def set_search(self,text):
+		self.search = text
+		self.search_label.setText(_("Search: {}",self.search))
+		self.editor.search(self.search)
+
+	def set_replace(self,text):
+		self.replace = text
+		self.replace_label.setText(_("Replace: {}",self.replace))
+
+        def emit_file(self, fn,ln):
+                self.filename.setText(_('Filename: {}',fn))

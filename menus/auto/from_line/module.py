@@ -54,15 +54,14 @@ class func:
 			self.edit.setText('')
 
 	def execute(self):
-		printVerbose(_("Button Run from line clicked"))
 		if self.edit.isVisible():
 			self.edit.setVisible(False)
 			printVerbose(_("Run program from line: {}",self.edit.text()))
 			if self.edit.text() != "":
-				print(int(self.edit.text()))
 				COMMAND.auto(LINUXCNC.AUTO_RUN, int(self.edit.text()))
 				COMMAND.auto(LINUXCNC.AUTO_PAUSE)
 		else:
+			printVerbose(_("Button Run from line clicked"))
 			self.edit.setVisible(True)
 			self.edit.setFocus()
 

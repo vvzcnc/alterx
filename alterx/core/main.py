@@ -32,11 +32,14 @@ class Main():
 #------ Initialize ------#
 	def setup(self, parent):
 		self.p = parent
+
 		UPDATER.connect("task_state", self.task_state_handler)
 		UPDATER.connect("task_mode", self.task_mode_handler)
 		UPDATER.connect("homed", self.homed_handler)
 		UPDATER.connect("file", self.load_program_handler)
 		UPDATER.connect("program_units", self.change_units_handler)
+
+		UPDATER.add("edit_page")
 
 #------ Global handlers ------#
 	def task_state_handler(self,data):
@@ -55,6 +58,38 @@ class Main():
                 printInfo(_('Units: {}',data))
 
 #------ Button callbacks ------#
+	def side_button_callback(self, button):
+		if button.label == "abort":
+			self.btn_abort_callback(button)
+		elif button.label == "equipment":
+			self.btn_equipment_callback(button)
+		elif button.label == "load":
+			self.btn_load_callback(button)
+		elif button.label == "homing":
+			self.btn_homing_callback(button)
+		elif button.label == "offset":
+			self.btn_offset_callback(button)
+		elif button.label == "tool":
+			self.btn_tools_callback(button)
+		elif button.label == "manual":
+			self.btn_manual_callback(button)
+		elif button.label == "mdi":
+			self.btn_mdi_callback(button)
+		elif button.label == "auto":
+			self.btn_auto_callback(button)
+		elif button.label == "settings":
+			self.btn_settings_callback(button)
+		elif button.label == "tabs":
+			self.btn_tabs_callback(button)
+		elif button.label == "machine":
+			self.btn_machine_callback(button)
+		else:
+			printError(_("Unknown button"))
+
+	def btn_edit_callback(self,central,bottom):
+		self.p.centralWidgets.setCurrentWidget(central)
+		self.p.bottomWidgets.setCurrentWidget(bottom)
+
 	def btn_abort_callback(self,button):
 		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
 		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)

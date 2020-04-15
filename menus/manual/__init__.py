@@ -8,7 +8,6 @@ from . import jog_0001
 from . import jog_act
 from . import jog_cont
 from . import jog_enc
-from . import space
 from . import exit
 
 buttons_order = [
@@ -16,11 +15,11 @@ buttons_order = [
 	'jog_01',
 	'jog_001',
 	'jog_0001',
-	'space',
+	None,
 	'jog_act',
 	'jog_cont',
 	'jog_enc',
-	'space',
-	'space',
+	None,
+	None,
 	'exit',
 	]
