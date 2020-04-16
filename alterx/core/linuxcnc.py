@@ -21,15 +21,13 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-__all__ = ['STAT','COMMAND','ERROR','INI','UPDATER','LINUXCNC','INFO','PREF']
+__all__ = ['STAT','COMMAND','ERROR','INI','UPDATER','LINUXCNC','INFO']
 
 from alterx.common.locale import _
 from alterx.common.compat import *
-from alterx.common.preferences import *
 from alterx.common import *
 from alterx.gui.qt_bindings import *
 
-import sys
 import time
 
 try:
@@ -44,8 +42,6 @@ try:
 except Exception as e:
 	printError(_("Failed to import LinuxCNC module: '{}'",e))
 
-PREF = Preferences(INI.find("DISPLAY", "PREFERENCE_FILE_PATH"))
-
 class linuxcnc_info():
 	def __init__(self):
 		if INI.find('TRAJ','LINEAR_UNITS') in ('mm','metric'):
@@ -58,6 +54,17 @@ class linuxcnc_info():
 		self.machine_is_lathe = True if INI.find('DISPLAY','LATHE') else False
 
 		self.get_metric = lambda: False if STAT.program_units == 1 else True
+
+		self.dro_format = "{:.3f}"
+		self.linear_units = _("mm")
+		self.angular_units = _("deg")
+		self.spindle_units = _("rev")
+		self.spindle_per_units =  _("min")
+		self.feed_per_units =  _("min")
+		self.angular_per_units =  _("min")
+
+	def get_tool_info(self,tool):
+		pass
 
 INFO = linuxcnc_info()
 

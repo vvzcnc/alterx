@@ -52,9 +52,9 @@ class func:
                                 self.button.setStyleSheet("color:black")
 
         def execute(self):
-                if UPDATER.jog_activate:
-                        printInfo( _("Button JOG incremental clicked" ))
+                if UPDATER.jog_continuous:
+                        printVerbose( _("Button JOG incremental clicked" ))
                         UPDATER.emit("jog_continuous",False)
                 else:
-                        printInfo( _("Button JOG continuous clicked" ))
+                        printVerbose( _("Button JOG continuous clicked" ))
                         UPDATER.emit("jog_continuous",True)

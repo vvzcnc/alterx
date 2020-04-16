@@ -21,45 +21,35 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
+__all__ = ['MainWindow']
+
 from alterx.common.locale import _
 from alterx.common.compat import *
 from alterx.common import *
 
+from alterx.core.main import MAIN
+from alterx.core.linuxcnc import *
+
 from alterx.gui.util import *
-from alterx.gui.widgets import *
+from alterx.gui.main_screen import *
 from alterx.gui.path_viewer_qt import *
 from alterx.gui.mdi_history import *
 from alterx.gui.gcode_editor import *
 from alterx.gui.file_manager import *
 from alterx.gui.offset_viewer import *
 from alterx.gui.tool_viewer import *
-from alterx.core.main import MAIN
-
-class ManualWidget(QWidget):
-	def __init__(self, parent=None):
-		QWidget.__init__(self, parent)
-		dro_layout = QVBoxLayout()
-		for i, axis in enumerate("xyza"):
-			dro_layout.addLayout(DROLayout(i,axis))
-		dro_layout.addStretch()
-		self.setLayout(dro_layout)
-
-class SettingsWidget(QWidget):
-	def __init__(self, parent=None):
-		QWidget.__init__(self, parent)
-
-class TabsWidget(QWidget):
-	def __init__(self, parent=None):
-		QWidget.__init__(self, parent)
+from alterx.gui.dro_viewer import *
+from alterx.gui.tabs_viewer import *
+from alterx.gui.settings_viewer import *
 
 class MainWindow(QWidget):
-	TITLE = _("Alterx v{}",VERSION_STRING)
+	TITLE = _("AlterX v{}",VERSION_STRING)
 
 	@classmethod
 	def start(cls):
 		QApplication.setOrganizationName("alterx")
 		QApplication.setOrganizationDomain(ALTERX_HOME_DOMAIN)
-		QApplication.setApplicationName("alterx-gui")
+		QApplication.setApplicationName("AlterX")
 		QApplication.setApplicationVersion(VERSION_STRING)
 
 		mainwnd = cls()
@@ -82,88 +72,90 @@ class MainWindow(QWidget):
 		MDI_STATE = HOMED_STATE + [LINUXCNC.MODE_MDI]
 		AUTO_STATE = HOMED_STATE + [LINUXCNC.MODE_AUTO]
 
-
 		#Page 0 - Manual
-		manualWidget = ManualWidget()
+		manualWidget = DROWidget()
 		self.mainLayout.centralWidgets.addWidget(manualWidget)
 		manualButtons = BottomWidget("manual")
 		self.mainLayout.bottomWidgets.addWidget(manualButtons)
-		self.mainLayout.rightLayout.addWidget(SideButton("manual",manualWidget,manualButtons,ON_STATE))
+		self.mainLayout.rightLayout.addWidget(SideButton("manual",manualWidget,manualButtons,ON_STATE,[LINUXCNC.MODE_MANUAL]))
+		MAIN.manual_screen = [manualWidget,manualButtons]
 
 		#Page 1 - MDI
 		mdiWidget = MDIHistory()
 		self.mainLayout.centralWidgets.addWidget(mdiWidget)
 		mdiButtons = BottomWidget("mdi")
 		self.mainLayout.bottomWidgets.addWidget(mdiButtons)
-		self.mainLayout.rightLayout.addWidget(SideButton("mdi",mdiWidget,mdiButtons,HOMED_STATE))
+		self.mainLayout.rightLayout.addWidget(SideButton("mdi",mdiWidget,mdiButtons,HOMED_STATE,[LINUXCNC.MODE_MDI]))
+		MAIN.mdi_screen = [mdiWidget,mdiButtons]
 
 		#Page 2 - Auto
 		autoWidget = GcodeWidget()
 		self.mainLayout.centralWidgets.addWidget(autoWidget)
 		autoButtons = BottomWidget("auto")
 		self.mainLayout.bottomWidgets.addWidget(autoButtons)
-		self.mainLayout.rightLayout.addWidget(SideButton("auto",autoWidget,autoButtons,HOMED_STATE))
+		self.mainLayout.rightLayout.addWidget(SideButton("auto",autoWidget,autoButtons,HOMED_STATE,[LINUXCNC.MODE_AUTO]))
+		MAIN.auto_screen = [autoWidget,autoButtons]
 
 		#Page 3 - Settings
 		settingsWidget = SettingsWidget()
 		self.mainLayout.centralWidgets.addWidget(settingsWidget)
 		settingsButtons = BottomWidget("settings")
-		self.mainLayout.bottomWidgets.addWidget(settingsButtons)
-		self.mainLayout.rightLayout.addWidget(SideButton("settings",settingsWidget,settingsButtons))
+		i=self.mainLayout.bottomWidgets.addWidget(settingsButtons)
+		self.mainLayout.rightLayout.addWidget(SideButton("settings",settingsWidget,settingsButtons,[],[None,i]))
 
 		#Page 4 - Tabs
 		tabsWidget = TabsWidget()
 		self.mainLayout.centralWidgets.addWidget(tabsWidget)
 		tabsButtons = BottomWidget("tabs")
-		self.mainLayout.bottomWidgets.addWidget(tabsButtons)
-		self.mainLayout.rightLayout.addWidget(SideButton("tabs",tabsWidget,tabsButtons,ON_STATE))
+		i=self.mainLayout.bottomWidgets.addWidget(tabsButtons)
+		self.mainLayout.rightLayout.addWidget(SideButton("tabs",tabsWidget,tabsButtons,ON_STATE,[None,i]))
 
 		#Button MACHINE
-		self.mainLayout.rightLayout.addWidget(SideButton("machine",manualWidget,manualButtons))
+		self.mainLayout.rightLayout.addWidget(SideButton("machine",manualWidget,manualButtons,[],[None,None,LINUXCNC.STATE_ON]))
 
 		#Page 5 - Display
 		displayWidget = PathViewer()
 		self.mainLayout.centralWidgets.addWidget(displayWidget)
 		displayButtons = BottomWidget("display")
-		self.mainLayout.bottomWidgets.addWidget(displayButtons)
-		self.mainLayout.leftLayout.addWidget(SideButton("abort",displayWidget,displayButtons,ON_STATE))
+		i=self.mainLayout.bottomWidgets.addWidget(displayButtons)
+		self.mainLayout.leftLayout.addWidget(SideButton("abort",displayWidget,displayButtons,ON_STATE,[None,i]))
 
 		#Button EQUIPMENT
 		equipmentButtons = BottomWidget("equipment")
-		self.mainLayout.bottomWidgets.addWidget(equipmentButtons)
-		self.mainLayout.leftLayout.addWidget(SideButton("equipment",None,equipmentButtons,ON_STATE))
+		i=self.mainLayout.bottomWidgets.addWidget(equipmentButtons)
+		self.mainLayout.leftLayout.addWidget(SideButton("equipment",None,equipmentButtons,ON_STATE,[None,i]))
 
 		#Page 6 - Load
 		loadWidget = FileManager()
 		self.mainLayout.centralWidgets.addWidget(loadWidget)
 		loadButtons = BottomWidget("load")
-		self.mainLayout.bottomWidgets.addWidget(loadButtons)
-		self.mainLayout.leftLayout.addWidget(SideButton("load",loadWidget,loadButtons,AUTO_STATE))
+		i=self.mainLayout.bottomWidgets.addWidget(loadButtons)
+		self.mainLayout.leftLayout.addWidget(SideButton("load",loadWidget,loadButtons,AUTO_STATE,[None,i]))
 
 		#Page 7 - Edit
 		editWidget = GcodeEditor()
 		self.mainLayout.centralWidgets.addWidget(editWidget)
 		editButtons = BottomWidget("edit")
-		self.mainLayout.bottomWidgets.addWidget(editButtons)
-		UPDATER.connect("edit_page",lambda s: MAIN.btn_edit_callback(editWidget,editButtons))
+		i=self.mainLayout.bottomWidgets.addWidget(editButtons)
+		UPDATER.connect("edit_page",lambda s: MAIN.btn_edit_callback(editWidget,editButtons,[],[None,i]))
 
 		#Button HOMING
 		homingButtons = BottomWidget("homing")
-		self.mainLayout.bottomWidgets.addWidget(homingButtons)
-		self.mainLayout.leftLayout.addWidget(SideButton("homing",None,homingButtons,ON_STATE+[None,LINUXCNC.MODE_MANUAL]))
+		i=self.mainLayout.bottomWidgets.addWidget(homingButtons)
+		self.mainLayout.leftLayout.addWidget(SideButton("homing",None,homingButtons,ON_STATE+[None,LINUXCNC.MODE_MANUAL],[None,i]))
 
 		#Page 8 - Offset
 		offsetWidget = OriginOffsetView()
 		self.mainLayout.centralWidgets.addWidget(offsetWidget)
 		offsetButtons = BottomWidget("offset")
-		self.mainLayout.bottomWidgets.addWidget(offsetButtons)
-		self.mainLayout.leftLayout.addWidget(SideButton("offset",offsetWidget,offsetButtons,MDI_STATE))
+		i=self.mainLayout.bottomWidgets.addWidget(offsetButtons)
+		self.mainLayout.leftLayout.addWidget(SideButton("offset",offsetWidget,offsetButtons,MDI_STATE,[None,i]))
 
 		#Page 9 - Tool
 		toolWidget = ToolOffsetView()
 		self.mainLayout.centralWidgets.addWidget(toolWidget)
 		toolButtons = BottomWidget("tool")
-		self.mainLayout.bottomWidgets.addWidget(toolButtons)
-		self.mainLayout.leftLayout.addWidget(SideButton("tool",toolWidget,toolButtons,MDI_STATE))
+		i=self.mainLayout.bottomWidgets.addWidget(toolButtons)
+		self.mainLayout.leftLayout.addWidget(SideButton("tool",toolWidget,toolButtons,MDI_STATE,[None,i]))
 
 		UPDATER.start(100)

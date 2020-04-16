@@ -23,7 +23,6 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from alterx.common.locale import _
 from alterx.gui.qt_bindings import *
-from alterx.common.blocker import *
 
 import pkg_resources
 import sys
@@ -67,7 +66,7 @@ def handleFatalException(parentWidget=None):
 		_("<pre>"
 		"A fatal exception occurred:\n\n"
 		"{}\n\n"
-		"Awlsim will be terminated."
+		"AlterX will be terminated."
 		"</pre>" , text))
 	sys.exit(1)
 
@@ -157,30 +156,3 @@ class MessageBox(QDialog):
 		res = dlg.exec_()
 		dlg.deleteLater()
 		return res
-
-	alterxErrorBlocked = Blocker()
-
-	@classmethod
-	def handleAwlSimError(cls, parent, description, exception, **kwargs):
-		if exception.getSeenByUser() or cls.alterxErrorBlocked:
-			return cls.Accepted
-		exception.setSeenByUser()
-		def maketext(verbose):
-			text = _("An exception occurred:")
-			if description:
-				text += "\n"
-				text += "  " + description + "."
-			text += "\n\n"
-			text += exception.getReport(verbose)
-			return text
-		return cls.error(parent=parent,
-				 text=maketext(False),
-				 verboseText=maketext(True),
-				 **kwargs)
-
-	@classmethod
-	def handleAwlParserError(cls, parent, exception, **kwargs):
-		return cls.handleAwlSimError(parent=parent,
-					     description=None,
-					     exception=exception,
-					     **kwargs)

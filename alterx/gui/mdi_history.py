@@ -21,6 +21,8 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
+__all__ = ['MDIHistory']
+
 from alterx.common.locale import _
 from alterx.common.compat import *
 from alterx.common import *
@@ -32,6 +34,7 @@ class MDI(QLineEdit):
         def __init__(self, parent=None):
                 QLineEdit.__init__(self,parent)
 		self.mdi_history_file = INI.find('DISPLAY','MDI_HISTORY_FILE') or '.mdi_history'
+		self.returnPressed.connect(lambda: self.submit())
 
         def submit(self):
                 text = str(self.text()).rstrip()

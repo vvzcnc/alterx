@@ -21,6 +21,8 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
+__all__ = ['ToolOffsetView']
+
 from alterx.common.locale import _
 from alterx.common.compat import *
 from alterx.common import *
@@ -68,6 +70,17 @@ class ToolOffsetView(QTableView):
                 UPDATER.connect('program_units', self.metricMode)
                 UPDATER.connect('tool_in_spindle', self.currentTool)
 
+		INFO.get_tool_info = self.get_tool_info
+
+	def get_tool_info(self,tool):
+		try:	
+			for t in self.tablemodel.arraydata:
+				if t[1] == tool:
+					return t
+			return [None,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'No Comment']
+		except Exception as e:
+			printError(_("Failed to get tool info: {}",e))
+
         def currentTool(self, data):
                 self.current_tool = data
 
@@ -78,13 +91,17 @@ class ToolOffsetView(QTableView):
 
         def createTable(self):
                 # create blank taple array
-		tabledata = [[QCheckBox(),0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'No Tool']]
+		tabledata = [[QCheckBox(),0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'No Comment']]
 
 		# create the view
 		self.setSelectionMode(QAbstractItemView.SingleSelection)
 
                 # set the table model
-                header = ['Select','tool','pocket','X','X Wear', 'Y', 'Y Wear', 'Z', 'Z Wear', 'A', 'B', 'C', 'U', 'V', 'W', 'Diameter', 'Front Angle', 'Back Angle','Orientation','Comment']
+                header = [_('Select'),_('Tool'),_('Pocket'),
+			_('X'),_('X Wear'), _('Y'), _('Y Wear'), _('Z'), _('Z Wear'), 
+			_('A'), _('B'), _('C'), _('U'), _('V'), _('W'), 
+			_('Diameter'), _('Front Angle'), _('Back Angle'),
+			_('Orientation'),_('Comment')]
                 vheader = []
                 self.tablemodel = ToolModel(tabledata, header, vheader, self)
                 self.setModel(self.tablemodel)
@@ -123,7 +140,7 @@ class ToolOffsetView(QTableView):
 		data = self.reload_tool_file()
 
 		if data in (None, []):
-	                data = [[QCheckBox(),0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'No Tool']]
+	                data = [[QCheckBox(),0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'No Comment']]
 		else:		
 			data = self.convert_to_wear_type(data)
 
@@ -209,7 +226,7 @@ class ToolOffsetView(QTableView):
                 if toolinfo_flag:
                         self.toolinfo = temp
                 else:
-                        self.toolinfo = [0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,'No Tool']
+                        self.toolinfo = [0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,'No Comment']
                 return (tool_model, wear_model)
 
         def save_tool_file(self, new_model, delete=()):
@@ -261,7 +278,7 @@ class ToolOffsetView(QTableView):
                 tool_num_list = {}
                 full_tool_list = []
                 for rnum, row in enumerate(maintool):
-                        new_line = [False, 0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'No Tool']
+                        new_line = [False, 0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'No Comment']
                         valuesInRow = [ value for value in row ]
                         for cnum,i in enumerate(valuesInRow):
                                 if cnum == 0:

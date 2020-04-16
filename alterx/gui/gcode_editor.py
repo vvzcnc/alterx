@@ -21,6 +21,8 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
+__all__ = ['GcodeWidget','GcodeEditor']
+
 from alterx.common.locale import _
 from alterx.common.compat import *
 from alterx.common import *

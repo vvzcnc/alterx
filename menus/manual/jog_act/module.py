@@ -53,8 +53,8 @@ class func:
 
         def execute(self):
                 if not UPDATER.jog_activate and STAT.task_state == LINUXCNC.STATE_ON:
-                        printInfo( _("Button JOG activate clicked" ))
+                        printVerbose( _("Button JOG activate clicked" ))
                         UPDATER.emit("jog_activate",True)
                 else:
-                        printInfo( _("Button JOG disactivate clicked" ))
+                        printVerbose( _("Button JOG disactivate clicked" ))
                         UPDATER.emit("jog_activate",False)

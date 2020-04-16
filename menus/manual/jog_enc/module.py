@@ -52,9 +52,9 @@ class func:
                                 self.button.setStyleSheet("color:black")
 
         def execute(self):
-                if UPDATER.jog_activate:
-                        printInfo( _("Button JOG joystick clicked" ))
+                if UPDATER.jog_encoder:
+                        printVerbose( _("Button JOG joystick clicked" ))
                         UPDATER.emit("jog_encoder",False)
                 else:
-                        printInfo( _("Button JOG encoder clicked" ))
+                        printVerbose( _("Button JOG encoder clicked" ))
                         UPDATER.emit("jog_encoder",True)

@@ -25,6 +25,9 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from alterx.common.compat import *
 from alterx.common.util import *
 from alterx.common.locale import _
+
+from alterx.gui.util import *
+
 import getopt
 
 def usage():
@@ -78,7 +81,7 @@ _.setup(opt_lang)
 
 printVerbose(_("Loglevel: {}",opt_loglevel))
 
-from alterx.gui.mainwindow import *
+from alterx.gui.main_window import *
 
 qapp = QApplication(sys.argv)
 

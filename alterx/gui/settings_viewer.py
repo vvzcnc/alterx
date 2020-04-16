@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# AlterX GUI - thread blocker
+# AlterX GUI - settings widget
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
@@ -21,34 +21,15 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
+__all__ = ['SettingsWidget']
+
+from alterx.common.locale import _
 from alterx.common.compat import *
+from alterx.common import *
 
+from alterx.gui.util import *
+from alterx.core.linuxcnc import *
 
-__all__ = [
-	"Blocker",
-]
-
-
-class Blocker(object):
-	"""'with'-statement based single threaded blocker.
-	This is _not_ a multi-thread lock."""
-
-	def __init__(self, initialCount = 0):
-		self.__count = initialCount
-		assert(self.__count >= 0)
-
-	def __enter__(self):
-		"""Enter the blocking context."""
-		assert(self.__count >= 0)
-		self.__count += 1
-
-	def __exit__(self, exc_type, exc_value, traceback):
-		"""Exit the blocking context."""
-		self.__count -= 1
-		assert(self.__count >= 0)
-
-	def __bool__(self):
-		"""Returns 'True', if the action is blocked."""
-		return self.__count > 0
-
-	__nonzero__ = __bool__ # Python 2 compat
+class SettingsWidget(QWidget):
+	def __init__(self, parent=None):
+		QWidget.__init__(self, parent)

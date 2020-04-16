@@ -27,6 +27,7 @@ from alterx.common.compat import *
 from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
+from alterx.core.main import PREF
 
 class func:
 	def __init__(self,button):
