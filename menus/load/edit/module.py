@@ -41,4 +41,4 @@ class func:
 
 	def execute(self):
 		printVerbose( _("Button edit page clicked") )
-		UPDATER.emit("edit_page")
+		UPDATER.emit("screen_edit")

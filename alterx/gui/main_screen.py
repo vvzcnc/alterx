@@ -93,29 +93,26 @@ class BottomWidget(QWidget):
 			layout.addWidget(btn)
 
 class SideButton(QPushButton):
-	def __init__(self, label, centralWidget, bottomWidget, checkDisable, checkToggle, parent=None,):
+	def __init__(self, label, checkDisable, checkToggle, parent=None,):
 		QPushButton.__init__(self, "btn_%s"%(label), parent)
-		self.centralWidget = centralWidget
-		self.botttomWidget = bottomWidget
 		self.label = label
 		self.checkDisable = checkDisable
 		self.checkToggle = checkToggle
 		self.active = False
 
 		self.set_active(self.active)
-		#self.setStyleSheet('QPushButton[active=true] {background-color: green;}')
+		self.setStyleSheet('QPushButton[active=true] {background-color: green;}')
 		self.setObjectName("btn_%s"%(label))
 		self.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
 
 		self.clicked.connect(partial(MAIN.side_button_callback,self))
 		
-		checkList = ["task_state","homed","task_mode"]
+		checkList = ["task_state","homed","task_mode","secondary_mode"]
 		self.checkState = [True,True,True]
 		for index,check in enumerate(checkDisable):
 			if check:
-				UPDATER.connect(checkList[index], lambda s,c=check,i=index: self.check_disable(True if s == c else False,i))
+				UPDATER.connect(checkList[index], lambda s,c=check,i=index: self.set_disable(True if s == c else False,i))
 
-		checkList = ["task_mode","secondary_mode","task_state"]
 		for index,check in enumerate(checkToggle):
 			if check:
 				UPDATER.connect(checkList[index], lambda s,c=check: self.set_active(True if s == c else False))
@@ -131,7 +128,7 @@ class SideButton(QPushButton):
 			self.setIconSize(QSize(90,90))
 			self.setText("")
 
-	def check_disable(self,state,index):
+	def set_disable(self,state,index):
 		self.checkState[index]=state
 		
 		if self.checkState == [True,True,True]:

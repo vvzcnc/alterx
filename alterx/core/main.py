@@ -31,15 +31,10 @@ from alterx.core.linuxcnc import *
 
 class Main():
 #------ Initialize ------#
-	def __init__(self):
-		UPDATER.add("edit_page")
+#	def __init__(self):
 
 	def setup(self, parent):
 		self.p = parent
-
-		self.manual_screen = [None,None]
-		self.mdi_screen = [None,None]
-		self.auto_screen = [None,None]
 
 		UPDATER.add('update_feed_labels')
 		UPDATER.add('feed_mode')
@@ -94,16 +89,13 @@ class Main():
 	def task_mode_handler(self,data):
 		if data == LINUXCNC.MODE_MANUAL:
 			mode = _("MANUAL")
-			self.p.centralWidgets.setCurrentWidget(self.manual_screen[0])
-			self.p.bottomWidgets.setCurrentWidget(self.manual_screen[1])
+			UPDATER.emit("screen_manual")
 		elif data == LINUXCNC.MODE_MDI:
 			mode = _("MDI")
-			self.p.centralWidgets.setCurrentWidget(self.mdi_screen[0])
-			self.p.bottomWidgets.setCurrentWidget(self.mdi_screen[1])
+			UPDATER.emit("screen_mdi")
 		elif data == LINUXCNC.MODE_AUTO:
 			mode = _("AUTO")
-			self.p.centralWidgets.setCurrentWidget(self.auto_screen[0])
-			self.p.bottomWidgets.setCurrentWidget(self.auto_screen[1])
+			UPDATER.emit("screen_auto")
 
 		printVerbose(_("LinuxCNC mode {}",mode))
 
@@ -112,8 +104,7 @@ class Main():
 
 	def load_program_handler(self,data):
 		if STAT.task_mode == LINUXCNC.MODE_AUTO:
-			self.p.centralWidgets.setCurrentWidget(self.auto_screen[0])
-			self.p.bottomWidgets.setCurrentWidget(self.auto_screen[1])
+			UPDATER.emit("screen_auto")
                 printInfo(_('Loaded: {}',data))
 
 	def change_units_handler(self,data):
@@ -128,6 +119,7 @@ class Main():
                 printInfo(_('Units: {}',INFO.linear_units))
 
 #------ Button callbacks ------#
+	
 	def side_button_callback(self, button):
 		if button.label == "abort":
 			self.btn_abort_callback(button)
@@ -140,7 +132,7 @@ class Main():
 		elif button.label == "offset":
 			self.btn_offset_callback(button)
 		elif button.label == "tool":
-			self.btn_tools_callback(button)
+			self.btn_tool_callback(button)
 		elif button.label == "manual":
 			self.btn_manual_callback(button)
 		elif button.label == "mdi":
@@ -156,59 +148,44 @@ class Main():
 		else:
 			printError(_("Unknown button"))
 
-	def btn_edit_callback(self,central,bottom):
-		self.p.centralWidgets.setCurrentWidget(central)
-		self.p.bottomWidgets.setCurrentWidget(bottom)
-
 	def btn_abort_callback(self,button):
-		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
-		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
+		UPDATER.emit("screen_display")
 
 	def btn_equipment_callback(self,button):
-		#self.p.centralWidgets.setCurrentWidget(button.centralWidget)
-		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
+		UPDATER.emit("screen_equipment")
 
 	def btn_load_callback(self,button):
-		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
-		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
+		UPDATER.emit("screen_load")
 
 	def btn_homing_callback(self,button):
-		#self.p.centralWidgets.setCurrentWidget(button.centralWidget)
-		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
+		UPDATER.emit("screen_homing")
 
 	def btn_offset_callback(self,button):
-		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
-		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
+		UPDATER.emit("screen_offset")
 
-	def btn_tools_callback(self,button):
-		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
-		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
+	def btn_tool_callback(self,button):
+		UPDATER.emit("screen_tool")
 
 	def btn_manual_callback(self,button):
 		COMMAND.mode(LINUXCNC.MODE_MANUAL)
 		if STAT.task_mode == LINUXCNC.MODE_MANUAL:
-			self.p.centralWidgets.setCurrentWidget(button.centralWidget)
-			self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
+			UPDATER.emit("screen_manual")
 
 	def btn_mdi_callback(self,button):
 		COMMAND.mode(LINUXCNC.MODE_MDI)
 		if STAT.task_mode == LINUXCNC.MODE_MDI:
-			self.p.centralWidgets.setCurrentWidget(button.centralWidget)
-			self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
+			UPDATER.emit("screen_mdi")
 
 	def btn_auto_callback(self,button):
 		COMMAND.mode(LINUXCNC.MODE_AUTO)
 		if STAT.task_mode == LINUXCNC.MODE_AUTO:
-			self.p.centralWidgets.setCurrentWidget(button.centralWidget)
-			self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
+			UPDATER.emit("screen_auto")
 
 	def btn_settings_callback(self,button):
-		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
-		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
+		UPDATER.emit("screen_settings")
 
 	def btn_tabs_callback(self,button):
-		self.p.centralWidgets.setCurrentWidget(button.centralWidget)
-		self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
+		UPDATER.emit("screen_tabs")
 
 	def btn_machine_callback(self,button):
 		COMMAND.state(LINUXCNC.STATE_ESTOP_RESET)
@@ -217,9 +194,6 @@ class Main():
 			COMMAND.state(LINUXCNC.STATE_OFF)
 		else:
 			COMMAND.state(LINUXCNC.STATE_ON)
-
-		#self.p.centralWidgets.setCurrentWidget(button.centralWidget)
-		#self.p.bottomWidgets.setCurrentWidget(button.botttomWidget)
 
 MAIN = Main()
 
