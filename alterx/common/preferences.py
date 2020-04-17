@@ -20,11 +20,13 @@
 #
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-__all__ = ['Preferences']
+__all__ = ['PREF']
 
 from alterx.common.locale import _
 from alterx.common.compat import *
 from alterx.common import *
+
+from alterx.core.linuxcnc import INI
 
 class Preferences(ConfigParser):
 	def __init__(self, path = None):
@@ -58,7 +60,7 @@ class Preferences(ConfigParser):
             except Exception, detail:
                 printError(_("Get preference error: {} ",detail))
 
-                self.putpref("DEFAULT", option, str(default))
+                self.putpref(option,default)
 		
 	        if type in(bool, float, int):
                     o = type(default)
@@ -70,3 +72,5 @@ class Preferences(ConfigParser):
 		self.set("DEFAULT", option, str(value))
 		with open(self.fn, "w") as config_file:
 			self.write(config_file)
+
+PREF = Preferences(INI.find("DISPLAY", "PREFERENCE_FILE_PATH"))

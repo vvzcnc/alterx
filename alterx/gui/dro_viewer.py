@@ -36,7 +36,8 @@ class DROLayout(QHBoxLayout):
 		self.num = num
 		self.name = name
 
-		self.drolabel_name = QLabel(name)
+		self.drolabel_name = QLabel(name.upper())
+		self.drolabel_name.setObjectName("lbl_dro_name_%s"%(name))
 		self.addWidget(self.drolabel_name,1)
 
 		v1 = QVBoxLayout()

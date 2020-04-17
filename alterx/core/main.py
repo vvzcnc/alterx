@@ -21,7 +21,7 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-__all__ = ['MAIN','PREF']
+__all__ = ['MAIN']
 
 from alterx.common.locale import _
 from alterx.common.compat import *
@@ -31,11 +31,7 @@ from alterx.core.linuxcnc import *
 
 class Main():
 #------ Initialize ------#
-#	def __init__(self):
-
-	def setup(self, parent):
-		self.p = parent
-
+	def __init__(self):
 		UPDATER.add('update_feed_labels')
 		UPDATER.add('feed_mode')
 		UPDATER.add('diameter_multiplier',1)
@@ -196,5 +192,3 @@ class Main():
 			COMMAND.state(LINUXCNC.STATE_ON)
 
 MAIN = Main()
-
-PREF = Preferences(INI.find("DISPLAY", "PREFERENCE_FILE_PATH"))

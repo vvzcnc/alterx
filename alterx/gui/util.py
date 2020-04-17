@@ -33,6 +33,7 @@ ALTERX_HOME_DOMAIN = ""
 ALTERX_HOME_URL = "https://" + ALTERX_HOME_DOMAIN
 
 IMAGE_DIR = pkg_resources.resource_filename("alterx", "images")
+STYLESHEET_DIR = pkg_resources.resource_filename("alterx", "stylesheets")
 
 # Convert an integer to a dual-string
 def intToDualString(value, bitWidth):

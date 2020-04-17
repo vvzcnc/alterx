@@ -24,10 +24,10 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 from alterx.common.locale import _
 from alterx.common.compat import *
+from alterx.common.preferences import *
 from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
-from alterx.core.main import PREF
 
 class func:
 	def __init__(self,button):
@@ -64,5 +64,3 @@ class func:
 		printInfo(_("Button block delete clicked"))
 		COMMAND.set_block_delete(s)
 	        PREF.putpref("block_delete",s)
-
-

@@ -318,6 +318,8 @@ class GcodeWidget(QWidget):
                 QWidget.__init__(self,parent)
 
 		lay = QVBoxLayout(self)
+		lay.setContentsMargins(0,0,0,0)
+
 		self.editor = GcodeDisplay()
 		lay.addWidget(self.editor)
 		self.setLayout(lay)
@@ -329,13 +331,16 @@ class GcodeWidget(QWidget):
 		vlay = QVBoxLayout()
 		gbox.setLayout(vlay)
 		self.filename = QLabel(_("Filename: "))
+		self.filename.setObjectName("lbl_gwidget_filename")
 		vlay.addWidget(self.filename)
 
 		hlay = QHBoxLayout()
 		vlay.addLayout(hlay)
 		self.lines = QLabel(_("Lines: "))
+		self.lines.setObjectName("lbl_geditor_lines")
 		hlay.addWidget(self.lines)
 		self.progress = QLabel(_("Progress: "))
+		self.progress.setObjectName("lbl_gwidget_progress")
 		hlay.addWidget(self.progress)
 
 		self.editor.emit_percent = self.emit_percent
@@ -363,18 +368,27 @@ class GcodeEditor(QWidget):
                 self.editor.setModified(False)
                 lay.addWidget(self.editor)
 
+		gbox = QGroupBox()
+		lay.addWidget(gbox)
+		gbox.setTitle(_("Editor"))
+		vlay = QVBoxLayout()
+		gbox.setLayout(vlay)
+
 		self.filename = QLabel(_("Filename: "))
-		lay.addWidget(self.filename)
+		self.filename.setObjectName("lbl_geditor_filename")
+		vlay.addWidget(self.filename)
 
 		hlay = QHBoxLayout()
-		lay.addLayout(hlay)
+		vlay.addLayout(hlay)
 
 		self.search = ""
 		self.replace = ""
 
 		self.search_label = QLabel(_("Search: {}",self.search))
+		self.search_label.setObjectName("lbl_geditor_search")
 		hlay.addWidget(self.search_label)
 		self.replace_label = QLabel(_("Replace: {}",self.replace))
+		self.replace_label.setObjectName("lbl_geditor_replace")
 		hlay.addWidget(self.replace_label)
 
                 self.setLayout(lay)		

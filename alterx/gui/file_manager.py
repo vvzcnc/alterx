@@ -65,10 +65,11 @@ class FileManager(QWidget):
                 hbox = QHBoxLayout()
                 hbox.addWidget(self.cb)
 
-                windowLayout = QVBoxLayout()
-                windowLayout.addWidget(self.list)
-                windowLayout.addLayout(hbox)
-                self.setLayout(windowLayout)
+                lay = QVBoxLayout()
+		lay.setContentsMargins(0,0,0,0)
+                lay.addWidget(self.list)
+                lay.addLayout(hbox)
+                self.setLayout(lay)
 
 		UPDATER.add("fileman_prev")
 		UPDATER.add("fileman_next")

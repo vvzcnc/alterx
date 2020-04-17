@@ -25,6 +25,7 @@ __all__ = ['MainWindow']
 
 from alterx.common.locale import _
 from alterx.common.compat import *
+from alterx.common.preferences import *
 from alterx.common import *
 
 from alterx.core.main import MAIN
@@ -41,6 +42,7 @@ from alterx.gui.tool_viewer import *
 from alterx.gui.dro_viewer import *
 from alterx.gui.tabs_viewer import *
 from alterx.gui.settings_viewer import *
+from alterx.gui.sseditor import *
 
 from functools import partial
 
@@ -66,13 +68,28 @@ class MainWindow(QWidget):
 		if w:self.mainLayout.centralWidgets.setCurrentWidget(w)
 		if b:self.mainLayout.bottomWidgets.setCurrentWidget(b)
 
+	def set_stylesheet(self):
+		ss_name = os.path.join(STYLESHEET_DIR,PREF.getpref("stylesheet", "default.qss", str))
+		if os.path.isfile(ss_name):
+            		file = QFile(ss_name)
+            		file.open(QFile.ReadOnly)
+            		stylesheet = file.readAll()
+			try:
+				# Python v2.
+				stylesheet = unicode(stylesheet, encoding='utf8')
+			except NameError:
+				# Python v3.
+				stylesheet = str(stylesheet, encoding='utf8')
+
+			self.setStyleSheet(stylesheet)
+
 	def __init__(self, parent=None):
 		QWidget.__init__(self, parent)
 
+		self.set_stylesheet()
+
 		#Main layout
 		self.mainLayout = MainLayout(self)
-
-		MAIN.setup(self.mainLayout)
 
 		ON_STATE = [LINUXCNC.STATE_ON] #Enable when CNC is ON
 		HOMED_STATE = ON_STATE + [(1,)*len(INFO.coordinates)+(0,)*(9-len(INFO.coordinates))] #Enable when CNC is ON, is HOMED
@@ -127,3 +144,6 @@ class MainWindow(QWidget):
 					self.mainLayout.leftLayout.addWidget(sidebutton)
 
 		UPDATER.start(100)
+
+		se = StyleSheetEditor(self)
+		se.load_dialog()
