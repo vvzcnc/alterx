@@ -78,7 +78,10 @@ class Main():
 			state = _("OFF")
 
 		if data != LINUXCNC.STATE_ON:
-			COMMAND.mode(LINUXCNC.MODE_MANUAL)
+			if STAT.task_mode == LINUXCNC.MODE_MANUAL:
+				UPDATER.emit("screen_manual")
+			else:	
+				COMMAND.mode(LINUXCNC.MODE_MANUAL)
 
 		printVerbose(_("LinuxCNC state {}",state))
 

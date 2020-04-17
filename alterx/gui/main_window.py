@@ -83,9 +83,15 @@ class MainWindow(QWidget):
 
 			self.setStyleSheet(stylesheet)
 
+	def launch_styleeditor(self,data=None):
+		se = StyleSheetEditor(self)
+		se.load_dialog()
+
 	def __init__(self, parent=None):
 		QWidget.__init__(self, parent)
 
+		UPDATER.add("launch_styleeditor")
+		UPDATER.connect("launch_styleeditor", self.launch_styleeditor)
 		self.set_stylesheet()
 
 		#Main layout
@@ -144,6 +150,3 @@ class MainWindow(QWidget):
 					self.mainLayout.leftLayout.addWidget(sidebutton)
 
 		UPDATER.start(100)
-
-		se = StyleSheetEditor(self)
-		se.load_dialog()

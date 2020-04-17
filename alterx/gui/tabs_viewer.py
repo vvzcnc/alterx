@@ -30,6 +30,25 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
-class TabsWidget(QWidget):
+from tabs import *
+
+class TabsWidget(QTabWidget):
 	def __init__(self, parent=None):
-		QWidget.__init__(self, parent)
+		QTabWidget.__init__(self, parent)
+
+		tab_names=[]
+		try:
+			tab_names=globals()['tabs_order']
+			if not isinstance(tab_names, list):
+				tab_names=[]
+				raise Exception("'tabs_order' is not a list")
+		except Exception as e:
+			printError(_('Invalid tabs order list, {}',e))
+
+		for tab_number, name in enumerate(tab_names):
+			if "tabs.%s"%name in sys.modules.keys():
+				tab = getattr(globals()[name],"module").func()
+				self.addTab(tab,name)
+			else:
+				printError(_("No menu tab with name: tabs.{}",name))
+
