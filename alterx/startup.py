@@ -39,23 +39,23 @@ def usage():
 	print(_(" -h|--help             Print this help text"))
 	print(_(" -L|--loglevel LVL     Set the log level:"))
 	print(_("                       0: Log nothing"))
-	print(_("                       1: Log errors"))
-	print(_("                       2: Log errors and warnings"))
-	print(_("                       3: Log errors, warnings and info messages (default)"))
-	print(_("                       4: Verbose logging"))
-	print(_("                       5: Extremely verbose logging"))
+	print(_("                       1: Debug logging"))
+	print(_("                       2: Log errors, warnings and info messages"))
+	print(_("                       3: Log errors and warnings (default)"))
+	print(_("                       4: Log errors"))
+	print(_("                       5: Log critical"))
 	print(_(" -l|--lang             Set locale"))
 
-opt_loglevel = Logging.LOG_INFO
+opt_loglevel = logListener.LOG_INFO
 opt_lang = None
 ini = None
-
+verbose = None
 try:
 	if(sys.argv[1]=="-ini"):
 		sys.argv[1]="--ini"
 	(opts, args) = getopt.getopt(sys.argv[1:],
-		"hL:l:i:",
-		[ "help", "loglevel=", "lang=","ini="])
+		"vhL:l:i:",
+		[ "verbose","help", "loglevel=", "lang=","ini="])
 except getopt.GetoptError as e:
 	printError(str(e))
 	usage()
@@ -70,13 +70,28 @@ for (o, v) in opts:
 		try:	
 			opt_loglevel = int(v)
 		except ValueError:
-			printError(_("-L|--loglevel: Invalid log level"))
+			printError("-L|--loglevel: Invalid log level")
 			sys.exit(ExitCodes.EXIT_ERR_CMDLINE)
 	if o in ("-l", "--lang"):
 		opt_lang = str(v)
+	if o in ("-v", "--verbose"):
+		verbose = True
+	if o in ("-i", "--ini"):
+		ini = str(v)
 
-Logging.setPrefix("AlterX: ")
-Logging.setLoglevel(opt_loglevel)
+parameters = ConfigParser()
+parameters.read(ini)
+
+try:
+	log = parameters.get("DISPLAY", "LOG_FILE")
+except Exception as e:
+	printError(_("Get preference error: {} ",detail))
+
+logListener.setVerbose(verbose)
+logger = logListener(os.path.expanduser(log),opt_loglevel)
+
+from alterx.common.keyboard_listener import *
+
 _.setup(opt_lang)
 
 printVerbose(_("Loglevel: {}",opt_loglevel))

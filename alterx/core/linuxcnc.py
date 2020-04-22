@@ -21,7 +21,7 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-__all__ = ['STAT','COMMAND','ERROR','INI','UPDATER','LINUXCNC','INFO']
+__all__ = ['STAT','COMMAND','INI','UPDATER','LINUXCNC','INFO']
 
 from alterx.common.locale import _
 from alterx.common.compat import *
@@ -37,7 +37,6 @@ try:
 	COMMAND = LINUXCNC.command()
 	ERROR = LINUXCNC.error_channel()
 	INI = LINUXCNC.ini(sys.argv[2])
-	#POS = LINUXCNC.positionlogger()
 
 except Exception as e:
 	printError(_("Failed to import LinuxCNC module: '{}'",e))
@@ -76,12 +75,19 @@ class linuxcnc_poll(QTimer):
 
 		try:
 			STAT.poll()
-			ERROR.poll()
+			error_data=ERROR.poll()
 		except LINUXCNC.error, detail:
 			printError(_("Failed to poll LinuxCNC stat: '{}'",detail))
 			#continue
 			return
 
+		if error_data:
+			kind, text = error_data
+			if kind in (LINUXCNC.NML_ERROR, LINUXCNC.OPERATOR_ERROR):
+				printError(text)
+			else:
+				printInfo(text)
+			
 		for s in dir(STAT):
 			if not s.startswith('_'):
 				if s not in self.stat_old or self.stat_old[s] != getattr(STAT,s):

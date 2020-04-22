@@ -76,6 +76,8 @@ class Main():
 			state = _("ON")
 		elif data == LINUXCNC.STATE_OFF:
 			state = _("OFF")
+		else:
+			state = _("None")
 
 		if data != LINUXCNC.STATE_ON:
 			if STAT.task_mode == LINUXCNC.MODE_MANUAL:

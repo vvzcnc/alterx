@@ -137,7 +137,7 @@ class MessageBox(QDialog):
 	@classmethod
 	def error(cls, parent, text, verboseText=None, **kwargs):
 		dlg = cls(parent=parent,
-			  title="Awlsim - Error",
+			  title="AlterX - Error",
 			  text=text,
 			  verboseText=verboseText,
 			  icon=QMessageBox.Critical,
@@ -149,7 +149,7 @@ class MessageBox(QDialog):
 	@classmethod
 	def warning(cls, parent, text, verboseText=None, **kwargs):
 		dlg = cls(parent=parent,
-			  title="Awlsim - Warning",
+			  title="AlterX - Warning",
 			  text=text,
 			  verboseText=verboseText,
 			  icon=QMessageBox.Warning,

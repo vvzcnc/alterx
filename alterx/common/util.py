@@ -20,106 +20,124 @@
 #
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-from alterx.common.compat import *
-import time
-import contextlib
-
 __all__ = [
-	"sys",
-	"Logging",
 	"printDebug",
 	"printVerbose",
 	"printInfo",
 	"printWarning",
 	"printError",
-]
+	"logListener",
+	"QLOG",
+	]
 
+from alterx.common.compat import *
+import contextlib
 
-class Logging(object):
+import logging
+import logging.handlers
+from threading import Thread
+from multiprocessing import Queue
+
+QLOG = Queue(-1)
+
+def singleton(class_):
+    class class_w(class_):
+        _instance = None
+        def __new__(class_, *args, **kwargs):
+            if class_w._instance is None:
+                class_w._instance = super(class_w,
+                                    class_).__new__(class_,
+                                                    *args,
+                                                    **kwargs)
+                class_w._instance._sealed = False
+            return class_w._instance
+        def __init__(self, *args, **kwargs):
+            if self._sealed:
+                return
+            super(class_w, self).__init__(*args, **kwargs)
+            self._sealed = True
+    class_w.__name__ = class_.__name__
+    return class_w
+
+@singleton
+class logListener(object):
 	LOG_NONE	= 0
-	LOG_ERROR	= 1
-	LOG_WARNING	= 2
-	LOG_INFO	= 3
-	LOG_VERBOSE	= 4
-	LOG_DEBUG	= 5
+	LOG_DEBUG	= 10
+	LOG_INFO	= 20
+	LOG_WARNING	= 30
+	LOG_ERROR	= 40
+	LOG_CRITICAL	= 50
 
+	verbose = False
+	loglevel = LOG_WARNING
 
-	loglevel = LOG_INFO
-	prefix = ""
+	def __init__(self,path=None,loglevel=LOG_WARNING):
+		self.loglevel=loglevel
+		FORMAT = '%(asctime)s %(levelname)-8s %(name)s: %(message)s'
 
-	_getNow = getattr(time, "monotonic", time.time)
-	_startupTime = _getNow()
+		logging.basicConfig(level=self.loglevel,format=FORMAT,datefmt="%Y-%m-%d %H:%M:%S")
+		root = logging.getLogger()
+
+		try:
+			handler = logging.handlers.RotatingFileHandler(path, 'a', 1000000, 10)
+			formatter = logging.Formatter(FORMAT)
+			handler.setFormatter(formatter)
+			root.addHandler(handler)
+		except Exception as e:
+			print("Log file handler creating failed")
+
+		listener = Thread(target=self.listener_thread,args=(QLOG,))
+		listener.daemon = True
+		listener.start()
+
+	def listener_thread(self,queue):
+		while True:
+			try:
+				record = queue.get()
+				if record is None:
+					break
+				record = logging.LogRecord(record["name"],record["level"],record["path"],0,record["msg"],(),None)
+				logger = logging.getLogger(record.name)
+				logger.handle(record)
+			except (KeyboardInterrupt, SystemExit):
+				raise
+			except Exception as e:
+				printError('Log listener thread error: %s'%e)
+
+	def printLog(self,level,text):
+		if self.log is not None:
+			self.log.log(level,text)
+		else:
+			print("Logging is not configured yet!\n Message: \n%s"%text)
+	@classmethod
+	def getVerbose(cls):
+		return cls.verbose
 
 	@classmethod
-	def _getUptime(cls):
-		return cls._getNow() - cls._startupTime
+	def setVerbose(cls,state):
+		cls.verbose = state
+	
+	def setLoglevel(self,level):
+		if level in (0,1,2,3,4,5):
+			self.loglevel = level*10
+		else:
+			printError("Invalid log level")
 
-	@classmethod
-	def setLoglevel(cls, loglevel):
-		if loglevel not in (cls.LOG_NONE,
-				    cls.LOG_ERROR,
-				    cls.LOG_WARNING,
-				    cls.LOG_INFO,
-				    cls.LOG_VERBOSE,
-				    cls.LOG_DEBUG):
-			raise AlterXError("Invalid log level '%d'" % loglevel)
-		cls.loglevel = loglevel
-
-	@classmethod
-	def getLogLevel(cls):
-		return cls.loglevel
-
-	@classmethod
-	def setPrefix(cls, prefix):
-		cls.prefix = prefix
-
-	@classmethod
-	def __print(cls, stream, text):
-		with contextlib.suppress(RuntimeError):
-			if stream:
-				if cls.prefix:
-					stream.write(cls.prefix)
-				stream.write("[%.3f] " % cls._getUptime())
-				stream.write(text)
-				stream.write("\n")
-
-
-	@classmethod
-	def printDebug(cls, text):
-		if cls.loglevel >= cls.LOG_DEBUG:
-			cls.__print(sys.stdout, text)
-
-	@classmethod
-	def printVerbose(cls, text):
-		if cls.loglevel >= cls.LOG_VERBOSE:
-			cls.__print(sys.stdout, text)
-
-	@classmethod
-	def printInfo(cls, text):
-		if cls.loglevel >= cls.LOG_INFO:
-			cls.__print(sys.stdout, text)
-
-	@classmethod
-	def printWarning(cls, text):
-		if cls.loglevel >= cls.LOG_WARNING:
-			cls.__print(sys.stderr, text)
-
-	@classmethod
-	def printError(cls, text):
-		if cls.loglevel >= cls.LOG_ERROR:
-			cls.__print(sys.stderr, text)
-
+	def getLoglevel(self):
+		return self.loglevel 
+	
 def printDebug(text):
-	Logging.printDebug("[DEBUG]" + text)
+	logging.getLogger("alterx").debug(text)
 
 def printVerbose(text):
-	Logging.printVerbose("[VERBOSE]" + text)
+	if logListener.getVerbose():
+		logging.getLogger("alterx").info(text)
 
 def printInfo(text):
-	Logging.printInfo("[INFO]" + text)
+	logging.getLogger("alterx").info(text)
 
 def printWarning(text):
-	Logging.printWarning("[WARNING]" + text)
+	logging.getLogger("alterx").warning(text)
 
 def printError(text):
-	Logging.printError("[ERROR]" + text)
+	logging.getLogger("alterx").error(text)

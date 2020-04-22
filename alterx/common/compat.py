@@ -86,4 +86,3 @@ if isPy2Compat:
 	from ConfigParser import ConfigParser
 else:
 	from configparser import ConfigParser
-
