@@ -30,125 +30,130 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
+
 class MDI(QLineEdit):
-        def __init__(self, parent=None):
-                QLineEdit.__init__(self,parent)
-		self.mdi_history_file = INI.find('DISPLAY','MDI_HISTORY_FILE') or '.mdi_history'
-		self.returnPressed.connect(lambda: self.submit())
+    def __init__(self, parent=None):
+        QLineEdit.__init__(self, parent)
+        self.mdi_history_file = INI.find(
+            'DISPLAY', 'MDI_HISTORY_FILE') or '.mdi_history'
+        self.returnPressed.connect(lambda: self.submit())
 
-        def submit(self):
-                text = str(self.text()).rstrip()
-                if text == '': return
+    def submit(self):
+        text = str(self.text()).rstrip()
+        if text == '':
+            return
 
-		COMMAND.mdi(text+'\n')
+        COMMAND.mdi(text+'\n')
 
-		try:
-			fp = os.path.expanduser(self.mdi_history_file)
-			fp = open(fp, 'a')
-			fp.write(text + "\n")
-			fp.close()
-		except:
-			pass
+        try:
+            fp = os.path.expanduser(self.mdi_history_file)
+            fp = open(fp, 'a')
+            fp.write(text + "\n")
+            fp.close()
+        except:
+            pass
+
 
 class MDIHistory(QWidget):
-        def __init__(self, parent=None):
-                QWidget.__init__(self, parent)
-                self.setMinimumSize(QSize(200, 150))        
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent)
+        self.setMinimumSize(QSize(200, 150))
 
-                lay = QVBoxLayout()
-                lay.setContentsMargins(0,0,0,0)
-                self.setLayout(lay)
+        lay = QVBoxLayout()
+        lay.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(lay)
 
-                self.list = QListView()
-                self.list.setEditTriggers(QListView.NoEditTriggers)
-                self.list.activated.connect(self.activated)
-                self.list.setAlternatingRowColors(True)
-                self.list.selectionChanged = self.selectionChanged
-                self.model = QStandardItemModel(self.list)
+        self.list = QListView()
+        self.list.setEditTriggers(QListView.NoEditTriggers)
+        self.list.activated.connect(self.activated)
+        self.list.setAlternatingRowColors(True)
+        self.list.selectionChanged = self.selectionChanged
+        self.model = QStandardItemModel(self.list)
 
-                self.MDI = MDI()
+        self.MDI = MDI()
 
-                lay.addWidget(self.list)
-                lay.addWidget(self.MDI)
+        lay.addWidget(self.list)
+        lay.addWidget(self.MDI)
 
-                self.fp = self.MDI.mdi_history_file
-                try:
-                        open(self.fp, 'r')
-                except:
-                        open(self.fp, 'a+')
-                        printVerbose(_('MDI History file created: {}',self.fp))
-                self.reload()
+        self.fp = self.MDI.mdi_history_file
+        try:
+            open(self.fp, 'r')
+        except:
+            open(self.fp, 'a+')
+            printVerbose(_('MDI History file created: {}', self.fp))
+        self.reload()
+        self.select_row('last')
+
+    def reload(self, w=None):
+        self.model.clear()
+        try:
+            with open(self.fp, 'r') as inputfile:
+                for line in inputfile:
+                    line = line.rstrip('\n')
+                    item = QStandardItem(line)
+                    self.model.appendRow(item)
+            self.list.setModel(self.model)
+            self.list.scrollToBottom()
+            if self.MDI.hasFocus():
                 self.select_row('last')
+        except:
+            printDebug(_('File path is not valid: {}', fp))
 
-        def reload(self, w=None ):
-                self.model.clear()
-                try:
-                        with open(self.fp,'r') as inputfile:
-                                for line in inputfile:
-                                        line = line.rstrip('\n')
-                                        item = QStandardItem(line)
-                                        self.model.appendRow(item)
-                        self.list.setModel(self.model)
-                        self.list.scrollToBottom()
-                        if self.MDI.hasFocus():
-                                self.select_row('last')
-                except:
-                        printDebug(_('File path is not valid: {}',fp))
+    def selectionChanged(self, old, new):
+        cmd = self.getSelected()
+        self.MDI.setText(cmd)
+        selectionModel = self.list.selectionModel()
+        if selectionModel.hasSelection():
+            self.row = selectionModel.currentIndex().row()
 
-        def selectionChanged(self,old, new):
-                cmd = self.getSelected()
-                self.MDI.setText(cmd)
-                selectionModel = self.list.selectionModel()
-                if selectionModel.hasSelection():
-                        self.row = selectionModel.currentIndex().row()
+    def getSelected(self):
+        selected_indexes = self.list.selectedIndexes()
+        selected_rows = [item.row() for item in selected_indexes]
+        # iterates each selected row in descending order
+        for selected_row in sorted(selected_rows, reverse=True):
+            text = self.model.item(selected_row).text()
+            return text
 
-        def getSelected(self):
-                selected_indexes = self.list.selectedIndexes()
-                selected_rows = [item.row() for item in selected_indexes]
-                # iterates each selected row in descending order
-                for selected_row in sorted(selected_rows, reverse=True):
-                        text = self.model.item(selected_row).text()
-                        return text
+    def activated(self):
+        cmd = self.getSelected()
+        self.MDI.setText(cmd)
+        self.MDI.submit()
+        self.model.appendRow(QStandardItem(cmd))
+        # self.select_row('down')
 
-        def activated(self):
-                cmd = self.getSelected()
-                self.MDI.setText(cmd)
-                self.MDI.submit()
-		self.model.appendRow(QStandardItem(cmd))
-                #self.select_row('down')
+    def run_command(self):
+        self.MDILine.submit()
+        self.select_row('last')
 
-        def run_command(self):
-                self.MDILine.submit()
-                self.select_row('last')
+    def select_row(self, style):
+        style = style.lower()
+        selectionModel = self.list.selectionModel()
+        parent = QModelIndex()
+        self.rows = self.model.rowCount(parent) - 1
+        if style == 'last':
+            self.row = self.rows
+        elif style == 'up':
+            if self.row > 0:
+                self.row -= 1
+            else:
+                self.row = 0
+        elif style == 'down':
+            if self.row < self.rows:
+                self.row += 1
+            else:
+                self.row = self.rows
+        else:
+            return
+        top = self.model.index(self.row, 0, parent)
+        bottom = self.model.index(self.row, 0, parent)
+        selectionModel.setCurrentIndex(
+            top, QItemSelectionModel.Select | QItemSelectionModel.Rows)
+        selection = QItemSelection(top, top)
+        selectionModel.clearSelection()
+        selectionModel.select(selection, QItemSelectionModel.Select)
 
-        def select_row(self, style):
-                style = style.lower()
-                selectionModel = self.list.selectionModel()
-                parent = QModelIndex()
-                self.rows = self.model.rowCount(parent) - 1
-                if style == 'last':
-                        self.row = self.rows
-                elif style == 'up':
-                        if self.row > 0:
-                                self.row -= 1
-                        else:
-                                self.row = 0
-                elif style == 'down':
-                        if self.row < self.rows:
-                                self.row += 1
-                        else:
-                                self.row = self.rows
-                else:
-                        return
-                top = self.model.index(self.row, 0, parent)
-                bottom = self.model.index(self.row, 0, parent)
-                selectionModel.setCurrentIndex(top, QItemSelectionModel.Select | QItemSelectionModel.Rows)
-                selection = QItemSelection(top, top)
-                selectionModel.clearSelection()
-                selectionModel.select(selection, QItemSelectionModel.Select)
+    def line_up(self):
+        self.select_row('up')
 
-        def line_up(self):
-                self.select_row('up')
-
-        def line_down(self):
-                self.select_row('down')
+    def line_down(self):
+        self.select_row('down')

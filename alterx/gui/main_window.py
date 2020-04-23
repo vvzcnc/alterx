@@ -46,107 +46,123 @@ from alterx.gui.sseditor import *
 
 from functools import partial
 
+
 class MainWindow(QWidget):
-	TITLE = _("AlterX v{}",VERSION_STRING)
+    TITLE = _("AlterX v{}", VERSION_STRING)
 
-	@classmethod
-	def start(cls):
-		QApplication.setOrganizationName("alterx")
-		QApplication.setOrganizationDomain(ALTERX_HOME_DOMAIN)
-		QApplication.setApplicationName("AlterX")
-		QApplication.setApplicationVersion(VERSION_STRING)
+    @classmethod
+    def start(cls):
+        QApplication.setOrganizationName("alterx")
+        QApplication.setOrganizationDomain(ALTERX_HOME_DOMAIN)
+        QApplication.setApplicationName("AlterX")
+        QApplication.setApplicationVersion(VERSION_STRING)
 
-		mainwnd = cls()
-		mainwnd.show()
+        mainwnd = cls()
+        mainwnd.show()
 
-		mainwnd.setWindowState(Qt.WindowMaximized)
+        mainwnd.setWindowState(Qt.WindowMaximized)
 
-		return mainwnd
+        return mainwnd
 
-	def activate_screen(self,screen,state=None):
-		w,b = screen
-		if w:self.mainLayout.centralWidgets.setCurrentWidget(w)
-		if b:self.mainLayout.bottomWidgets.setCurrentWidget(b)
+    def activate_screen(self, screen, state=None):
+        w, b = screen
+        if w:
+            self.mainLayout.centralWidgets.setCurrentWidget(w)
+        if b:
+            self.mainLayout.bottomWidgets.setCurrentWidget(b)
 
-	def set_stylesheet(self):
-		ss_name = os.path.join(STYLESHEET_DIR,PREF.getpref("stylesheet", "default.qss", str))
-		if os.path.isfile(ss_name):
-            		file = QFile(ss_name)
-            		file.open(QFile.ReadOnly)
-            		stylesheet = file.readAll()
-			try:
-				# Python v2.
-				stylesheet = unicode(stylesheet, encoding='utf8')
-			except NameError:
-				# Python v3.
-				stylesheet = str(stylesheet, encoding='utf8')
+    def set_stylesheet(self):
+        ss_name = os.path.join(STYLESHEET_DIR, PREF.getpref(
+            "stylesheet", "default.qss", str))
+        if os.path.isfile(ss_name):
+            file = QFile(ss_name)
+            file.open(QFile.ReadOnly)
+            stylesheet = file.readAll()
+            try:
+                # Python v2.
+                stylesheet = unicode(stylesheet, encoding='utf8')
+            except NameError:
+                # Python v3.
+                stylesheet = str(stylesheet, encoding='utf8')
 
-			self.setStyleSheet(stylesheet)
+            self.setStyleSheet(stylesheet)
 
-	def launch_styleeditor(self,data=None):
-		se = StyleSheetEditor(self)
-		se.load_dialog()
+    def launch_styleeditor(self, data=None):
+        se = StyleSheetEditor(self)
+        se.load_dialog()
 
-	def __init__(self, parent=None):
-		QWidget.__init__(self, parent)
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent)
 
-		UPDATER.add("launch_styleeditor")
-		UPDATER.connect("launch_styleeditor", self.launch_styleeditor)
-		self.set_stylesheet()
+        UPDATER.add("launch_styleeditor")
+        UPDATER.connect("launch_styleeditor", self.launch_styleeditor)
+        self.set_stylesheet()
 
-		#Main layout
-		self.mainLayout = MainLayout(self)
+        # Main layout
+        self.mainLayout = MainLayout(self)
 
-		ON_STATE = [LINUXCNC.STATE_ON] #Enable when CNC is ON
-		HOMED_STATE = ON_STATE + [(1,)*len(INFO.coordinates)+(0,)*(9-len(INFO.coordinates))] #Enable when CNC is ON, is HOMED
-		MDI_STATE = HOMED_STATE + [LINUXCNC.MODE_MDI] #Enable when CNC is ON, is HOMED and in MDI mode
-		AUTO_STATE = HOMED_STATE + [LINUXCNC.MODE_AUTO] #Enable when CNC is ON, is HOMED and in AUTO mode
-		SEC_WIDGET = [None,None,None] #Activate only when bottom widget active
-		
-		#mainscreen widgets
-		centralWidget = [DROWidget,MDIHistory,GcodeWidget,SettingsWidget,TabsWidget,None,PathViewer,None,FileManager,GcodeEditor,None,OriginOffsetView,ToolOffsetView]
+        ON_STATE = [LINUXCNC.STATE_ON]  # Enable when CNC is ON
+        # Enable when CNC is ON, is HOMED
+        HOMED_STATE = ON_STATE + \
+            [(1,)*len(INFO.coordinates)+(0,)*(9-len(INFO.coordinates))]
+        # Enable when CNC is ON, is HOMED and in MDI mode
+        MDI_STATE = HOMED_STATE + [LINUXCNC.MODE_MDI]
+        # Enable when CNC is ON, is HOMED and in AUTO mode
+        AUTO_STATE = HOMED_STATE + [LINUXCNC.MODE_AUTO]
+        # Activate only when bottom widget active
+        SEC_WIDGET = [None, None, None]
 
-		#buttons for mainscreen mode
-		bottomWidget = ["manual","mdi","auto","settings","tabs",None,"display","equipment","load","edit","homing","offset","tool"]
+        # mainscreen widgets
+        centralWidget = [DROWidget, MDIHistory, GcodeWidget, SettingsWidget, TabsWidget, None,
+                         PathViewer, None, FileManager, GcodeEditor, None, OriginOffsetView, ToolOffsetView]
 
-		#side buttons
-		#		#layout#	#name#		#enable state#	#active state#			#
-		sideWidget = 	[
-				["right",	"manual",	ON_STATE,	[None,None,LINUXCNC.MODE_MANUAL]],
-				["right",	"mdi",		HOMED_STATE,	[None,None,LINUXCNC.MODE_MDI]],
-				["right",	"auto",		HOMED_STATE,	[None,None,LINUXCNC.MODE_AUTO]],
-				["right",	"settings",	[],		SEC_WIDGET],
-				["right",	"tabs",		ON_STATE,	SEC_WIDGET],
-				["right",	"machine",	[],		ON_STATE],
-				["left",	"abort",	ON_STATE,	SEC_WIDGET],
-				["left",	"equipment",	ON_STATE,	SEC_WIDGET],
-				["left",	"load",		AUTO_STATE,	SEC_WIDGET],
-				[None],
-				["left",	"homing",	ON_STATE+[None,LINUXCNC.MODE_MANUAL],SEC_WIDGET],
-				["left",	"offset",	MDI_STATE,	SEC_WIDGET],
-				["left",	"tool",		MDI_STATE,	SEC_WIDGET],
-				]
-	
-		for i,name in enumerate(bottomWidget):
-			widget = None
-			if centralWidget[i] is not None:
-				widget = centralWidget[i]()  
-				self.mainLayout.centralWidgets.addWidget(widget)
+        # buttons for mainscreen mode
+        bottomWidget = ["manual", "mdi", "auto", "settings", "tabs", None,
+                        "display", "equipment", "load", "edit", "homing", "offset", "tool"]
 
-			buttons = None
-			bottom_index = None
-			if name is not None:
-				buttons = BottomWidget(name)
-				bottom_index = self.mainLayout.bottomWidgets.addWidget(buttons)
+        # side buttons
+        #		#layout#	#name#		#enable state#	#active state#			#
+        sideWidget = [
+            ["right",	"manual",	ON_STATE,	[None, None, LINUXCNC.MODE_MANUAL]],
+            ["right",	"mdi",		HOMED_STATE,	[
+                None, None, LINUXCNC.MODE_MDI]],
+            ["right",	"auto",		HOMED_STATE,	[
+                None, None, LINUXCNC.MODE_AUTO]],
+            ["right",	"settings",	[],		SEC_WIDGET],
+            ["right",	"tabs",		ON_STATE,	SEC_WIDGET],
+            ["right",	"machine",	[],		ON_STATE],
+            ["left",	"abort",	ON_STATE,	SEC_WIDGET],
+            ["left",	"equipment",	ON_STATE,	SEC_WIDGET],
+            ["left",	"load",		AUTO_STATE,	SEC_WIDGET],
+            [None],
+            ["left",	"homing",	ON_STATE +
+             [None, LINUXCNC.MODE_MANUAL], SEC_WIDGET],
+            ["left",	"offset",	MDI_STATE,	SEC_WIDGET],
+            ["left",	"tool",		MDI_STATE,	SEC_WIDGET],
+        ]
 
-				UPDATER.add("screen_{}".format(name))
-				UPDATER.connect("screen_{}".format(name),partial(self.activate_screen,(widget,buttons)))
+        for i, name in enumerate(bottomWidget):
+            widget = None
+            if centralWidget[i] is not None:
+                widget = centralWidget[i]()
+                self.mainLayout.centralWidgets.addWidget(widget)
 
-			if sideWidget[i][0] is not None:
-				sidebutton = SideButton(sideWidget[i][1],sideWidget[i][2],sideWidget[i][3]+[bottom_index])
-				if sideWidget[i][0] == "right":
-					self.mainLayout.rightLayout.addWidget(sidebutton)
-				else:
-					self.mainLayout.leftLayout.addWidget(sidebutton)
+            buttons = None
+            bottom_index = None
+            if name is not None:
+                buttons = BottomWidget(name)
+                bottom_index = self.mainLayout.bottomWidgets.addWidget(buttons)
 
-		UPDATER.start(100)
+                UPDATER.add("screen_{}".format(name))
+                UPDATER.connect("screen_{}".format(name), partial(
+                    self.activate_screen, (widget, buttons)))
+
+            if sideWidget[i][0] is not None:
+                sidebutton = SideButton(
+                    sideWidget[i][1], sideWidget[i][2], sideWidget[i][3]+[bottom_index])
+                if sideWidget[i][0] == "right":
+                    self.mainLayout.rightLayout.addWidget(sidebutton)
+                else:
+                    self.mainLayout.leftLayout.addWidget(sidebutton)
+
+        UPDATER.start(100)

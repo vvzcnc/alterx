@@ -30,6 +30,7 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
+
 class SettingsWidget(QWidget):
-	def __init__(self, parent=None):
-		QWidget.__init__(self, parent)
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent)

@@ -26,47 +26,51 @@ import os
 import sys
 
 __all__ = [
-	"sys",
-	"os",
-	"contextlib",
-	"osIsWindows",
-	"osIsPosix",
-	"osIsLinux",
-	"ConfigParser",
+    "sys",
+    "os",
+    "contextlib",
+    "osIsWindows",
+    "osIsPosix",
+    "osIsLinux",
+    "ConfigParser",
 ]
 
 # Convenient operating system identifiers
 if os.name == "java":
-	import java.lang.System
-	__osName = java.lang.System.getProperty("os.name").lower()
-	osIsWindows = __osName.startswith("windows")
-	osIsPosix = not osIsWindows
-else: #@nocov
-	osIsWindows = os.name == "nt" or os.name == "ce"
-	osIsPosix = os.name == "posix"
+    import java.lang.System
+    __osName = java.lang.System.getProperty("os.name").lower()
+    osIsWindows = __osName.startswith("windows")
+    osIsPosix = not osIsWindows
+else:  # @nocov
+    osIsWindows = os.name == "nt" or os.name == "ce"
+    osIsPosix = os.name == "posix"
 osIsLinux = osIsPosix and "linux" in sys.platform.lower()
 
 # contextlib.suppress compatibility
-if not hasattr(contextlib, "suppress"): 
-	class _suppress(object):
-		def __init__(self, *excs):
-			self._excs = excs
-		def __enter__(self):
-			pass
-		def __exit__(self, exctype, excinst, exctb):
-			return exctype is not None and issubclass(exctype, self._excs)
-	contextlib.suppress = _suppress
+if not hasattr(contextlib, "suppress"):
+    class _suppress(object):
+        def __init__(self, *excs):
+            self._excs = excs
+
+        def __enter__(self):
+            pass
+
+        def __exit__(self, exctype, excinst, exctb):
+            return exctype is not None and issubclass(exctype, self._excs)
+    contextlib.suppress = _suppress
 
 # contextlib.nullcontext compatibility
 if not hasattr(contextlib, "nullcontext"):
-	class _nullcontext(object):
-		def __init__(self, enter_result=None):
-			self.enter_result = enter_result
-		def __enter__(self):
-			return self.enter_result
-		def __exit__(self, *unused):
-			pass
-	contextlib.nullcontext = _nullcontext
+    class _nullcontext(object):
+        def __init__(self, enter_result=None):
+            self.enter_result = enter_result
+
+        def __enter__(self):
+            return self.enter_result
+
+        def __exit__(self, *unused):
+            pass
+    contextlib.nullcontext = _nullcontext
 
 # isPy3Compat is True, if the interpreter is Python 3 compatible.
 isPy3Compat = sys.version_info[0] == 3
@@ -75,14 +79,17 @@ isPy3Compat = sys.version_info[0] == 3
 isPy2Compat = sys.version_info[0] == 2
 
 # Python 2/3 helper selection
-def py23(py2, py3): 
-	if isPy3Compat:
-		return py3
-	if isPy2Compat:
-		return py2
-	raise Exception("Failed to detect Python version")
+
+
+def py23(py2, py3):
+    if isPy3Compat:
+        return py3
+    if isPy2Compat:
+        return py2
+    raise Exception("Failed to detect Python version")
+
 
 if isPy2Compat:
-	from ConfigParser import ConfigParser
+    from ConfigParser import ConfigParser
 else:
-	from configparser import ConfigParser
+    from configparser import ConfigParser

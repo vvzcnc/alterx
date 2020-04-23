@@ -28,41 +28,44 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
+
 class func:
-	def __init__(self,button):
-		self.button = button
-		self.edit = QLineEdit()
-		self.edit.setVisible(False)
-		edit_layout = QVBoxLayout(self.button)
-		edit_layout.addWidget(self.edit)
+    def __init__(self, button):
+        self.button = button
+        self.edit = QLineEdit()
+        self.edit.setVisible(False)
+        edit_layout = QVBoxLayout(self.button)
+        edit_layout.addWidget(self.edit)
 
-		self.path = UPDATER.fileman_current_path
-		UPDATER.connect("fileman_current_path",self.update_path)
+        self.path = UPDATER.fileman_current_path
+        UPDATER.connect("fileman_current_path", self.update_path)
 
-		dir_path = os.path.dirname(os.path.realpath(__file__))
+        dir_path = os.path.dirname(os.path.realpath(__file__))
 
-		if os.path.isfile("%s/icon.png"%dir_path):
-			self.button.setIcon(QIcon("%s/icon.png"%dir_path))
-			self.button.setIconSize(QSize(90,90))
-			self.button.setText("")
-		else:
-			self.button.setStyleSheet("color:black")
+        if os.path.isfile("%s/icon.png" % dir_path):
+            self.button.setIcon(QIcon("%s/icon.png" % dir_path))
+            self.button.setIconSize(QSize(90, 90))
+            self.button.setText("")
+        else:
+            self.button.setStyleSheet("color:black")
 
-	def update_path(self,path):
-		self.path = path
+    def update_path(self, path):
+        self.path = path
 
-	def update(self):
-		if not self.edit.hasFocus():
-			self.edit.setVisible(False)
-			self.edit.setText('')
+    def update(self):
+        if not self.edit.hasFocus():
+            self.edit.setVisible(False)
+            self.edit.setText('')
 
-	def execute(self):
-		if self.edit.isVisible():
-			self.edit.setVisible(False)
-			if self.edit.text() != "":
-				printVerbose(_("Button save as clicked, path: {}",os.path.join(self.path,self.edit.text())))
-				UPDATER.emit("geditor_save",os.path.join(self.path,self.edit.text()))
-		else:
-			printVerbose(_("Button save as clicked"))
-			self.edit.setVisible(True)
-			self.edit.setFocus()
+    def execute(self):
+        if self.edit.isVisible():
+            self.edit.setVisible(False)
+            if self.edit.text() != "":
+                printVerbose(_("Button save as clicked, path: {}",
+                               os.path.join(self.path, self.edit.text())))
+                UPDATER.emit("geditor_save", os.path.join(
+                    self.path, self.edit.text()))
+        else:
+            printVerbose(_("Button save as clicked"))
+            self.edit.setVisible(True)
+            self.edit.setFocus()

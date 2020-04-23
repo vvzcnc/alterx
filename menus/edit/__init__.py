@@ -12,15 +12,15 @@ from . import set_search
 from . import undo
 
 buttons_order = [
-	'new_file',
-	'save',
-	'save_as',
-	None,
-	'undo',
-	'redo',
-	None,
-	'replace',
-	'set_replace',
-	'search',
-	'set_search',
-	]
+    'new_file',
+    'save',
+    'save_as',
+    None,
+    'undo',
+    'redo',
+    None,
+    'replace',
+    'set_replace',
+    'search',
+    'set_search',
+]

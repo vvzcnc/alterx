@@ -36,124 +36,133 @@ IMAGE_DIR = pkg_resources.resource_filename("alterx", "images")
 STYLESHEET_DIR = pkg_resources.resource_filename("alterx", "stylesheets")
 
 # Convert an integer to a dual-string
+
+
 def intToDualString(value, bitWidth):
-	string = []
-	for bitnr in range(bitWidth - 1, -1, -1):
-		string.append('1' if ((value >> bitnr) & 1) else '0')
-		if bitnr and bitnr % 4 == 0:
-			string.append('_')
-	return ''.join(string)
+    string = []
+    for bitnr in range(bitWidth - 1, -1, -1):
+        string.append('1' if ((value >> bitnr) & 1) else '0')
+        if bitnr and bitnr % 4 == 0:
+            string.append('_')
+    return ''.join(string)
 
 # Get the default fixed font
+
+
 def getDefaultFixedFont(pointSize=11, bold=False):
-	font = QFont()
-	font.setStyleHint(QFont.Courier)
-	font.setFamily("Courier")
-	font.setPointSize(pointSize)
-	font.setWeight(QFont.Normal)
-	font.setBold(bold)
-	return font
+    font = QFont()
+    font.setStyleHint(QFont.Courier)
+    font.setFamily("Courier")
+    font.setPointSize(pointSize)
+    font.setWeight(QFont.Normal)
+    font.setBold(bold)
+    return font
 
 # Color used for errors
+
+
 def getErrorColor():
-	return QColor("#FFC0C0")
+    return QColor("#FFC0C0")
+
 
 def handleFatalException(parentWidget=None):
-	text = str(traceback.format_exc())
-	print(_("Fatal exception:\n"), text)
-	text = saxutils.escape(text)
-	QMessageBox.critical(parentWidget,
-		_("A fatal exception occurred"),
-		_("<pre>"
-		"A fatal exception occurred:\n\n"
-		"{}\n\n"
-		"AlterX will be terminated."
-		"</pre>" , text))
-	sys.exit(1)
+    text = str(traceback.format_exc())
+    print(_("Fatal exception:\n"), text)
+    text = saxutils.escape(text)
+    QMessageBox.critical(parentWidget,
+                         _("A fatal exception occurred"),
+                         _("<pre>"
+                             "A fatal exception occurred:\n\n"
+                             "{}\n\n"
+                             "AlterX will be terminated."
+                             "</pre>", text))
+    sys.exit(1)
 
 
 class MessageBox(QDialog):
-	def __init__(self,
-		     parent,
-		     title,
-		     text,
-		     verboseText=None,
-		     icon=QMessageBox.Critical,
-		     okButton=True,
-		     continueButton=False,
-		     cancelButton=False):
-		QDialog.__init__(self, parent)
-		self.setLayout(QGridLayout())
-		self.setWindowTitle(title)
+    def __init__(self,
+                 parent,
+                 title,
+                 text,
+                 verboseText=None,
+                 icon=QMessageBox.Critical,
+                 okButton=True,
+                 continueButton=False,
+                 cancelButton=False):
+        QDialog.__init__(self, parent)
+        self.setLayout(QGridLayout())
+        self.setWindowTitle(title)
 
-		self.text = "<pre>" + saxutils.escape(text) + "\n</pre>"
-		self.verboseText = None
-		if verboseText and verboseText.strip() != text.strip():
-			self.verboseText = "<pre>" + saxutils.escape(verboseText) + "\n</pre>"
+        self.text = "<pre>" + saxutils.escape(text) + "\n</pre>"
+        self.verboseText = None
+        if verboseText and verboseText.strip() != text.strip():
+            self.verboseText = "<pre>" + \
+                saxutils.escape(verboseText) + "\n</pre>"
 
-		self.textBox = QLabel(self)
-		self.textBox.setTextInteractionFlags(Qt.TextSelectableByMouse |\
-						     Qt.TextSelectableByKeyboard |\
-						     Qt.LinksAccessibleByMouse |\
-						     Qt.LinksAccessibleByKeyboard)
-		self.layout().addWidget(self.textBox, 0, 0, 1, 3)
+        self.textBox = QLabel(self)
+        self.textBox.setTextInteractionFlags(Qt.TextSelectableByMouse |
+                                             Qt.TextSelectableByKeyboard |
+                                             Qt.LinksAccessibleByMouse |
+                                             Qt.LinksAccessibleByKeyboard)
+        self.layout().addWidget(self.textBox, 0, 0, 1, 3)
 
-		if self.verboseText:
-			self.verboseCheckBox = QCheckBox(_("Show verbose information"), self)
-			self.layout().addWidget(self.verboseCheckBox, 1, 0, 1, 3)
-		else:
-			self.verboseCheckBox = None
+        if self.verboseText:
+            self.verboseCheckBox = QCheckBox(
+                _("Show verbose information"), self)
+            self.layout().addWidget(self.verboseCheckBox, 1, 0, 1, 3)
+        else:
+            self.verboseCheckBox = None
 
-		buttonsLayout = QHBoxLayout()
-		if okButton:
-			self.okButton = QPushButton(_("&Ok"), self)
-			buttonsLayout.addWidget(self.okButton)
-		if continueButton:
-			self.continueButton = QPushButton(_("C&ontinue"), self)
-			buttonsLayout.addWidget(self.continueButton)
-		if cancelButton:
-			self.cancelButton = QPushButton(_("&Cancel"), self)
-			buttonsLayout.addWidget(self.cancelButton)
-		self.layout().addLayout(buttonsLayout, 2, 1)
+        buttonsLayout = QHBoxLayout()
+        if okButton:
+            self.okButton = QPushButton(_("&Ok"), self)
+            buttonsLayout.addWidget(self.okButton)
+        if continueButton:
+            self.continueButton = QPushButton(_("C&ontinue"), self)
+            buttonsLayout.addWidget(self.continueButton)
+        if cancelButton:
+            self.cancelButton = QPushButton(_("&Cancel"), self)
+            buttonsLayout.addWidget(self.cancelButton)
+        self.layout().addLayout(buttonsLayout, 2, 1)
 
-		self.__updateText()
+        self.__updateText()
 
-		if okButton:
-			self.okButton.released.connect(self.accept)
-		if continueButton:
-			self.continueButton.released.connect(self.accept)
-		if cancelButton:
-			self.cancelButton.released.connect(self.reject)
-		if self.verboseCheckBox:
-			self.verboseCheckBox.stateChanged.connect(self.__updateText)
+        if okButton:
+            self.okButton.released.connect(self.accept)
+        if continueButton:
+            self.continueButton.released.connect(self.accept)
+        if cancelButton:
+            self.cancelButton.released.connect(self.reject)
+        if self.verboseCheckBox:
+            self.verboseCheckBox.stateChanged.connect(self.__updateText)
 
-	def __updateText(self):
-		if self.verboseCheckBox and\
-		   self.verboseCheckBox.checkState() == Qt.Checked:
-			self.textBox.setText(self.verboseText)
-		else:
-			self.textBox.setText(self.text)
+    def __updateText(self):
+        if self.verboseCheckBox and\
+           self.verboseCheckBox.checkState() == Qt.Checked:
+            self.textBox.setText(self.verboseText)
+        else:
+            self.textBox.setText(self.text)
 
-	@classmethod
-	def error(cls, parent, text, verboseText=None, **kwargs):
-		dlg = cls(parent=parent,
-			  title="AlterX - Error",
-			  text=text,
-			  verboseText=verboseText,
-			  icon=QMessageBox.Critical,
-			  **kwargs)
-		res = dlg.exec_()
-		dlg.deleteLater()
-		return res
+    @classmethod
+    def error(cls, parent, text, verboseText=None, **kwargs):
+        dlg = cls(parent=parent,
+                  title="AlterX - Error",
+                  text=text,
+                  verboseText=verboseText,
+                  icon=QMessageBox.Critical,
+                  **kwargs)
+        res = dlg.exec_()
+        dlg.deleteLater()
+        return res
 
-	@classmethod
-	def warning(cls, parent, text, verboseText=None, **kwargs):
-		dlg = cls(parent=parent,
-			  title="AlterX - Warning",
-			  text=text,
-			  verboseText=verboseText,
-			  icon=QMessageBox.Warning,
-			  **kwargs)
-		res = dlg.exec_()
-		dlg.deleteLater()
-		return res
+    @classmethod
+    def warning(cls, parent, text, verboseText=None, **kwargs):
+        dlg = cls(parent=parent,
+                  title="AlterX - Warning",
+                  text=text,
+                  verboseText=verboseText,
+                  icon=QMessageBox.Warning,
+                  **kwargs)
+        res = dlg.exec_()
+        dlg.deleteLater()
+        return res

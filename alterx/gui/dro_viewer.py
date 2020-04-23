@@ -30,58 +30,66 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
+
 class DROLayout(QHBoxLayout):
-	def __init__(self, num, name, parent=None):
-		QHBoxLayout.__init__(self, parent)
-		self.num = num
-		self.name = name
+    def __init__(self, num, name, parent=None):
+        QHBoxLayout.__init__(self, parent)
+        self.num = num
+        self.name = name
 
-		self.drolabel_name = QLabel(name.upper())
-		self.drolabel_name.setObjectName("lbl_dro_name_%s"%(name))
-		self.addWidget(self.drolabel_name,1)
+        self.drolabel_name = QLabel(name.upper())
+        self.drolabel_name.setObjectName("lbl_dro_name_%s" % (name))
+        self.addWidget(self.drolabel_name, 1)
 
-		v1 = QVBoxLayout()
+        v1 = QVBoxLayout()
 
-		self.drolabel_act = QLabel(name)
-		self.drolabel_act.setObjectName("lbl_dro_act_%s"%(name))
-		self.drolabel_act.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-		v1.addWidget(self.drolabel_act)
-		
-		h1 = QHBoxLayout()
-		self.drolabel_dtg = QLabel(name)
-		self.drolabel_dtg.setObjectName("lbl_dro_dtg_%s"%(name))
-		self.drolabel_ferror = QLabel(name)
-		self.drolabel_ferror.setObjectName("lbl_dro_ferror_%s"%(name))
-		self.drolabel_ferror.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
-		h1.addWidget(self.drolabel_dtg)
-		h1.addWidget(self.drolabel_ferror)
-		v1.addLayout(h1)
+        self.drolabel_act = QLabel(name)
+        self.drolabel_act.setObjectName("lbl_dro_act_%s" % (name))
+        self.drolabel_act.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        v1.addWidget(self.drolabel_act)
 
-		self.addLayout(v1,12)
-		UPDATER.connect("axis", lambda axis: self.update_position(axis[num]))
-		if name=='X' and INFO.machine_is_lathe:
-			UPDATER.connect("diameter_multiplier",lambda m: self.diameter_mode(m,num,name))
+        h1 = QHBoxLayout()
+        self.drolabel_dtg = QLabel(name)
+        self.drolabel_dtg.setObjectName("lbl_dro_dtg_%s" % (name))
+        self.drolabel_ferror = QLabel(name)
+        self.drolabel_ferror.setObjectName("lbl_dro_ferror_%s" % (name))
+        self.drolabel_ferror.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        h1.addWidget(self.drolabel_dtg)
+        h1.addWidget(self.drolabel_ferror)
+        v1.addLayout(h1)
 
-	def diameter_mode(self,data):
-		self.update_position(STAT.axis[self.num])
-		self.drolabel_name.setText("{}{}".format(self.name,['','R','D'][UPDATER.diameter_multiplier]))
+        self.addLayout(v1, 12)
+        UPDATER.connect("axis", lambda axis: self.update_position(axis[num]))
+        if name == 'X' and INFO.machine_is_lathe:
+            UPDATER.connect("diameter_multiplier",
+                            lambda m: self.diameter_mode(m, num, name))
 
-	def update_position(self, stat):
-		#position=stat['input'] is absolute
-		position=stat['input']-STAT.g5x_offset[self.num]-STAT.tool_offset[self.num]-STAT.g92_offset[self.num]	#set 'output' to see commanded position
+    def diameter_mode(self, data):
+        self.update_position(STAT.axis[self.num])
+        self.drolabel_name.setText("{}{}".format(
+            self.name, ['', 'R', 'D'][UPDATER.diameter_multiplier]))
 
-		if self.name == 'X' and INFO.machine_is_lathe:
-			self.drolabel_act.setText(INFO.dro_format.format(position*UPDATER.diameter_multiplier))	
-		else:
-			self.drolabel_act.setText(INFO.dro_format.format(position)) 
-		self.drolabel_dtg.setText('DTG '+INFO.dro_format.format(stat['output']-stat['input'])) 
-		self.drolabel_ferror.setText('FE '+INFO.dro_format.format(stat['ferror_current'])) 
+    def update_position(self, stat):
+        #position=stat['input'] is absolute
+        position = stat['input']-STAT.g5x_offset[self.num]-STAT.tool_offset[self.num] - \
+            STAT.g92_offset[self.num]  # set 'output' to see commanded position
+
+        if self.name == 'X' and INFO.machine_is_lathe:
+            self.drolabel_act.setText(INFO.dro_format.format(
+                position*UPDATER.diameter_multiplier))
+        else:
+            self.drolabel_act.setText(INFO.dro_format.format(position))
+        self.drolabel_dtg.setText(
+            'DTG '+INFO.dro_format.format(stat['output']-stat['input']))
+        self.drolabel_ferror.setText(
+            'FE '+INFO.dro_format.format(stat['ferror_current']))
+
 
 class DROWidget(QWidget):
-	def __init__(self, parent=None):
-		QWidget.__init__(self, parent)
-		dro_layout = QVBoxLayout()
-		for i, axis in enumerate("xyza"):
-			dro_layout.addLayout(DROLayout(i,axis))
-		dro_layout.addStretch()
-		self.setLayout(dro_layout)
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent)
+        dro_layout = QVBoxLayout()
+        for i, axis in enumerate("xyza"):
+            dro_layout.addLayout(DROLayout(i, axis))
+        dro_layout.addStretch()
+        self.setLayout(dro_layout)

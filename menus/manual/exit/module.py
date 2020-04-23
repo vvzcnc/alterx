@@ -26,20 +26,21 @@ from alterx.common.compat import *
 from alterx.common import *
 from alterx.gui.util import *
 
+
 class func:
-	def __init__(self,button):
-		dir_path = os.path.dirname(os.path.realpath(__file__))
+    def __init__(self, button):
+        dir_path = os.path.dirname(os.path.realpath(__file__))
 
-		if os.path.isfile("%s/icon.png"%dir_path):
-			button.setIcon(QIcon("%s/icon.png"%dir_path))
-			button.setIconSize(QSize(90,90))
-			button.setText("")
-		else:
-			button.setStyleSheet("color:black")
+        if os.path.isfile("%s/icon.png" % dir_path):
+            button.setIcon(QIcon("%s/icon.png" % dir_path))
+            button.setIconSize(QSize(90, 90))
+            button.setText("")
+        else:
+            button.setStyleSheet("color:black")
 
-	def execute(self):
-		printVerbose( _("Button exit clicked") )
+    def execute(self):
+        printVerbose(_("Button exit clicked"))
 
-		sys.exit()
+        sys.exit()
 
-		#os.system('sudo /sbin/poweroff')
+        #os.system('sudo /sbin/poweroff')

@@ -28,25 +28,27 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
+
 class func:
-	def __init__(self,button):
-		self.button = button
+    def __init__(self, button):
+        self.button = button
 
-		UPDATER.connect("interp_state",self.update_status)
+        UPDATER.connect("interp_state", self.update_status)
 
-		dir_path = os.path.dirname(os.path.realpath(__file__))
+        dir_path = os.path.dirname(os.path.realpath(__file__))
 
-		if os.path.isfile("%s/icon.png"%dir_path):
-			self.button.setIcon(QIcon("%s/icon.png"%dir_path))
-			self.button.setIconSize(QSize(90,90))
-			self.button.setText("")
-		else:
-			self.button.setStyleSheet("color:black")
+        if os.path.isfile("%s/icon.png" % dir_path):
+            self.button.setIcon(QIcon("%s/icon.png" % dir_path))
+            self.button.setIconSize(QSize(90, 90))
+            self.button.setText("")
+        else:
+            self.button.setStyleSheet("color:black")
 
-	def execute(self):
-		printVerbose(_("Button Step clicked"))
+    def execute(self):
+        printVerbose(_("Button Step clicked"))
 
-		COMMAND.auto(LINUXCNC.AUTO_STEP)
+        COMMAND.auto(LINUXCNC.AUTO_STEP)
 
-	def update_status(self,status):
-		self.button.setEnabled(False if status == LINUXCNC.INTERP_READING or status == LINUXCNC.INTERP_WAITING else True)
+    def update_status(self, status):
+        self.button.setEnabled(
+            False if status == LINUXCNC.INTERP_READING or status == LINUXCNC.INTERP_WAITING else True)

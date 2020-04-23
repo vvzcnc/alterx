@@ -29,38 +29,39 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
+
 class func:
-	def __init__(self,button):
-		self.button = button
+    def __init__(self, button):
+        self.button = button
 
-		if PREF.getpref("block_delete",False,bool):
-			COMMAND.set_block_delete(True)
-		else:
-			COMMAND.set_block_delete(False)
+        if PREF.getpref("block_delete", False, bool):
+            COMMAND.set_block_delete(True)
+        else:
+            COMMAND.set_block_delete(False)
 
-		UPDATER.connect("block_delete",self.update_image)
+        UPDATER.connect("block_delete", self.update_image)
 
-		self.update_image(STAT.block_delete)
+        self.update_image(STAT.block_delete)
 
-        def update_image(self,state):
-                dir_path = os.path.dirname(os.path.realpath(__file__))
-                if state:
-                        if os.path.isfile("%s/icon_on.png"%dir_path):
-				self.button.setIcon(QIcon("%s/icon_on.png"%dir_path))
-				self.button.setIconSize(QSize(90,90))
-				self.button.setText("")
-                        else:
-                                self.button.setStyleSheet("color:black")
-                else:
-                        if os.path.isfile("%s/icon.png"%dir_path):
-				self.button.setIcon(QIcon("%s/icon.png"%dir_path))
-				self.button.setIconSize(QSize(90,90))
-				self.button.setText("")
-                        else:
-                                self.button.setStyleSheet("color:black")
+    def update_image(self, state):
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        if state:
+            if os.path.isfile("%s/icon_on.png" % dir_path):
+                self.button.setIcon(QIcon("%s/icon_on.png" % dir_path))
+                self.button.setIconSize(QSize(90, 90))
+                self.button.setText("")
+            else:
+                self.button.setStyleSheet("color:black")
+        else:
+            if os.path.isfile("%s/icon.png" % dir_path):
+                self.button.setIcon(QIcon("%s/icon.png" % dir_path))
+                self.button.setIconSize(QSize(90, 90))
+                self.button.setText("")
+            else:
+                self.button.setStyleSheet("color:black")
 
-	def execute(self):
-		s = not STAT.block_delete
-		printInfo(_("Button block delete clicked"))
-		COMMAND.set_block_delete(s)
-	        PREF.putpref("block_delete",s)
+    def execute(self):
+        s = not STAT.block_delete
+        printInfo(_("Button block delete clicked"))
+        COMMAND.set_block_delete(s)
+        PREF.putpref("block_delete", s)

@@ -10,15 +10,15 @@ from . import prev_offset
 from . import next_offset
 
 buttons_order = [
-		"set_selected",
-		None,
-		"zero_g92",
-		None,
-		"edit_value_x",
-		"edit_value_y",
-		"edit_value_z",
-		None,
-		None,
-		"prev_offset",
-		"next_offset",
-		]
+    "set_selected",
+    None,
+    "zero_g92",
+    None,
+    "edit_value_x",
+    "edit_value_y",
+    "edit_value_z",
+    None,
+    None,
+    "prev_offset",
+    "next_offset",
+]

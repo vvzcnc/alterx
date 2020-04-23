@@ -28,35 +28,36 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import UPDATER
 
+
 class func:
-	def __init__(self,button):
-		self.button = button
-		self.delete_confirm = False
-		self.update_image()
+    def __init__(self, button):
+        self.button = button
+        self.delete_confirm = False
+        self.update_image()
 
-	def update_image(self):
-		dir_path = os.path.dirname(os.path.realpath(__file__))
-		if os.path.isfile("%s/icon.png"%dir_path):
-			self.button.setIcon(QIcon("%s/icon.png"%dir_path))
-			self.button.setIconSize(QSize(90,90))
-			self.button.setText("")
-		else:
-			self.button.setStyleSheet("color:black")
+    def update_image(self):
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        if os.path.isfile("%s/icon.png" % dir_path):
+            self.button.setIcon(QIcon("%s/icon.png" % dir_path))
+            self.button.setIconSize(QSize(90, 90))
+            self.button.setText("")
+        else:
+            self.button.setStyleSheet("color:black")
 
-	def update(self):
-		if not self.button.hasFocus() and self.delete_confirm:
-			self.delete_confirm = False
-			self.update_image()
+    def update(self):
+        if not self.button.hasFocus() and self.delete_confirm:
+            self.delete_confirm = False
+            self.update_image()
 
-	def execute(self):
-		printVerbose( _("Button filemanager delete clicked") )
+    def execute(self):
+        printVerbose(_("Button filemanager delete clicked"))
 
-		if self.delete_confirm:
-			self.delete_confirm = False
-			self.update_image()
-			UPDATER.emit("fileman_delete")
-		else:
-			self.button.setFocus()
-			self.button.setIcon(QIcon())
-			self.button.setText(_("Are you sure?\nClick to delete."))
-			self.delete_confirm = True
+        if self.delete_confirm:
+            self.delete_confirm = False
+            self.update_image()
+            UPDATER.emit("fileman_delete")
+        else:
+            self.button.setFocus()
+            self.button.setIcon(QIcon())
+            self.button.setText(_("Are you sure?\nClick to delete."))
+            self.delete_confirm = True

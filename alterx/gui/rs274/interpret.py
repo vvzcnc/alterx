@@ -14,7 +14,9 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-import math, gcode
+import math
+import gcode
+
 
 class Translated:
     g92_offset_x = g92_offset_y = g92_offset_z = 0
@@ -25,7 +27,7 @@ class Translated:
     g5x_offset_u = g5x_offset_v = g5x_offset_w = 0
     rotation_xy = 0
 
-    def rotate_and_translate(self, x,y,z,a,b,c,u,v,w):
+    def rotate_and_translate(self, x, y, z, a, b, c, u, v, w):
         x += self.g92_offset_x
         y += self.g92_offset_y
         z += self.g92_offset_z
@@ -35,7 +37,7 @@ class Translated:
         u += self.g92_offset_u
         v += self.g92_offset_v
         w += self.g92_offset_w
-        
+
         if self.rotation_xy:
             rotx = x * self.rotation_cos - y * self.rotation_sin
             y = x * self.rotation_sin + y * self.rotation_cos
@@ -55,8 +57,10 @@ class Translated:
 
     def straight_traverse(self, *args):
         self.straight_traverse_translated(*self.rotate_and_translate(*args))
+
     def straight_feed(self, *args):
         self.straight_feed_translated(*self.rotate_and_translate(*args))
+
     def set_g5x_offset(self, index, x, y, z, a, b, c, u=None, v=None, w=None):
         self.g5x_index = index
         self.g5x_offset_x = x
@@ -68,6 +72,7 @@ class Translated:
         self.g5x_offset_u = u
         self.g5x_offset_v = v
         self.g5x_offset_w = w
+
     def set_g92_offset(self, x, y, z, a, b, c, u=None, v=None, w=None):
         self.g92_offset_x = x
         self.g92_offset_y = y
@@ -78,11 +83,13 @@ class Translated:
         self.g92_offset_u = u
         self.g92_offset_v = v
         self.g92_offset_w = w
+
     def set_xy_rotation(self, theta):
         self.rotation_xy = theta
         t = math.radians(theta)
         self.rotation_sin = math.sin(t)
         self.rotation_cos = math.cos(t)
+
 
 class ArcsToSegmentsMixin:
     plane = 1
@@ -93,8 +100,10 @@ class ArcsToSegmentsMixin:
 
     def arc_feed(self, x1, y1, cx, cy, rot, z1, a, b, c, u, v, w):
         self.lo = tuple(self.lo)
-        segs = gcode.arc_to_segments(self, x1, y1, cx, cy, rot, z1, a, b, c, u, v, w, self.arcdivision)
+        segs = gcode.arc_to_segments(
+            self, x1, y1, cx, cy, rot, z1, a, b, c, u, v, w, self.arcdivision)
         self.straight_arcsegments(segs)
+
 
 class PrintCanon:
     def set_g5x_offset(self, *args):
@@ -131,6 +140,7 @@ class PrintCanon:
     def arc_feed(self, *args):
         print "arc_feed %.4g %.4g  %.4g %.4g %.4g  %.4g  %.4g %.4g %.4g" % args
 
+
 class StatMixin:
     def __init__(self, s, r):
         self.s = s
@@ -140,8 +150,9 @@ class StatMixin:
     def change_tool(self, pocket):
         if self.random:
             self.tools[0], self.tools[pocket] = self.tools[pocket], self.tools[0]
-        elif pocket==0:
-            self.tools[0] = -1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
+        elif pocket == 0:
+            self.tools[0] = - \
+                1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
         else:
             self.tools[0] = self.tools[pocket]
 

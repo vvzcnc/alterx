@@ -29,44 +29,48 @@ import locale
 import gettext
 import pkg_resources
 
+
 class translate():
-	def __init__(self):
-		self._locale, _encoding = locale.getdefaultlocale()
+    def __init__(self):
+        self._locale, _encoding = locale.getdefaultlocale()
 
-	def __call__(self,source,*args):
-		t=""
-		if len(args)>0:
-			try:
-				t=self._(source).format(*args)
-			except Exception as e:
-				printVerbose("Bad translation for ({}), error ({})".format(source,e))
-				t=source.format(*args)
-		else:
-			t=self._(source)
-		return t
-		
-	def get_text(self, s):
-		text = self.lang.lgettext(s)
-		if hasattr(text,"decode"):
-			return text.decode('utf-8') 
-		else:
-			printVerbose("No translation for ({})".format(s))
-			return s
+    def __call__(self, source, *args):
+        t = ""
+        if len(args) > 0:
+            try:
+                t = self._(source).format(*args)
+            except Exception as e:
+                printVerbose(
+                    "Bad translation for ({}), error ({})".format(source, e))
+                t = source.format(*args)
+        else:
+            t = self._(source)
+        return t
 
-	def setup(self,val):
-		locale_dir = pkg_resources.resource_filename("alterx", "locales")
+    def get_text(self, s):
+        text = self.lang.lgettext(s)
+        if hasattr(text, "decode"):
+            return text.decode('utf-8')
+        else:
+            printVerbose("No translation for ({})".format(s))
+            return s
 
-		if not val:
-			printVerbose("Using default locale: {}".format(self._locale))
-			val = self._locale
+    def setup(self, val):
+        locale_dir = pkg_resources.resource_filename("alterx", "locales")
 
-		try:
-			self.lang = gettext.translation("base", locale_dir, [val])
-			self.lang.install()
-			self._ = self.get_text
-			printVerbose("Setup locale: {}".format(val))
-		except Exception as e:
-			printError("Unsupported locale ({}) setting or translation error ({})".format(val,e))
-			self._ = lambda s: s
+        if not val:
+            printVerbose("Using default locale: {}".format(self._locale))
+            val = self._locale
+
+        try:
+            self.lang = gettext.translation("base", locale_dir, [val])
+            self.lang.install()
+            self._ = self.get_text
+            printVerbose("Setup locale: {}".format(val))
+        except Exception as e:
+            printError(
+                "Unsupported locale ({}) setting or translation error ({})".format(val, e))
+            self._ = lambda s: s
+
 
 _ = translate()

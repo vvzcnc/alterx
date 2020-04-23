@@ -10,11 +10,11 @@ from . import zoom_in
 from . import zoom_out
 
 buttons_order = [
-	'delete_view',
-	'view_p',
-	'view_x',
-	'view_y',
-	'view_z',
-	'zoom_in',
-	'zoom_out',
-	]
+    'delete_view',
+    'view_p',
+    'view_x',
+    'view_y',
+    'view_z',
+    'zoom_in',
+    'zoom_out',
+]

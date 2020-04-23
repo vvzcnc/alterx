@@ -16,13 +16,17 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-import nf, os
+import sys
+import commands
+import nf
+import os
 
 # lib/tcltk/emc2 for installed emc
 # tcl            for run-in-place emc
 for candidate in 'lib/tcltk/linuxcnc', 'tcl':
     LINUXCNC_TCL = os.path.join(nf.PREFIX, candidate, 'linuxcnc.tcl')
-    if os.path.exists(LINUXCNC_TCL): break
+    if os.path.exists(LINUXCNC_TCL):
+        break
 
 options = '''
 . configure -bg #d9d9d9
@@ -164,12 +168,13 @@ option add *Togl.lathetool #cccccc startupFile
 option add *Togl.lathetool_alpha .1 startupFile
 '''
 
-import commands, sys
 
-def install(root = None):
-    if root is None: root = Tkinter._default_root
+def install(root=None):
+    if root is None:
+        root = Tkinter._default_root
     o = root.option_get("optionLevel", "Level") or "interactive"
-    if hasattr(root, 'tk'): root = root.tk
+    if hasattr(root, 'tk'):
+        root = root.tk
     root.call('source', LINUXCNC_TCL)
     root.call('set', 'OPTIONLEVEL', o)
     root.call('eval', options)

@@ -28,43 +28,45 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
+
 class func:
-	def __init__(self,button):
-		self.button = button
-		self.edit = QLineEdit()
-		self.edit.setObjectName("edit_in_button_run_from_line")
-		self.edit.setVisible(False)
-		self.edit.setValidator(QIntValidator())
-		edit_layout = QVBoxLayout(self.button)
-		edit_layout.addWidget(self.edit)
+    def __init__(self, button):
+        self.button = button
+        self.edit = QLineEdit()
+        self.edit.setObjectName("edit_in_button_run_from_line")
+        self.edit.setVisible(False)
+        self.edit.setValidator(QIntValidator())
+        edit_layout = QVBoxLayout(self.button)
+        edit_layout.addWidget(self.edit)
 
-		UPDATER.connect("interp_state",self.update_status)
+        UPDATER.connect("interp_state", self.update_status)
 
-		dir_path = os.path.dirname(os.path.realpath(__file__))
+        dir_path = os.path.dirname(os.path.realpath(__file__))
 
-		if os.path.isfile("%s/icon.png"%dir_path):
-			self.button.setIcon(QIcon("%s/icon.png"%dir_path))
-			self.button.setIconSize(QSize(90,90))
-			self.button.setText("")
-		else:
-			self.button.setStyleSheet("color:black")
+        if os.path.isfile("%s/icon.png" % dir_path):
+            self.button.setIcon(QIcon("%s/icon.png" % dir_path))
+            self.button.setIconSize(QSize(90, 90))
+            self.button.setText("")
+        else:
+            self.button.setStyleSheet("color:black")
 
-	def update(self):
-		if not self.edit.hasFocus():
-			self.edit.setVisible(False)
-			self.edit.setText('')
+    def update(self):
+        if not self.edit.hasFocus():
+            self.edit.setVisible(False)
+            self.edit.setText('')
 
-	def execute(self):
-		if self.edit.isVisible():
-			self.edit.setVisible(False)
-			printVerbose(_("Run program from line: {}",self.edit.text()))
-			if self.edit.text() != "":
-				COMMAND.auto(LINUXCNC.AUTO_RUN, int(self.edit.text()))
-				COMMAND.auto(LINUXCNC.AUTO_PAUSE)
-		else:
-			printVerbose(_("Button Run from line clicked"))
-			self.edit.setVisible(True)
-			self.edit.setFocus()
+    def execute(self):
+        if self.edit.isVisible():
+            self.edit.setVisible(False)
+            printVerbose(_("Run program from line: {}", self.edit.text()))
+            if self.edit.text() != "":
+                COMMAND.auto(LINUXCNC.AUTO_RUN, int(self.edit.text()))
+                COMMAND.auto(LINUXCNC.AUTO_PAUSE)
+        else:
+            printVerbose(_("Button Run from line clicked"))
+            self.edit.setVisible(True)
+            self.edit.setFocus()
 
-	def update_status(self,status):
-		self.button.setEnabled(True if status == LINUXCNC.INTERP_IDLE else False)
+    def update_status(self, status):
+        self.button.setEnabled(
+            True if status == LINUXCNC.INTERP_IDLE else False)

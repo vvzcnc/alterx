@@ -27,35 +27,36 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
+
 class func:
-    def __init__(self,button):
+    def __init__(self, button):
         self.button = button
         self.update()
 
-    def update_image(self,state):
+    def update_image(self, state):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         if state:
-            if os.path.isfile("%s/icon_on.png"%dir_path):
-		self.button.setIcon(QIcon("%s/icon_on.png"%dir_path))
-		self.button.setIconSize(QSize(90,90))
-		self.button.setText("")
+            if os.path.isfile("%s/icon_on.png" % dir_path):
+                self.button.setIcon(QIcon("%s/icon_on.png" % dir_path))
+                self.button.setIconSize(QSize(90, 90))
+                self.button.setText("")
             else:
                 self.button.setStyleSheet("color:black")
         else:
-            if os.path.isfile("%s/icon.png"%dir_path):
-		self.button.setIcon(QIcon("%s/icon.png"%dir_path))
-		self.button.setIconSize(QSize(90,90))
-		self.button.setText("")
+            if os.path.isfile("%s/icon.png" % dir_path):
+                self.button.setIcon(QIcon("%s/icon.png" % dir_path))
+                self.button.setIconSize(QSize(90, 90))
+                self.button.setText("")
             else:
                 self.button.setStyleSheet("color:black")
 
     def execute(self):
         if STAT.flood:
-            printInfo( _("Button flood clicked, flood disactivated" ))
-            COMMAND.flood( LINUXCNC.FLOOD_OFF )
+            printInfo(_("Button flood clicked, flood disactivated"))
+            COMMAND.flood(LINUXCNC.FLOOD_OFF)
         else:
-            printInfo( _("Button flood clicked, flood activated" ))
-            COMMAND.flood( LINUXCNC.FLOOD_ON )
+            printInfo(_("Button flood clicked, flood activated"))
+            COMMAND.flood(LINUXCNC.FLOOD_ON)
 
     def update(self):
         self.update_image(STAT.flood)

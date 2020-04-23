@@ -4,5 +4,5 @@
 from . import macro_stop
 
 buttons_order = [
-	'macro_stop',
-	]
+    'macro_stop',
+]

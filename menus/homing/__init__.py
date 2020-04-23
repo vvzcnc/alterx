@@ -11,14 +11,14 @@ from . import home_c
 from . import unhome_all
 
 buttons_order = [
-	'home_all',
-	None,
-	'home_x',
-	'home_y',
-	'home_z',
-#	'home_a',
-#	'home_b',
-#	'home_c',
-	None,
-	'unhome_all'
-	]
+    'home_all',
+    None,
+    'home_x',
+    'home_y',
+    'home_z',
+    #	'home_a',
+    #	'home_b',
+    #	'home_c',
+    None,
+    'unhome_all'
+]

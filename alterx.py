@@ -22,4 +22,4 @@
 
 
 if __name__ == "__main__":
-	import alterx.startup
+    import alterx.startup

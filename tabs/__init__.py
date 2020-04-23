@@ -4,5 +4,5 @@
 from . import example
 
 tabs_order = [
-	"example",
-	]
+    "example",
+]

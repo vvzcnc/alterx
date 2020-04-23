@@ -11,15 +11,15 @@ from . import jog_enc
 from . import exit
 
 buttons_order = [
-	'jog_0001',
-	'jog_001',
-	'jog_01',
-	'jog_1',
-	None,
-	'jog_act',
-	'jog_cont',
-	'jog_enc',
-	None,
-	None,
-	'exit',
-	]
+    'jog_0001',
+    'jog_001',
+    'jog_01',
+    'jog_1',
+    None,
+    'jog_act',
+    'jog_cont',
+    'jog_enc',
+    None,
+    None,
+    'exit',
+]

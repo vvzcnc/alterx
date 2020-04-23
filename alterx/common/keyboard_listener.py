@@ -29,39 +29,43 @@ from alterx.common.util import *
 __all__ = []
 
 import time
-from multiprocessing import Process,Queue
+from multiprocessing import Process, Queue
 from threading import Thread
 
 QKEY = Queue(-1)
 QLED = Queue(-1)
 
-def listener_process(log,key,led):
-	while True:
-		time.sleep(10)
-		log.put_nowait({"name":__name__,"level":logging.INFO,"msg":"Testing","path":__file__})
-		key.put_nowait({"key":"F1","state":True})
-	key.put_nowait(None)		
-	
+
+def listener_process(log, key, led):
+    while True:
+        time.sleep(10)
+        log.put_nowait({"name": __name__, "level": logging.INFO,
+                        "msg": "Testing", "path": __file__})
+        key.put_nowait({"key": "F1", "state": True})
+    key.put_nowait(None)
+
+
 class keyboardListener():
-	def listener_thread(self,log,key,led):
-		while True:
-			try:
-				k = key.get()
-				if k is None:
-					break
-				printVerbose('Key received: %s'%k["key"])
-			except (KeyboardInterrupt, SystemExit):
-				raise
-			except Exception as e:
-				printError('Key listener thread error: %s'%e)
+    def listener_thread(self, log, key, led):
+        while True:
+            try:
+                k = key.get()
+                if k is None:
+                    break
+                printVerbose('Key received: %s' % k["key"])
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except Exception as e:
+                printError('Key listener thread error: %s' % e)
 
-	def __init__(self):
-		kt = Thread(target=self.listener_thread,args=(QLOG,QKEY,QLED,))
-		kt.daemon = True
-		kt.start()
+    def __init__(self):
+        kt = Thread(target=self.listener_thread, args=(QLOG, QKEY, QLED,))
+        kt.daemon = True
+        kt.start()
 
-		kp=Process(target=listener_process,args=(QLOG,QKEY,QLED,))
-		kp.daemon = True
-		kp.start()
+        kp = Process(target=listener_process, args=(QLOG, QKEY, QLED,))
+        kp.daemon = True
+        kp.start()
+
 
 key_listener = keyboardListener()

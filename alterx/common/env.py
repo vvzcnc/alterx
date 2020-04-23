@@ -24,40 +24,41 @@ from alterx.common.compat import *
 from alterx.common.util import *
 
 __all__ = [
-	"AlterxEnv",
+    "AlterxEnv",
 ]
 
+
 class AlterxEnv(object):
-	"""Central environment variable handler.
-	"""
+    """Central environment variable handler.
+    """
 
-	@classmethod
-	def getEnv(cls):
-		"""Get a copy of the environment dict.
-		"""
-		return dict(os.environ)
+    @classmethod
+    def getEnv(cls):
+        """Get a copy of the environment dict.
+        """
+        return dict(os.environ)
 
-	@classmethod
-	def clearLang(cls, env, lang="C"):
-		"""Reset the language settings of an environment dict
-		to some expected value and return the result.
-		"""
-		env = dict(env)
-		env["LANG"] = lang
-		for i in {"LANGUAGE", "LC_CTYPE", "LC_NUMERIC",
-			  "LC_TIME", "LC_COLLATE", "LC_MONETARY",
-			  "LC_MESSAGES", "LC_PAPER", "LC_NAME",
-			  "LC_ADDRESS", "LC_TELEPHONE", "LC_MEASUREMENT",
-			  "LC_IDENTIFICATION",}:
-			env.pop(i, None)
-		return env
+    @classmethod
+    def clearLang(cls, env, lang="C"):
+        """Reset the language settings of an environment dict
+        to some expected value and return the result.
+        """
+        env = dict(env)
+        env["LANG"] = lang
+        for i in {"LANGUAGE", "LC_CTYPE", "LC_NUMERIC",
+                  "LC_TIME", "LC_COLLATE", "LC_MONETARY",
+                  "LC_MESSAGES", "LC_PAPER", "LC_NAME",
+                  "LC_ADDRESS", "LC_TELEPHONE", "LC_MEASUREMENT",
+                  "LC_IDENTIFICATION", }:
+            env.pop(i, None)
+        return env
 
-	@classmethod
-	def __getVar(cls, name, default=None):
-		return cls.getEnv().get("ALTERX_" + name, default)
+    @classmethod
+    def __getVar(cls, name, default=None):
+        return cls.getEnv().get("ALTERX_" + name, default)
 
-	@classmethod
-	def getGuiFramework(cls):
-		"""Get ALTERX_GUI.
-		"""
-		return cls.__getVar("GUI", "auto").lower()
+    @classmethod
+    def getGuiFramework(cls):
+        """Get ALTERX_GUI.
+        """
+        return cls.__getVar("GUI", "auto").lower()

@@ -30,83 +30,88 @@ import os
 
 
 def __frameworkError(msg):
-	printError(_("alterx ERROR: {}" , msg))
-	try:
-		if osIsWindows:
-			input(_("Press enter to exit."))
-	except (KeyboardInterrupt, Exception) as e:
-		pass
-	sys.exit(1)
+    printError(_("alterx ERROR: {}", msg))
+    try:
+        if osIsWindows:
+            input(_("Press enter to exit."))
+    except (KeyboardInterrupt, Exception) as e:
+        pass
+    sys.exit(1)
+
 
 def __testQStringAPI(scope, silent=False):
-	# Test for QString v2 API
-	if "QString" in scope:
-		# QString exists. This is v1 API.
-		if silent:
-			return False
-		__frameworkError(_("Deprecated QString API detected.\n"
-				 "Awlsim does not support PyQt QString v1 API.\n"
-				 "---> Please use PySide2 or a newer PyQt5. <---"))
-	return True
+    # Test for QString v2 API
+    if "QString" in scope:
+        # QString exists. This is v1 API.
+        if silent:
+            return False
+        __frameworkError(_("Deprecated QString API detected.\n"
+                           "Awlsim does not support PyQt QString v1 API.\n"
+                           "---> Please use PySide2 or a newer PyQt5. <---"))
+    return True
+
 
 def __autodetectGuiFramework():
-	urls = {
-		"pyside" : "http://www.pyside.org/",
-		"pyqt"   : "http://www.riverbankcomputing.com/software/pyqt/download5",
-	}
-	with contextlib.suppress(ImportError):
-		import PyQt5.QtCore as __pyQtCore
-		if __testQStringAPI(dir(__pyQtCore), True):
-			return "pyqt5"
-	with contextlib.suppress(ImportError):
-		import PySide2.QtCore as __pySideCore
-		return "pyside2"
-	__frameworkError("Neither PySide nor PyQt found.\n"
-			 "PLEASE INSTALL PySide2 (%s)\n"
-			 "            or PyQt5 (%s)" %\
-			 (urls["pyside"],
-			  urls["pyqt"]))
+    urls = {
+        "pyside": "http://www.pyside.org/",
+        "pyqt": "http://www.riverbankcomputing.com/software/pyqt/download5",
+    }
+    with contextlib.suppress(ImportError):
+        import PyQt5.QtCore as __pyQtCore
+        if __testQStringAPI(dir(__pyQtCore), True):
+            return "pyqt5"
+    with contextlib.suppress(ImportError):
+        import PySide2.QtCore as __pySideCore
+        return "pyside2"
+    __frameworkError("Neither PySide nor PyQt found.\n"
+                     "PLEASE INSTALL PySide2 (%s)\n"
+                     "            or PyQt5 (%s)" %
+                     (urls["pyside"],
+                      urls["pyqt"]))
+
 
 # The Qt bindings can be set via AWLSIM_GUI environment variable.
 __guiFramework = AlterxEnv.getGuiFramework()
 
 # Run Qt autodetection
 if __guiFramework == "auto":
-	__guiFramework = __autodetectGuiFramework()
+    __guiFramework = __autodetectGuiFramework()
 if __guiFramework == "pyside":
-	__guiFramework = "pyside2"
+    __guiFramework = "pyside2"
 if __guiFramework == "pyqt":
-	__guiFramework = "pyqt5"
+    __guiFramework = "pyqt5"
 
 # Load the Qt modules
 if __guiFramework == "pyside2":
-	try:
-		from PySide2.QtCore import *
-		from PySide2.QtGui import *
-		from PySide2.QtWidgets import *
-		from PySide2.Qsci import *
-	except ImportError as e:
-		__frameworkError(_("Failed to import PySide2 modules:\n {}" , str(e)))
+    try:
+        from PySide2.QtCore import *
+        from PySide2.QtGui import *
+        from PySide2.QtWidgets import *
+        from PySide2.Qsci import *
+    except ImportError as e:
+        __frameworkError(_("Failed to import PySide2 modules:\n {}", str(e)))
 elif __guiFramework == "pyqt5":
-	try:
-		from PyQt5.QtCore import *
-		from PyQt5.QtGui import *
-		from PyQt5.QtWidgets import *
-		from PyQt5.Qsci import *
-	except ImportError as e:
-		__frameworkError(_("Failed to import PyQt5 modules:\n {}" , str(e)))
-	__testQStringAPI(globals())
+    try:
+        from PyQt5.QtCore import *
+        from PyQt5.QtGui import *
+        from PyQt5.QtWidgets import *
+        from PyQt5.Qsci import *
+    except ImportError as e:
+        __frameworkError(_("Failed to import PyQt5 modules:\n {}", str(e)))
+    __testQStringAPI(globals())
 else:
-	__frameworkError(_("Unknown GUI framework '{}' requested.\n"
-			 "Please fix the AWLSIM_GUI environment variable.",
-			 __guiFramework))
+    __frameworkError(_("Unknown GUI framework '{}' requested.\n"
+                       "Please fix the AWLSIM_GUI environment variable.",
+                       __guiFramework))
+
 
 def getGuiFrameworkName():
-	return __guiFramework
+    return __guiFramework
+
 
 # Helpers for distinction between PySide and PyQt API.
 isPySide = __guiFramework.startswith("pyside")
 isPyQt = __guiFramework.startswith("pyqt")
 
 if isPyQt:
-	Signal = pyqtSignal
+    Signal = pyqtSignal

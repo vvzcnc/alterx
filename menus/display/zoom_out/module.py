@@ -28,17 +28,18 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import UPDATER
 
+
 class func:
-	def __init__(self,button):
-		dir_path = os.path.dirname(os.path.realpath(__file__))
+    def __init__(self, button):
+        dir_path = os.path.dirname(os.path.realpath(__file__))
 
-		if os.path.isfile("%s/icon.png"%dir_path):
-			button.setIcon(QIcon("%s/icon.png"%dir_path))
-			button.setIconSize(QSize(90,90))
-			button.setText("")
-		else:
-			button.setStyleSheet("color:black")
+        if os.path.isfile("%s/icon.png" % dir_path):
+            button.setIcon(QIcon("%s/icon.png" % dir_path))
+            button.setIconSize(QSize(90, 90))
+            button.setText("")
+        else:
+            button.setStyleSheet("color:black")
 
-	def execute(self):
-		printVerbose( _("Button zoom minus clicked") )
-		UPDATER.emit("display_zoomout")
+    def execute(self):
+        printVerbose(_("Button zoom minus clicked"))
+        UPDATER.emit("display_zoomout")

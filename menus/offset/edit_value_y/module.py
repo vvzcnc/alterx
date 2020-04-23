@@ -28,43 +28,44 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
+
 class func:
-	def __init__(self,button):
-		self.button = button
-		self.edit = QLineEdit()
-		self.edit.setObjectName("edit_in_button_edit_y")
-		self.edit.setVisible(False)
-		self.edit.setValidator(QDoubleValidator())
-		edit_layout = QVBoxLayout(self.button)
-		edit_layout.addWidget(self.edit)
-		self.edit_lifetime = 0
-		dir_path = os.path.dirname(os.path.realpath(__file__))
+    def __init__(self, button):
+        self.button = button
+        self.edit = QLineEdit()
+        self.edit.setObjectName("edit_in_button_edit_y")
+        self.edit.setVisible(False)
+        self.edit.setValidator(QDoubleValidator())
+        edit_layout = QVBoxLayout(self.button)
+        edit_layout.addWidget(self.edit)
+        self.edit_lifetime = 0
+        dir_path = os.path.dirname(os.path.realpath(__file__))
 
-		if os.path.isfile("%s/icon.png"%dir_path):
-			self.button.setIcon(QIcon("%s/icon.png"%dir_path))
-			self.button.setIconSize(QSize(90,90))
-			self.button.setText("")
-		else:
-			self.button.setStyleSheet("color:black")
+        if os.path.isfile("%s/icon.png" % dir_path):
+            self.button.setIcon(QIcon("%s/icon.png" % dir_path))
+            self.button.setIconSize(QSize(90, 90))
+            self.button.setText("")
+        else:
+            self.button.setStyleSheet("color:black")
 
-	def update(self):
-		if not self.edit.hasFocus() and self.edit_lifetime == 0:
-			self.edit.setVisible(False)
-			self.edit.setText('')
-		else:
-			self.edit_lifetime-=1
+    def update(self):
+        if not self.edit.hasFocus() and self.edit_lifetime == 0:
+            self.edit.setVisible(False)
+            self.edit.setText('')
+        else:
+            self.edit_lifetime -= 1
 
-	def execute(self):
-		if self.edit.isVisible():
-			self.edit.setVisible(False)
-			printVerbose(_("Offset viewer edit Y: {}",self.edit.text()))
-			if self.edit.text() != "":
-				UPDATER.emit("offsetviewer_edit",(1,float(self.edit.text())))
-			else:
-				UPDATER.emit("offsetviewer_edit",(1,0.0))
-		else:
-			printVerbose(_("Offset viewer edit Y clicked"))
-			self.edit_lifetime = 5
-			self.edit.setText("")
-			self.edit.setVisible(True)
-			self.edit.setFocus()
+    def execute(self):
+        if self.edit.isVisible():
+            self.edit.setVisible(False)
+            printVerbose(_("Offset viewer edit Y: {}", self.edit.text()))
+            if self.edit.text() != "":
+                UPDATER.emit("offsetviewer_edit", (1, float(self.edit.text())))
+            else:
+                UPDATER.emit("offsetviewer_edit", (1, 0.0))
+        else:
+            printVerbose(_("Offset viewer edit Y clicked"))
+            self.edit_lifetime = 5
+            self.edit.setText("")
+            self.edit.setVisible(True)
+            self.edit.setFocus()

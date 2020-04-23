@@ -21,10 +21,14 @@
 
 from minigl import *
 import math
-import array, itertools
+import array
+import itertools
+
 
 def use_pango_font(font, start, count, will_call_prepost=False):
-    import pango, cairo, pangocairo
+    import pango
+    import cairo
+    import pangocairo
     fontDesc = pango.FontDescription(font)
     a = array.array('b', itertools.repeat(0, 256*256))
     surface = cairo.ImageSurface.create_for_data(a, cairo.FORMAT_A8, 256, 256)
@@ -59,13 +63,13 @@ def use_pango_font(font, start, count, will_call_prepost=False):
         context.new_path()
         context.rectangle(0, 0, 256, 256)
         context.set_source_rgba(0., 0., 0., 0.)
-        context.set_operator (cairo.OPERATOR_SOURCE);
+        context.set_operator(cairo.OPERATOR_SOURCE)
         context.paint()
         context.restore()
 
         context.save()
         context.set_source_rgba(1., 1., 1., 1.)
-        context.set_operator (cairo.OPERATOR_SOURCE);
+        context.set_operator(cairo.OPERATOR_SOURCE)
         context.move_to(0, 0)
         context.update_layout(layout)
         context.show_layout(layout)
@@ -73,23 +77,29 @@ def use_pango_font(font, start, count, will_call_prepost=False):
 
         w, h = pango.PIXELS(w), pango.PIXELS(h)
         glNewList(base+i, GL_COMPILE)
-        glBitmap(0, 0, 0, 0, 0, h-d, '');
-        if not will_call_prepost: pango_font_pre()
-        if w and h: glDrawPixels(w, h, GL_LUMINANCE, GL_UNSIGNED_BYTE, a)
-        glBitmap(0, 0, 0, 0, w, -h+d, '');
-        if not will_call_prepost: pango_font_post()
+        glBitmap(0, 0, 0, 0, 0, h-d, '')
+        if not will_call_prepost:
+            pango_font_pre()
+        if w and h:
+            glDrawPixels(w, h, GL_LUMINANCE, GL_UNSIGNED_BYTE, a)
+        glBitmap(0, 0, 0, 0, w, -h+d, '')
+        if not will_call_prepost:
+            pango_font_post()
         glEndList()
 
     glPopClientAttrib()
     return base, pango.PIXELS(width), pango.PIXELS(linespace)
+
 
 def pango_font_pre(rgba=(1., 1., 0., 1.)):
     glPushAttrib(GL_COLOR_BUFFER_BIT)
     glEnable(GL_BLEND)
     glBlendFunc(GL_ONE, GL_ONE)
 
+
 def pango_font_post():
     glPopAttrib()
+
 
 def glTranslateScene(w, s, x, y, mousex, mousey):
     glMatrixMode(GL_MODELVIEW)
@@ -101,7 +111,7 @@ def glTranslateScene(w, s, x, y, mousex, mousey):
 
 def glRotateScene(w, s, xcenter, ycenter, zcenter, x, y, mousex, mousey):
     def snap(a):
-        m = a%90
+        m = a % 90
         if m < 3:
             return a-m
         elif m > 87:
@@ -126,8 +136,10 @@ def glRotateScene(w, s, xcenter, ycenter, zcenter, x, y, mousex, mousey):
     w.lat = lat
     w.lon = lon
 
+
 def sub(x, y):
     return map(lambda a, b: a-b, x, y)
+
 
 def dot(x, y):
     t = 0
@@ -135,17 +147,20 @@ def dot(x, y):
         t = t + x[i]*y[i]
     return t
 
+
 def glDistFromLine(x, p1, p2):
     f = map(lambda x, y: x-y, p2, p1)
     g = map(lambda x, y: x-y, x, p1)
     return dot(g, g) - dot(f, g)**2/dot(f, f)
 
-def v3distsq(a,b):
-    d = ( a[0] - b[0], a[1] - b[1], a[2] - b[2] )
+
+def v3distsq(a, b):
+    d = (a[0] - b[0], a[1] - b[1], a[2] - b[2])
     return d[0]*d[0] + d[1]*d[1] + d[2]*d[2]
 
+
 class GlNavBase:
-    rotation_vectors = [(1.,0.,0.), (0., 0., 1.)]
+    rotation_vectors = [(1., 0., 0.), (0., 0., 1.)]
 
     def __init__(self):
         # Current coordinates of the mouse.
@@ -197,7 +212,6 @@ class GlNavBase:
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
-
     def set_background(self, r, g, b):
         """Change the background colour of the widget."""
 
@@ -206,7 +220,6 @@ class GlNavBase:
         self.b_back = b
 
         self._redraw()
-
 
     def set_centerpoint(self, x, y, z):
         """Set the new center point for the model.
@@ -217,7 +230,6 @@ class GlNavBase:
         self.zcenter = z
 
         self._redraw()
-
 
     def set_latitudelimits(self, minlat, maxlat):
         """Set the new "latitude" limits for rotations."""
@@ -232,7 +244,6 @@ class GlNavBase:
         self.minlat = minlat
 
         self._redraw()
-
 
     def set_eyepoint(self, distance):
         """Set how far the eye is from the position we are looking."""
@@ -255,7 +266,6 @@ class GlNavBase:
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         self._redraw()
-
 
     def recordMouse(self, x, y):
         self.xmouse = x
@@ -288,7 +298,8 @@ class GlNavBase:
 
         self.activate()
         self.perspective = True
-        glRotateScene(self, 0.5, self.xcenter, self.ycenter, self.zcenter, x, y, self.xmouse, self.ymouse)
+        glRotateScene(self, 0.5, self.xcenter, self.ycenter,
+                      self.zcenter, x, y, self.xmouse, self.ymouse)
         self._redraw()
         self.recordMouse(x, y)
 
@@ -298,29 +309,29 @@ class GlNavBase:
         self.activate()
 
         # Scale mouse translations to object viewplane so object tracks with mouse
-        win_height = max( 1,self.winfo_height() )
-        obj_c     = ( self.xcenter, self.ycenter, self.zcenter )
-        win     = gluProject( obj_c[0], obj_c[1], obj_c[2])
-        obj     = gluUnProject( win[0], win[1] + 0.5 * win_height, win[2])
-        dist       = math.sqrt( v3distsq( obj, obj_c ) )
-        scale     = abs( dist / ( 0.5 * win_height ) )
+        win_height = max(1, self.winfo_height())
+        obj_c = (self.xcenter, self.ycenter, self.zcenter)
+        win = gluProject(obj_c[0], obj_c[1], obj_c[2])
+        obj = gluUnProject(win[0], win[1] + 0.5 * win_height, win[2])
+        dist = math.sqrt(v3distsq(obj, obj_c))
+        scale = abs(dist / (0.5 * win_height))
 
         glTranslateScene(self, scale, x, y, self.xmouse, self.ymouse)
         self._redraw()
         self.recordMouse(x, y)
 
-
     def set_viewangle(self, lat, lon):
         self.lat = lat
         self.lon = lon
-        glRotateScene(self, 0.5, self.xcenter, self.ycenter, self.zcenter, 0, 0, 0, 0)
+        glRotateScene(self, 0.5, self.xcenter, self.ycenter,
+                      self.zcenter, 0, 0, 0, 0)
         self.tkRedraw()
 
     def get_zoom_distance(self):
         data = self.distance
         return data
 
-    def set_zoom_distance(self,data):
+    def set_zoom_distance(self, data):
         self.distance = data
         self._redraw()
 
@@ -419,12 +430,14 @@ class GlNavBase:
         mid, size = self.extents_info()
         glTranslatef(-mid[0], -mid[1], -mid[2])
         size = (size[0] ** 2 + size[1] ** 2 + size[2] ** 2) ** .5
-        if size > 1e99: size = 5. # in case there are no moves in the preview
+        if size > 1e99:
+            size = 5.  # in case there are no moves in the preview
         w = self.winfo_width()
         h = self.winfo_height()
         fovx = self.fovy * w / h
         fov = min(fovx, self.fovy)
-        self.set_eyepoint((size * 1.1 + 1.0) / 2 / math.sin ( fov * math.pi / 180 / 2))
+        self.set_eyepoint((size * 1.1 + 1.0) / 2 /
+                          math.sin(fov * math.pi / 180 / 2))
         self.lat = -60
         self.lon = 335
         glRotateScene(self, 1.0, mid[0], mid[1], mid[2], 0, 0, 0, 0)
