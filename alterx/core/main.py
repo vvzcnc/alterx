@@ -97,6 +97,8 @@ class Main():
 		elif data == LINUXCNC.MODE_AUTO:
 			mode = _("AUTO")
 			UPDATER.emit("screen_auto")
+		else:
+			mode = _("None")
 
 		printVerbose(_("LinuxCNC mode {}",mode))
 
@@ -162,9 +164,11 @@ class Main():
 		UPDATER.emit("screen_homing")
 
 	def btn_offset_callback(self,button):
+		UPDATER.emit("reload_offsets")
 		UPDATER.emit("screen_offset")
 
 	def btn_tool_callback(self,button):
+		UPDATER.emit("reload_tools")
 		UPDATER.emit("screen_tool")
 
 	def btn_manual_callback(self,button):

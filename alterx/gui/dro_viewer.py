@@ -67,10 +67,13 @@ class DROLayout(QHBoxLayout):
 		self.drolabel_name.setText("{}{}".format(self.name,['','R','D'][UPDATER.diameter_multiplier]))
 
 	def update_position(self, stat):
+		#position=stat['input'] is absolute
+		position=stat['input']-STAT.g5x_offset[self.num]-STAT.tool_offset[self.num]-STAT.g92_offset[self.num]	#set 'output' to see commanded position
+
 		if self.name == 'X' and INFO.machine_is_lathe:
-			self.drolabel_act.setText(INFO.dro_format.format(stat['input']*UPDATER.diameter_multiplier))	
+			self.drolabel_act.setText(INFO.dro_format.format(position*UPDATER.diameter_multiplier))	
 		else:
-			self.drolabel_act.setText(INFO.dro_format.format(stat['input'])) #set 'output' to see commanded position
+			self.drolabel_act.setText(INFO.dro_format.format(position)) 
 		self.drolabel_dtg.setText('DTG '+INFO.dro_format.format(stat['output']-stat['input'])) 
 		self.drolabel_ferror.setText('FE '+INFO.dro_format.format(stat['ferror_current'])) 
 

@@ -46,7 +46,7 @@ class ToolOffsetView(QTableView):
                 self.metric_display = INFO.get_metric()
                 self.mm_text_template = '%10.3f'
                 self.imperial_text_template = '%9.4f'
-                self.setEnabled(False)
+                self.setEnabled(True)
 		self.table = self.createTable()
         
 		self.MACHINE_UNIT_CONVERSION = [1.0/25.4]*6+[1]*3+[1.0/25.4]*4
@@ -65,8 +65,8 @@ class ToolOffsetView(QTableView):
 
 		self.reload_tools()
 
-		UPDATER.add("reload-tools")
-                UPDATER.connect('reload-tools', self.reload_tools)
+		UPDATER.add("reload_tools")
+                UPDATER.connect('reload_tools', self.reload_tools)
                 UPDATER.connect('program_units', self.metricMode)
                 UPDATER.connect('tool_in_spindle', self.currentTool)
 
@@ -274,7 +274,6 @@ class ToolOffsetView(QTableView):
                 else:
                         maintool = data[0]
                         weartool = data[1]
-                #print 'main',data
                 tool_num_list = {}
                 full_tool_list = []
                 for rnum, row in enumerate(maintool):
@@ -297,8 +296,7 @@ class ToolOffsetView(QTableView):
                                         # a;; the rest past z wear position
                                         new_line[cnum+4] = i
                         full_tool_list.append(new_line)
-                        #print 'row',row
-                        #print 'new row',new_line
+
                 # any tool number over 10000 is a wear offset
                 # It's already been separated in the weartool variable.
                 # now we pull the values we need out and put it in our
@@ -366,15 +364,12 @@ class ToolOffsetView(QTableView):
                 # now update linuxcnc to the change
                 try:
                         if STAT.task_mode == LINUXCNC.MODE_MDI:
-                                #for i in self.tablemodel.arraydata:
-                                #        printDebug("2>>> = {}".format(i))
                                 error = save_tool_file(self.convert_to_standard_type(self.tablemodel.arraydata))
                                 if error:
                                         raise
                                 COMMAND.mdi('g43')
-				UPDATER.emit('reload-display')
+				COMMAND.wait_complete()
 	    			self.reload_table()
-                                #self.resizeColumnsToContents()
                 except Exception as e:
                         printError(_("Offsetpage widget error: MDI call error, {}",e))
 			self.reload_table()
@@ -426,18 +421,9 @@ class ToolModel(QAbstractTableModel):
                                 checkedlist.append(row[1])
                 return checkedlist
 
-        # Returns the number of rows under the given parent.
-        # When the parent is valid it means that rowCount is
-        # returning the number of children of parent.
-        #
-        # Note: When implementing a table based model, rowCount() 
-        # should return 0 when the parent is valid.
         def rowCount(self, parent):
                 return len(self.arraydata)
 
-        # Returns the number of columns for the children of the given parent.
-        # Note: When implementing a table based model, columnCount() should 
-        # return 0 when the parent is valid.
         def columnCount(self, parent):
                 if len(self.arraydata) > 0:
                         return len(self.arraydata[0])
@@ -451,13 +437,11 @@ class ToolModel(QAbstractTableModel):
                         return self.arraydata[index.row()][index.column()]
                 elif role == Qt.CheckStateRole:
                         if index.column() == 0:
-                                # print(">>> data() row,col = %d, %d" % (index.row(), index.column()))
                                 if self.arraydata[index.row()][index.column()].isChecked():
                                         return Qt.Checked
                                 else:
                                         return Qt.Unchecked
                 return QVariant()
-
 
         # Returns the item flags for the given index.
         def flags(self, index):
@@ -468,30 +452,16 @@ class ToolModel(QAbstractTableModel):
                 else:
                         return Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable
 
-        # Sets the role data for the item at index to value.
-        # Returns true if successful; otherwise returns false.
-        # The dataChanged() signal should be emitted if the data was successfully set.
-        # these column numbers correspond to our included wear columns
-        # it will be converted when saved
         def setData(self, index, value, role):
                 col = index.column()
                 if not index.isValid():
-                        printError(">>> index not valid {}".format(index))
+                        printError("Tool viewer index not valid {}".format(index))
                         return False
-                printDebug("original value:{}".format(self.arraydata[index.row()][col]))
-                printDebug(">>> setData() role = {}".format(role))
-                printDebug(">>> setData() column() = {}".format(col))
                 if role == Qt.CheckStateRole and index.column() == 0:
-                        #print(">>> setData() role = ", role)
-                        #print(">>> setData() index.column() = ", index.column())
                         if value == Qt.Checked:
                                 self.arraydata[index.row()][index.column()].setChecked(True)
-                                #self.arraydata[index.row()][index.column()].setText("Delete")
-                                #print 'selected',self.arraydata[index.row()][1]
                         else:
                                 self.arraydata[index.row()][index.column()].setChecked(False)
-                                #self.arraydata[index.row()][index.column()].setText("Un")
-                        # don't emit dataChanged - return right away
                         return True
 
                 # TODO make valuse actually change in metric/impeial mode
@@ -511,21 +481,10 @@ class ToolModel(QAbstractTableModel):
                 except:
                         printError(_("Invaliad data type in row {} column:{} ",index.row(), col))
                         return False
-                printDebug(">>> setData() value = {} ".format(value))
-                printDebug(">>> setData() qualified value = {}".format(v))
-                printDebug(">>> setData() index.row = {}".format(index.row()))
-                printDebug(">>> setData() index.column = {}".format(col))
-
-                printDebug(">>> = {}".format(self.arraydata[index.row()][col]))
-                for i in self.arraydata:
-                        printDebug(">>> = {}".format(i))
 
                 self.dataChanged.emit(index, index)
                 return True
 
-        # Returns the data for the given role and section in the header with the specified orientation.
-        # For horizontal headers, the section number corresponds to the column number. 
-        # Similarly, for vertical headers, the section number corresponds to the row number.
         def headerData(self, col, orientation, role):
                 if orientation == Qt.Horizontal and role == Qt.DisplayRole:
                         return QVariant(self.headerdata[col])
@@ -533,11 +492,7 @@ class ToolModel(QAbstractTableModel):
                         return QVariant('')
                 return QVariant()
 
-        # Sorts the model by column in the given order.
         def sort(self, Ncol, order):
-                """
-                Sort table by given column number.
-                """
                 self.layoutAboutToBeChanged.emit()
                 self.arraydata = sorted(self.arraydata, key=operator.itemgetter(Ncol))
                 if order == Qt.DescendingOrder:

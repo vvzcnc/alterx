@@ -1,7 +1,6 @@
-#!/usr/bin/env python
-# -*- coding:UTF-8 -*-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 #
-# AlterX GUI - program run from line
+# AlterX GUI - offset view zero g92 button
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
@@ -26,45 +25,21 @@ from alterx.common.locale import _
 from alterx.common.compat import *
 from alterx.common import *
 from alterx.gui.util import *
+
 from alterx.core.linuxcnc import *
 
 class func:
 	def __init__(self,button):
-		self.button = button
-		self.edit = QLineEdit()
-		self.edit.setObjectName("edit_in_button_run_from_line")
-		self.edit.setVisible(False)
-		self.edit.setValidator(QIntValidator())
-		edit_layout = QVBoxLayout(self.button)
-		edit_layout.addWidget(self.edit)
-
-		UPDATER.connect("interp_state",self.update_status)
-
 		dir_path = os.path.dirname(os.path.realpath(__file__))
 
 		if os.path.isfile("%s/icon.png"%dir_path):
-			self.button.setIcon(QIcon("%s/icon.png"%dir_path))
-			self.button.setIconSize(QSize(90,90))
-			self.button.setText("")
+			button.setIcon(QIcon("%s/icon.png"%dir_path))
+			button.setIconSize(QSize(90,90))
+			button.setText("")
 		else:
-			self.button.setStyleSheet("color:black")
-
-	def update(self):
-		if not self.edit.hasFocus():
-			self.edit.setVisible(False)
-			self.edit.setText('')
+			button.setStyleSheet("color:black")
 
 	def execute(self):
-		if self.edit.isVisible():
-			self.edit.setVisible(False)
-			printVerbose(_("Run program from line: {}",self.edit.text()))
-			if self.edit.text() != "":
-				COMMAND.auto(LINUXCNC.AUTO_RUN, int(self.edit.text()))
-				COMMAND.auto(LINUXCNC.AUTO_PAUSE)
-		else:
-			printVerbose(_("Button Run from line clicked"))
-			self.edit.setVisible(True)
-			self.edit.setFocus()
-
-	def update_status(self,status):
-		self.button.setEnabled(True if status == LINUXCNC.INTERP_IDLE else False)
+		printVerbose( _("Button zero g92 clicked") )
+		if STAT.task_mode == LINUXCNC.MODE_MDI:
+			COMMAND.mdi("G92.2")

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:UTF-8 -*-# -*- coding: utf-8 -*-
 #
-# AlterX GUI - program run from line
+# AlterX GUI - offset view edit y
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
@@ -32,14 +32,12 @@ class func:
 	def __init__(self,button):
 		self.button = button
 		self.edit = QLineEdit()
-		self.edit.setObjectName("edit_in_button_run_from_line")
+		self.edit.setObjectName("edit_in_button_edit_y")
 		self.edit.setVisible(False)
-		self.edit.setValidator(QIntValidator())
+		self.edit.setValidator(QDoubleValidator())
 		edit_layout = QVBoxLayout(self.button)
 		edit_layout.addWidget(self.edit)
-
-		UPDATER.connect("interp_state",self.update_status)
-
+		self.edit_lifetime = 0
 		dir_path = os.path.dirname(os.path.realpath(__file__))
 
 		if os.path.isfile("%s/icon.png"%dir_path):
@@ -50,21 +48,23 @@ class func:
 			self.button.setStyleSheet("color:black")
 
 	def update(self):
-		if not self.edit.hasFocus():
+		if not self.edit.hasFocus() and self.edit_lifetime == 0:
 			self.edit.setVisible(False)
 			self.edit.setText('')
+		else:
+			self.edit_lifetime-=1
 
 	def execute(self):
 		if self.edit.isVisible():
 			self.edit.setVisible(False)
-			printVerbose(_("Run program from line: {}",self.edit.text()))
+			printVerbose(_("Offset viewer edit Y: {}",self.edit.text()))
 			if self.edit.text() != "":
-				COMMAND.auto(LINUXCNC.AUTO_RUN, int(self.edit.text()))
-				COMMAND.auto(LINUXCNC.AUTO_PAUSE)
+				UPDATER.emit("offsetviewer_edit",(1,float(self.edit.text())))
+			else:
+				UPDATER.emit("offsetviewer_edit",(1,0.0))
 		else:
-			printVerbose(_("Button Run from line clicked"))
+			printVerbose(_("Offset viewer edit Y clicked"))
+			self.edit_lifetime = 5
+			self.edit.setText("")
 			self.edit.setVisible(True)
 			self.edit.setFocus()
-
-	def update_status(self,status):
-		self.button.setEnabled(True if status == LINUXCNC.INTERP_IDLE else False)

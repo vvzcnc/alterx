@@ -33,33 +33,34 @@ from multiprocessing import Process,Queue
 from threading import Thread
 
 QKEY = Queue(-1)
+QLED = Queue(-1)
 
-def listener_process(log,key):
+def listener_process(log,key,led):
 	while True:
-		time.sleep(1)
+		time.sleep(10)
 		log.put_nowait({"name":__name__,"level":logging.INFO,"msg":"Testing","path":__file__})
 		key.put_nowait({"key":"F1","state":True})
 	key.put_nowait(None)		
 	
 class keyboardListener():
-	def listener_thread(self,log,key):
+	def listener_thread(self,log,key,led):
 		while True:
 			try:
 				k = key.get()
 				if k is None:
 					break
-				log.put_nowait({"name":__name__,"level":logging.INFO,"msg":"Key received: %s"%k["key"],"path":__file__})
+				printVerbose('Key received: %s'%k["key"])
 			except (KeyboardInterrupt, SystemExit):
 				raise
 			except Exception as e:
 				printError('Key listener thread error: %s'%e)
 
 	def __init__(self):
-		kt = Thread(target=self.listener_thread,args=(QLOG,QKEY,))
+		kt = Thread(target=self.listener_thread,args=(QLOG,QKEY,QLED,))
 		kt.daemon = True
 		kt.start()
 
-		kp=Process(target=listener_process,args=(QLOG,QKEY,))
+		kp=Process(target=listener_process,args=(QLOG,QKEY,QLED,))
 		kp.daemon = True
 		kp.start()
 

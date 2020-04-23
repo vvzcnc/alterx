@@ -187,12 +187,14 @@ class GCodeWidget(QGroupBox):
 		h1.addWidget(self.spindle)
 		v1.addLayout(h1)
 		self.g_codes = QLabel("G")
+		self.g_codes.setWordWrap(True)
 		self.g_codes.setObjectName("lbl_main_screen_gcode")
 		v1.addWidget(self.g_codes)
 		v1.addStretch()
 		#v1.addItem(QSpacerItem(0,0,QSizePolicy.Expanding,QSizePolicy.Expanding))
 		v1.addWidget(HSeparator())
 		self.m_codes = QLabel("M")
+		self.m_codes.setWordWrap(True)
 		self.m_codes.setObjectName("lbl_main_screen_mcode")
 		v1.addWidget(self.m_codes)
 		self.setLayout(v1)
@@ -390,10 +392,13 @@ class AxisWidget(QGroupBox):
 	def update_position(self, stat):
 		text = ""
 		for i,axis in enumerate(self.coordinates.split(' ')):
+			#position=stat[i]['input'] is absolute
+			position=stat[i]['input']-STAT.g5x_offset[i]-STAT.tool_offset[i]-STAT.g92_offset[i]	#set 'output' to see commanded position
+
 			if axis=='X' and INFO.machine_is_lathe:
-				text += '{}{}:'.format(axis,['','R','D'][UPDATER.diameter_multiplier])+INFO.dro_format.format(stat[i]['input']*UPDATER.diameter_multiplier)+'  '
+				text += '{}{}:'.format(axis,['','R','D'][UPDATER.diameter_multiplier])+INFO.dro_format.format(position*UPDATER.diameter_multiplier)+'  '
 			else:
-				text += '{}:'.format(axis)+INFO.dro_format.format(stat[i]['input'])+'  '
+				text += '{}:'.format(axis)+INFO.dro_format.format(position)+'  '
 			
 		self.drolabel.setText(text) 
 

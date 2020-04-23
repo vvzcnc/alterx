@@ -54,6 +54,10 @@ QLineEdit {
     border-radius: 8px;
     }
 
+QLineEdit[objectName|="edit_in_button"]{
+    font-size: 20px;
+    }
+
 QPushButton{
     border: 2px solid #555;
     border-radius: 11px;

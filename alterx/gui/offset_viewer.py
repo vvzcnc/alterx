@@ -41,10 +41,15 @@ class OriginOffsetView(QTableView):
                 self.axisletters = ["x", "y", "z", "a", "b", "c", "u", "v", "w"]
                 self.current_system = "G54"
                 self.current_tool = 0
+
                 self.metric_display = INFO.get_metric()
                 self.mm_text_template = '{:10.3f}'
                 self.imperial_text_template = '{:9.4f}'
-                self.setEnabled(False)
+		self.degree_text_template = '{:11.2f}'
+		self.linear_tmpl = self.mm_text_template
+		self.degree_tmpl = self.degree_text_template 
+
+                self.setEnabled(True)
                 self.table = self.createTable()
 
           	self.MACHINE_UNIT_CONVERSION_9 = [1.0/25.4]*3+[1]*3+[1.0/25.4]*3
@@ -57,41 +62,105 @@ class OriginOffsetView(QTableView):
 
 		self.reload_offsets()
 
-		UPDATER.add("reload-offsets")
-                UPDATER.connect('reload-offsets', self.reload_offsets)
-                UPDATER.connect('program_units', self.metricMode)
-                UPDATER.connect('g5x_index', self._convert_system)
+		UPDATER.add("reload_offsets")
+                UPDATER.connect("reload_offsets", self.reload_offsets)
+		UPDATER.connect("tool_offset", self.reload_offsets)
+		#UPDATER.connect("g5x_offset", self.reload_offsets)
+		UPDATER.connect("g92_offset", self.reload_offsets)
 
-        def _convert_system(self, data):
-                convert = ("None", "G54", "G55", "G56", "G57", "G58", "G59", "G59.1", "G59.2", "G59.3")
-                self.current_system = convert[int(data)]
+                UPDATER.connect("program_units", self.metricMode)
+                UPDATER.connect("g5x_index", self.currentSystem )
+                UPDATER.connect("tool_in_spindle", self.currentTool)
+
+		UPDATER.add("offsetviewer_next")
+		UPDATER.add("offsetviewer_prev")
+		UPDATER.add("offsetviewer_select")
+		UPDATER.add("offsetviewer_edit")
+
+		UPDATER.connect("offsetviewer_next",self.selection_next)
+		UPDATER.connect("offsetviewer_prev",self.selection_prev)
+		UPDATER.connect("offsetviewer_select",self.selection_set)
+		UPDATER.connect("offsetviewer_edit",self.selection_edit)
+
+	def selection_next(self,stat=None):
+		index = self.get_row()
+		if index:
+			self.set_row(self.model().index(index.row() + 1,2))
+		else:
+			self.set_row(self.model().index(0,2))
+
+	def selection_prev(self,stat=None):
+		index = self.get_row()
+		if index and index.row() > 0:
+			self.set_row(self.model().index(index.row() - 1,2))
+		else:
+			self.set_row(self.model().index(self.model().rowCount(None) - 1,2))
+
+	def selection_set(self,stat=None):
+		index = self.get_row()
+		if index and index.row() > 3 and STAT.task_mode == LINUXCNC.MODE_MDI:
+			COMMAND.mdi(self.convert_system(index.row()-4))
+
+	def selection_edit(self,stat=None):
+		index = self.get_row()
+		if index and index.row() > 0:
+			try:
+				axis,value = stat
+			except:
+				return
+
+			self.tabledata[index.row()][axis] = value
+			new_index = self.model().index(index.row(),axis)
+			self.dataChanged(new_index,None,None)
+			self.tablemodel.layoutUpdate.emit()
+
+	def get_row(self):
+		return self.selectionModel().currentIndex()
+
+	def set_row(self,index):
+		self.setCurrentIndex(index)
+
+        def convert_system(self, data):
+	        convert = ("G54", "G55", "G56", "G57", "G58", "G59", "G59.1", "G59.2", "G59.3")
+		return convert[int(data)]
+
+	def currentSystem(self,data):
+		self.current_system = self.convert_system(data-1)
 
         def currentTool(self, data):
                 self.current_tool = data
+		self.reload_offsets()
 
         def metricMode(self, state):
 		if self.metric_display != INFO.get_metric():
+		        # set the text style based on unit type
+		        if self.metric_display:
+		                self.linear_tmpl = self.mm_text_template
+		        else:
+		                self.linear_tmpl = self.imperial_text_template
+
 			self.metric_display = INFO.get_metric()
 			self.reload_offsets()
 
         def createTable(self):
                 # create blank taple array
-                self.tabledata = [[0, 0, 1, 0, 0, 0, 0, 0, 0, 'Absolute Position'],
-                                  [None, None, 2, None, None, None, None, None, None, 'Rotational Offsets'],
-                                  [0, 0, 3, 0, 0, 0, 0, 0, 0, 'G92 Offsets'],
+                self.tabledata = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 'Absolute Position'],
+                                  [None, None, None, None, None, None, None, None, None, 'Rotational Offsets'],
+                                  [0, 0, 0, 0, 0, 0, 0, 0, 0, 'G92 Offsets'],
                                   [0, 0, 0, 0, 0, 0, 0, 0, 0, 'Current Tool'],
-                                  [0, 0, 4, 0, 0, 0, 0, 0, 0, 'System 1'],
-                                  [0, 0, 5, 0, 0, 0, 0, 0, 0, 'System 2'],
-                                  [0, 0, 6, 0, 0, 0, 0, 0, 0, 'System 3'],
-                                  [0, 0, 7, 0, 0, 0, 0, 0, 0, 'System 4'],
-                                  [0, 0, 8, 0, 0, 0, 0, 0, 0, 'System 5'],
-                                  [0, 0, 9, 0, 0, 0, 0, 0, 0, 'System 6'],
-                                  [0, 0, 10, 0, 0, 0, 0, 0, 0, 'System 7'],
-                                  [0, 0, 11, 0, 0, 0, 0, 0, 0, 'System 8'],
-                                  [0, 0, 12, 0, 0, 0, 0, 0, 0, 'System 9']]
+                                  [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 1'],
+                                  [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 2'],
+                                  [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 3'],
+                                  [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 4'],
+                                  [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 5'],
+                                  [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 6'],
+                                  [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 7'],
+                                  [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 8'],
+                                  [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 9']]
 
                 # create the view
-                self.setSelectionMode(QAbstractItemView.SingleSelection)
+                self.setSelectionMode(QTableView.SingleSelection)
+		self.setSelectionBehavior(QTableView.SelectRows);
 
                 # set the table model
                 header = ['X', 'Y', 'Z', 'A', 'B', 'C', 'U', 'V', 'W', 'Name']
@@ -120,7 +189,6 @@ class OriginOffsetView(QTableView):
 
         def showSelection(self, item):
                 cellContent = item.data()
-                #text = cellContent.toPyObject()  # test
                 text = cellContent
                 printDebug(_('Text: {}, Row: {}, Column: {}',text, item.row(), item.column()))
 
@@ -157,24 +225,16 @@ class OriginOffsetView(QTableView):
                         g59_2 = self.convert_units_9(g59_2)
                         g59_3 = self.convert_units_9(g59_3)
 
-                # set the text style based on unit type
-                if self.metric_display:
-                        tmpl = self.mm_text_template
-                else:
-                        tmpl = self.imperial_text_template
-
-                degree_tmpl = "{:11.2f}"
-
                 # fill each row of the liststore fron the offsets arrays
                 for row, i in enumerate([ap, rot, g92, tool, g54, g55, g56, g57, g58, g59, g59_1, g59_2, g59_3]):
                         for column in range(0, 9):
                                 if row == 1:
                                         if column == 2:
-                                                self.tabledata[row][column] = degree_tmpl.format(rot)
+                                                self.tabledata[row][column] = self.degree_tmpl.format(rot)
                                         else:
                                                 self.tabledata[row][column] = " "
                                 else:
-                                        self.tabledata[row][column] = tmpl.format(i[column])
+                                        self.tabledata[row][column] = self.linear_tmpl.format(i[column])
                 self.tablemodel.layoutUpdate.emit()
 
         # We read the var file directly
@@ -221,7 +281,8 @@ class OriginOffsetView(QTableView):
                                 elif 5389 >= param >= 5381:
                                         g59_3[param - 5381] = data
                         return g54, g55, g56, g57, g58, g59, g59_1, g59_2, g59_3
-                except:
+                except Exception as e:
+			printDebug(_("Reading parameter file failed: {}",e))
                         return None, None, None, None, None, None, None, None, None
 
         def dataChanged(self, new, old, x):
@@ -229,21 +290,28 @@ class OriginOffsetView(QTableView):
                 col = new.column()
                 data = self.tabledata[row][col]
 
-                # Hack to not edit any rotational offset but Z axis
+                # Hack to not edit any rotational offset but Z axis 
                 if row == 1 and not col == 2: return
 
-                # set the text style based on unit type
-                if self.metric_display:
-                        tmpl = lambda s: self.mm_text_template % s
+		# TODO: Save system name
+		if col == 9:
+			return
+
+                if row == 1:
+                        if col == 2:
+                                self.tabledata[row][col] = self.degree_tmpl.format(data)
+                        else:
+                                self.tabledata[row][col] = " "
                 else:
-                        tmpl = lambda s: self.imperial_text_template % s
+			self.tabledata[row][col] = self.linear_tmpl.format(data)
 
                 # make sure we switch to correct units for machine and rotational, row 2, does not get converted
                 try:
-                                qualified = float(data)
-                                #qualified = float(locale.atof(data))
+		        qualified = float(data)
+		        #qualified = float(locale.atof(data))
                 except Exception as e:
                         printError(_("Offset data changed error {}",e))
+
                 # now update linuxcnc to the change
                 try:
                         if STAT.task_mode == LINUXCNC.MODE_MDI:
@@ -253,19 +321,17 @@ class OriginOffsetView(QTableView):
                                         if col == 2:  # Z axis only
                                                 COMMAND.mdi("G10 L2 P0 R %10.4f" % (qualified))
                                 elif row == 2:  # G92 offset
-                                        ACTION.CALL_MDI("G92 %s %10.4f" % (self.axisletters[col], qualified))
+                                        COMMAND.mdi("G92 %s %10.4f" % (self.axisletters[col], qualified))
                                 elif row == 3:  # Tool
                                         if not self.current_tool == 0:
                                                 COMMAND.mdi("G10 L1 P%d %s %10.4f" % (self.current_tool, self.axisletters[col], qualified))
-                                                COMMAND.mdi('g43')
+                                                COMMAND.mdi("G43")
                                 else:
-                                                COMMAND.mdi("G10 L2 P%d %s %10.4f" % (row-3, self.axisletters[col], qualified))
-
-                                UPDATER.emit('reload-display')
-                                self.reload_offsets()
+                                        COMMAND.mdi("G10 L2 P%d %s %10.4f" % (row-3, self.axisletters[col], qualified))
                 except Exception as e:
                         printError(_("Offsetpage widget error: MDI call error, {}",e))
                         self.reload_offsets()
+
 
 #########################################
 # offset model
@@ -274,11 +340,6 @@ class OffsetModel(QAbstractTableModel):
 	layoutUpdate = pyqtSignal()
 
         def __init__(self, datain, headerdata, vheaderdata, parent=None):
-                """
-                Args:
-                        datain: a list of lists\n
-                        headerdata: a list of strings
-                """
                 QAbstractTableModel.__init__(self,parent)
                 self.arraydata = datain
                 self.headerdata = headerdata
@@ -307,7 +368,6 @@ class OffsetModel(QAbstractTableModel):
         def flags(self, index):
                 if not index.isValid():
                         return None
-                # print(">>> flags() index.column() = ", index.column())
                 if index.column() == 9 and index.row() in(0, 1, 2, 3):
                         return Qt.ItemIsEnabled
                 elif index.row() == 1 and not index.column() == 2:
@@ -318,20 +378,19 @@ class OffsetModel(QAbstractTableModel):
         def setData(self, index, value, role):
                 if not index.isValid():
                         return False
-                printDebug(self.arraydata[index.row()][index.column()])
-                printDebug(">>> setData() role = {}".format(role))
-                printDebug(">>> setData() index.column() = {}".format(index.column()))
+
                 try:
                         if index.column() == 9:
                                 v = str(value)
                         else:
                                 v = float(value)
-                except:
-                        return False
-                printDebug(">>> setData() value = {}".format(value))
-                printDebug(">>> setData() qualified value = {}".format(v))
-                printDebug(">>> setData() index.row = {}".format(index.row()))
-                printDebug(">>> setData() index.column = {}".format(index.column()))
+                except Exception as e:
+			printDebug(_("Set offset data failed: {}",e))
+                        if index.column() == 9:
+                                v = str(" ")
+                        else:
+                                v = float(0.0)
+
                 self.arraydata[index.row()][index.column()] = v
                 self.dataChanged.emit(index, index)
                 return True
@@ -344,9 +403,6 @@ class OffsetModel(QAbstractTableModel):
                 return QVariant()
 
         def sort(self, Ncol, order):
-                """
-                Sort table by given column number.
-                """
                 self.emit(SIGNAL("layoutAboutToBeChanged()"))
                 self.arraydata = sorted(self.arraydata, key=operator.itemgetter(Ncol))
                 if order == Qt.DescendingOrder:
