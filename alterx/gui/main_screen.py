@@ -116,12 +116,12 @@ class SideButton(QPushButton):
         for index, check in enumerate(checkDisable):
             if check:
                 UPDATER.connect(checkList[index], lambda s, c=check, i=index: self.set_disable(
-                    True if s == c else False, i))
+                                                            True if s == c else False, i))
 
         for index, check in enumerate(checkToggle):
             if check:
                 UPDATER.connect(checkList[index], lambda s, c=check: self.set_active(
-                    True if s == c else False))
+                                                            True if s == c else False))
 
     def set_active(self, state):
         self.active = state
@@ -483,7 +483,21 @@ class MainLayout(QVBoxLayout):
 
         infoLayout.addStretch()
 
-        h2.addLayout(infoLayout, 2)
+        infoWidget = QWidget()
+        infoWidget.setLayout(infoLayout)
+        
+        h2.addWidget(infoWidget, 2)
+
+        def setFullscreen(state):
+            if state:
+                h2.setStretch(1,0)
+                infoWidget.setVisible(False)
+            else:
+                h2.setStretch(1,2)
+                infoWidget.setVisible(True)
+                
+        UPDATER.add("mainscreen_full")
+        UPDATER.connect("mainscreen_full",setFullscreen)
 
         h1.addLayout(self.leftLayout, 1)
         h1.addLayout(h2, 9)

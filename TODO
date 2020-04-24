@@ -1,6 +1,14 @@
-Offset buttons
-Tool buttons
-Keyboard serial listener
-Popup notify
-Jog
-Settings
+TODO list
+
+Features:
+	Tool buttons
+	Keyboard serial listener
+	Popup notify
+	Jog
+	Settings
+	Lathe tool table has too much columns
+	In info section rename default files
+	
+Bugs:
+    path_viewer not rotated axis label
+    path_viewer current view not working on startup

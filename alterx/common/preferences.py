@@ -26,8 +26,7 @@ from alterx.common.locale import _
 from alterx.common.compat import *
 from alterx.common import *
 
-from alterx.core.linuxcnc import INI
-
+from alterx.core.linuxcnc import *
 
 class Preferences(ConfigParser):
     def __init__(self, path=None):
@@ -41,25 +40,18 @@ class Preferences(ConfigParser):
         }
 
         if not path:
-            path = "preferences.var"
+            path = INFO.preferences_file
 
         self.fn = os.path.expanduser(path)
-        if not os.path.exists(self.fn):
-            self.create_config()
-
-        self.read(self.fn)
-
-    def create_config(self):
-        self.addSetion("DEFAULT")
-        with open(self.fn, "w") as config_file:
-            self.write(config_file)
+        if os.path.exists(self.fn):
+            self.read(self.fn)
 
     def getpref(self, option, default=False, type=bool):
         m = self.types.get(type)
         try:
             o = m("DEFAULT", option)
         except Exception, detail:
-            printError(_("Get preference error: {} ", detail))
+            printWarning(_("Get preference error: {} ", detail))
 
             self.putpref(option, default)
 
@@ -74,5 +66,4 @@ class Preferences(ConfigParser):
         with open(self.fn, "w") as config_file:
             self.write(config_file)
 
-
-PREF = Preferences(INI.find("DISPLAY", "PREFERENCE_FILE_PATH"))
+PREF = Preferences()

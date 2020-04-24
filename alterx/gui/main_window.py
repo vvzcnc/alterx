@@ -65,12 +65,15 @@ class MainWindow(QWidget):
         return mainwnd
 
     def activate_screen(self, screen, state=None):
-        w, b = screen
+        w, b, i = screen
         if w:
             self.mainLayout.centralWidgets.setCurrentWidget(w)
         if b:
             self.mainLayout.bottomWidgets.setCurrentWidget(b)
-
+            
+        if i is not None:
+            UPDATER.emit("mainscreen_full",i)
+            
     def set_stylesheet(self):
         ss_name = os.path.join(STYLESHEET_DIR, PREF.getpref(
             "stylesheet", "default.qss", str))
@@ -110,7 +113,10 @@ class MainWindow(QWidget):
         # Enable when CNC is ON, is HOMED and in AUTO mode
         AUTO_STATE = HOMED_STATE + [LINUXCNC.MODE_AUTO]
         # Activate only when bottom widget active
-        SEC_WIDGET = [None, None, None]
+        SEC_WIDGET = [None, None, None, True]
+
+        # info widget state
+        infoWidget = [False,False,False,True,True,None,True,None,True,True,None,True,True]
 
         # mainscreen widgets
         centralWidget = [DROWidget, MDIHistory, GcodeWidget, SettingsWidget, TabsWidget, None,
@@ -121,24 +127,22 @@ class MainWindow(QWidget):
                         "display", "equipment", "load", "edit", "homing", "offset", "tool"]
 
         # side buttons
-        #		#layout#	#name#		#enable state#	#active state#			#
+        #        #layout#    #name#        #enable state#    #active state#            #
         sideWidget = [
-            ["right",	"manual",	ON_STATE,	[None, None, LINUXCNC.MODE_MANUAL]],
-            ["right",	"mdi",		HOMED_STATE,	[
-                None, None, LINUXCNC.MODE_MDI]],
-            ["right",	"auto",		HOMED_STATE,	[
-                None, None, LINUXCNC.MODE_AUTO]],
-            ["right",	"settings",	[],		SEC_WIDGET],
-            ["right",	"tabs",		ON_STATE,	SEC_WIDGET],
-            ["right",	"machine",	[],		ON_STATE],
-            ["left",	"abort",	ON_STATE,	SEC_WIDGET],
-            ["left",	"equipment",	ON_STATE,	SEC_WIDGET],
-            ["left",	"load",		AUTO_STATE,	SEC_WIDGET],
+            ["right",    "manual",    ON_STATE,    [None, None, LINUXCNC.MODE_MANUAL, None]],
+            ["right",    "mdi",        HOMED_STATE,[None, None, LINUXCNC.MODE_MDI, None]],
+            ["right",    "auto",        HOMED_STATE,[None, None, LINUXCNC.MODE_AUTO, None]],
+            ["right",    "settings",    [],            SEC_WIDGET],
+            ["right",    "tabs",        ON_STATE,    SEC_WIDGET],
+            ["right",    "machine",    [],            ON_STATE+[None]*3],
+            ["left",    "abort",    ON_STATE,    SEC_WIDGET],
+            ["left",    "equipment",ON_STATE,    SEC_WIDGET],
+            ["left",    "load",        AUTO_STATE,    SEC_WIDGET],
             [None],
-            ["left",	"homing",	ON_STATE +
-             [None, LINUXCNC.MODE_MANUAL], SEC_WIDGET],
-            ["left",	"offset",	MDI_STATE,	SEC_WIDGET],
-            ["left",	"tool",		MDI_STATE,	SEC_WIDGET],
+            ["left",    "homing",    ON_STATE +
+                                     [None, LINUXCNC.MODE_MANUAL], SEC_WIDGET],
+            ["left",    "offset",    MDI_STATE,    SEC_WIDGET],
+            ["left",    "tool",        MDI_STATE,    SEC_WIDGET],
         ]
 
         for i, name in enumerate(bottomWidget):
@@ -155,11 +159,14 @@ class MainWindow(QWidget):
 
                 UPDATER.add("screen_{}".format(name))
                 UPDATER.connect("screen_{}".format(name), partial(
-                    self.activate_screen, (widget, buttons)))
+                    self.activate_screen, (widget, buttons, infoWidget[i])))
 
             if sideWidget[i][0] is not None:
+                if sideWidget[i][3][3]:
+                    sideWidget[i][3][3]=bottom_index
+                    
                 sidebutton = SideButton(
-                    sideWidget[i][1], sideWidget[i][2], sideWidget[i][3]+[bottom_index])
+                    sideWidget[i][1], sideWidget[i][2], sideWidget[i][3])
                 if sideWidget[i][0] == "right":
                     self.mainLayout.rightLayout.addWidget(sidebutton)
                 else:

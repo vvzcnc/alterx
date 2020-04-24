@@ -54,7 +54,12 @@ class linuxcnc_info():
         self.machine_is_lathe = True if INI.find('DISPLAY', 'LATHE') else False
 
         self.get_metric = lambda: False if STAT.program_units == 1 else True
-
+        
+        self.tool_file = INI.find('EMCIO', 'TOOL_TABLE') or 'tool.var'
+        self.parameter_file = INI.find("RS274NGC", "PARAMETER_FILE") or 'cnc.var'
+        self.preferences_file = INI.find("DISPLAY", "PREFERENCE_FILE_PATH") or 'preferences.var'
+        self.position_file = INI.find("TRAJ", "POSITION_FILE") or 'position.var'
+        
         self.dro_format = "{:.3f}"
         self.linear_units = _("mm")
         self.angular_units = _("deg")

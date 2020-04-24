@@ -174,19 +174,22 @@ class Main():
         UPDATER.emit("screen_tool")
 
     def btn_manual_callback(self, button):
-        COMMAND.mode(LINUXCNC.MODE_MANUAL)
         if STAT.task_mode == LINUXCNC.MODE_MANUAL:
             UPDATER.emit("screen_manual")
+        else:
+            COMMAND.mode(LINUXCNC.MODE_MANUAL)
 
     def btn_mdi_callback(self, button):
-        COMMAND.mode(LINUXCNC.MODE_MDI)
         if STAT.task_mode == LINUXCNC.MODE_MDI:
             UPDATER.emit("screen_mdi")
+        else:
+            COMMAND.mode(LINUXCNC.MODE_MDI)
 
     def btn_auto_callback(self, button):
-        COMMAND.mode(LINUXCNC.MODE_AUTO)
         if STAT.task_mode == LINUXCNC.MODE_AUTO:
             UPDATER.emit("screen_auto")
+        else:
+            COMMAND.mode(LINUXCNC.MODE_AUTO)
 
     def btn_settings_callback(self, button):
         UPDATER.emit("screen_settings")

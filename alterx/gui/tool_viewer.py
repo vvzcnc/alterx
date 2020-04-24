@@ -32,14 +32,17 @@ from alterx.core.linuxcnc import *
 
 import operator
 
+KEYWORDS = ['T', 'P', 'X', 'Y', 'Z', 'A', 'B',
+            'C', 'U', 'V', 'W', 'D', 'I', 'J', 'Q', ';']
+
 
 class ToolOffsetView(QTableView):
     def __init__(self, parent=None):
         QTableView.__init__(self, parent)
         self.setAlternatingRowColors(True)
-
-        self.toolfile = INI.find('EMCIO', 'TOOL_TABLE') or '.tool_table'
-        self.filename = INI.find('RS274NGC', 'PARAMETER_FILE') or '.cnc_var'
+        
+        self.toolfile = INFO.tool_file
+        self.filename = INFO.parameter_file
         self.axisletters = ["x", "y", "z", "a", "b", "c", "u", "v", "w"]
         self.editing_flag = False
         self.current_system = None
@@ -68,9 +71,9 @@ class ToolOffsetView(QTableView):
         self.reload_tools()
 
         UPDATER.add("reload_tools")
-        UPDATER.connect('reload_tools', self.reload_tools)
-        UPDATER.connect('program_units', self.metricMode)
-        UPDATER.connect('tool_in_spindle', self.currentTool)
+        UPDATER.connect("reload_tools", self.reload_tools)
+        UPDATER.connect("program_units", self.metricMode)
+        UPDATER.connect("tool_in_spindle", self.currentTool)
 
         INFO.get_tool_info = self.get_tool_info
 
@@ -79,7 +82,7 @@ class ToolOffsetView(QTableView):
             for t in self.tablemodel.arraydata:
                 if t[1] == tool:
                     return t
-            return [None, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'No Comment']
+            return [None, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'No Comment']
         except Exception as e:
             printError(_("Failed to get tool info: {}", e))
 
@@ -93,16 +96,15 @@ class ToolOffsetView(QTableView):
 
     def createTable(self):
         # create blank taple array
-        tabledata = [[QCheckBox(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        tabledata = [[QCheckBox(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                       0, 0, 0, 0, 0, 0, 0, 'No Comment']]
 
         # create the view
         self.setSelectionMode(QAbstractItemView.SingleSelection)
 
         # set the table model
-        header = [_('Select'), _('Tool'), _('Pocket'),
-                  _('X'), _('X Wear'), _('Y'), _(
-                      'Y Wear'), _('Z'), _('Z Wear'),
+        header = [_('*'), _('Tool'), _('Pocket'),
+                  _('X'), _('X Wear'), _('Y'), _('Y Wear'), _('Z'), _('Z Wear'),
                   _('A'), _('B'), _('C'), _('U'), _('V'), _('W'),
                   _('Diameter'), _('Front Angle'), _('Back Angle'),
                   _('Orientation'), _('Comment')]
@@ -114,18 +116,6 @@ class ToolOffsetView(QTableView):
 
         # set the minimum size
         self.setMinimumSize(100, 100)
-
-        # set horizontal header properties
-        hh = self.horizontalHeader()
-        hh.setMinimumSectionSize(75)
-        hh.setStretchLastSection(True)
-        hh.setSortIndicator(1, Qt.AscendingOrder)
-
-        # set column width to fit contents
-        self.resizeColumnsToContents()
-
-        # set row height
-        self.resizeRowsToContents()
 
         # enable sorting
         self.setSortingEnabled(True)
@@ -145,7 +135,7 @@ class ToolOffsetView(QTableView):
         data = self.reload_tool_file()
 
         if data in (None, []):
-            data = [[QCheckBox(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            data = [[QCheckBox(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                      0, 0, 0, 0, 0, 0, 0, 'No Comment']]
         else:
             data = self.convert_to_wear_type(data)
@@ -158,118 +148,115 @@ class ToolOffsetView(QTableView):
                 line[3:16] = self.convert_units(line[3:16])
 
         self.tablemodel.layoutUpdate.emit(data)
-
-        self.resizeColumnsToContents()
+        
+        header = self.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(19,QHeaderView.Stretch)
+        #self.resizeColumnsToContents()
         self.resizeRowsToContents()
 
     def reload_tool_file(self):
-        KEYWORDS = ['T', 'P', 'X', 'Y', 'Z', 'A', 'B',
-                    'C', 'U', 'V', 'W', 'D', 'I', 'J', 'Q', ';']
-
-        if self.toolfile is None or not os.path.exists(self.toolfile):
+        if self.toolfile is None or not os.path.exists(self.toolfile) or os.stat(self.toolfile).st_size==0:
             printDebug(_("Toolfile does not exist' {}", self.toolfile))
             return None
         #print 'file',self.toolfile
         # clear the current liststore, search the tool file, and add each tool
         tool_model = []
         wear_model = []
-        logfile = open(self.toolfile, "r").readlines()
-        self.toolinfo = None
-        toolinfo_flag = False
-        for rawline in logfile:
-            # strip the comments from line and add directly to array
-            # if index = -1 the delimiter ; is missing - clear comments
-            index = rawline.find(";")
-            comment = ''
-            if not index == -1:
-                comment = (rawline[index+1:])
-                comment = comment.rstrip("\n")
-                line = rawline.rstrip(comment)
-            else:
-                line = rawline
-            array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, comment]
-            wear_flag = False
-            # search beginning of each word for keyword letters
-            # if i = ';' that is the comment and we have already added it
-            # offset 0 and 1 are integers the rest floats
-            # we strip leading and following spaces from the comments
-            for offset, i in enumerate(KEYWORDS):
-                if i == ';':
-                    continue
-                for word in line.split():
-                    if word.startswith(';'):
-                        break
-                    if word.startswith(i):
-                        if offset == 0:
-                            if int(word.lstrip(i)) == STAT.tool_in_spindle:
-                                toolinfo_flag = True
-                                # This array's tool num is the current tool num
-                                # remember it for later
-                                temp = array
-                            # check if tool is greater then 10000 -then it's a wear tool
-                            if int(word.lstrip(i)) > 10000:
-                                wear_flag = True
-                        if offset in(0, 1, 14):
-                            try:
-                                array[offset] = int(word.lstrip(i))
-                            except ValueError as e:
+        with open(self.toolfile, "r") as tool_file:
+            self.toolinfo = None
+            toolinfo_flag = False
+            for line_index,rawline in enumerate(tool_file):
+                # strip the comments from line and add directly to array
+                # if index = -1 the delimiter ; is missing - clear comments
+                index = rawline.find(";")
+                comment = ''
+                if not index == -1:
+                    comment = (rawline[index+1:])
+                    comment = comment.rstrip("\n")
+                    line = rawline.rstrip(comment)
+                else:
+                    line = rawline
+                array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, comment]
+                wear_flag = False
+                # search beginning of each word for keyword letters
+                # if i = ';' that is the comment and we have already added it
+                # offset 0 and 1 are integers the rest floats
+                # we strip leading and following spaces from the comments
+                for offset, i in enumerate(KEYWORDS):
+                    if i == ';':
+                        continue
+                    for word in line.split():
+                        if word.startswith(';'):
+                            break
+                        if word.startswith(i):
+                            if offset == 0:
+                                if int(word.lstrip(i)) == STAT.tool_in_spindle:
+                                    toolinfo_flag = True
+                                    # This array's tool num is the current tool num
+                                    # remember it for later
+                                    temp = array
+                                # check if tool is greater then 10000 -then it's a wear tool
+                                if int(word.lstrip(i)) > 10000:
+                                    wear_flag = True
+                            if offset in(0, 1, 14):
                                 try:
-                                    array[offset] = int(float(word.lstrip(i)))
-                                except Exception as e:
+                                    array[offset] = int(word.lstrip(i))
+                                except ValueError as e:
+                                    try:
+                                        array[offset] = int(float(word.lstrip(i)))
+                                    except Exception as e:
+                                        printError(
+                                            _("Toolfile integer access: {} : {}", word.lstrip(i), e))
+                            else:
+                                try:
+                                    if float(word.lstrip(i)) < 0.000001:
+                                        array[offset] = 0
+                                    else:
+                                        array[offset] = float(word.lstrip(i))
+                                except:
                                     printError(
-                                        _("Toolfile integer access: {} : {}", word.lstrip(i), e))
-                        else:
-                            try:
-                                if float(word.lstrip(i)) < 0.000001:
-                                    array[offset] = 0
-                                else:
-                                    array[offset] = float(word.lstrip(i))
-                            except:
-                                printError(
-                                    _("Toolfile float access: {}", self.toolfile))
-                        break
-
-            # add array line to model array
-            if wear_flag:
-                wear_model.append(array)
+                                        _("Toolfile float access: {}", self.toolfile))
+                            break
+                # add array line to model array
+                if wear_flag:
+                    wear_model.append(array)
+                else:
+                    tool_model.append(array)
+       
+            if toolinfo_flag:
+                self.toolinfo = temp
             else:
-                tool_model.append(array)
-        if toolinfo_flag:
-            self.toolinfo = temp
-        else:
-            self.toolinfo = [0, 0, 0, 0, 0, 0, 0, 0,
-                             0, 0, 0, 0, 0, 0, 0, 'No Comment']
+                self.toolinfo = [0, 0, 0, 0, 0, 0, 0, 0,
+                                 0, 0, 0, 0, 0, 0, 0, 'No Comment']
         return (tool_model, wear_model)
 
     def save_tool_file(self, new_model, delete=()):
         if self.toolfile == None:
             return True
-        file = open(self.toolfile, "w")
-        for row in new_model:
-            values = [value for value in row]
-            #print values
-            line = ""
-            skip = False
-            for num, i in enumerate(values):
-                # print KEYWORDS[num], i, #type(i), int(i)
-                if num == 0 and i in delete:
-                    printDebug(_("Delete tool ' {}", i))
-                    skip = True
-                if num in (0, 1, 14):  # tool# pocket# orientation
-                    line = line + "%s%d " % (KEYWORDS[num], i)
-                elif num == 15:  # comments
-                    test = i.strip()
-                    line = line + "%s%s " % (KEYWORDS[num], test)
-                else:
-                    test = str(i).lstrip()  # floats
-                    line = line + "%s%s " % (KEYWORDS[num], test)
-            printDebug(_("Save line: {}", line))
-            if not skip:
-                print >>file, line
-        # Theses lines are required to make sure the OS doesn't cache the data
-        # That would make linuxcnc and the widget to be out of synch leading to odd errors
-        file.flush()
-        os.fsync(file.fileno())
+        with open(self.toolfile, "w") as file:
+            for row in new_model:
+                values = [value for value in row]
+                line = ""
+                skip = False
+                for num, i in enumerate(values):
+                    # print KEYWORDS[num], i, #type(i), int(i)
+                    if num == 0 and i in delete:
+                        printDebug(_("Delete tool ' {}", i))
+                        skip = True
+                    if num in (0, 1, 14):  # tool# pocket# orientation
+                        line = line + "%s%d " % (KEYWORDS[num], i)
+                    elif num == 15:  # comments
+                        test = i.strip()
+                        line = line + "%s%s " % (KEYWORDS[num], test)
+                    else:
+                        test = str(i).lstrip()  # floats
+                        line = line + "%s%s " % (KEYWORDS[num], test)
+
+                if not skip:
+                    file.write(line + os.linesep)
+                    printDebug(_("Save line: {}", line))
+    
         # tell linuxcnc we changed the tool table entries
         try:
             COMMAND.load_tool_table()
@@ -379,16 +366,16 @@ class ToolOffsetView(QTableView):
         # now update linuxcnc to the change
         try:
             if STAT.task_mode == LINUXCNC.MODE_MDI:
-                error = save_tool_file(
+                error = self.save_tool_file(
                     self.convert_to_standard_type(self.tablemodel.arraydata))
                 if error:
                     raise
-                COMMAND.mdi('g43')
+                COMMAND.mdi("G43")
                 COMMAND.wait_complete()
-                self.reload_table()
+                self.reload_tools()
         except Exception as e:
-            printError(_("Offsetpage widget error: MDI call error, {}", e))
-            self.reload_table()
+            printError(_("Tool offsetpage widget error: MDI call error, {}", e))
+            self.reload_tools()
         self.editing_flag = False
 
     def add_tool(self):
@@ -401,7 +388,7 @@ class ToolOffsetView(QTableView):
             printDebug(_('Delete tools request'))
             dtools = self.tablemodel.listCheckedTools()
             if dtools:
-                error = save_tool_file(self.convert_to_standard_type(
+                error = self.save_tool_file(self.convert_to_standard_type(
                     self.tablemodel.arraydata), dtools)
 
     def get_checked_list(self):
@@ -416,11 +403,6 @@ class ToolModel(QAbstractTableModel):
     layoutUpdate = pyqtSignal(list)
 
     def __init__(self, datain, headerdata, vheaderdata, parent=None):
-        """
-        Args:
-                datain: a list of lists\n
-                headerdata: a list of strings
-        """
         QAbstractTableModel.__init__(self, parent)
         self.text_template = '%.4f'
         self.arraydata = datain

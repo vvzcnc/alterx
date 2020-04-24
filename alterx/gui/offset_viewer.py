@@ -37,8 +37,8 @@ class OriginOffsetView(QTableView):
     def __init__(self, parent=None):
         QTableView.__init__(self, parent)
         self.setAlternatingRowColors(True)
-
-        self.filename = INI.find('RS274NGC', 'PARAMETER_FILE') or '.cnc_var'
+        
+        self.filename = INFO.parameter_file
         self.axisletters = ["x", "y", "z", "a", "b", "c", "u", "v", "w"]
         self.current_system = "G54"
         self.current_tool = 0
@@ -179,19 +179,8 @@ class OriginOffsetView(QTableView):
         # set the minimum size
         self.setMinimumSize(100, 100)
 
-        # set horizontal header properties
-        hh = self.horizontalHeader()
-        hh.setStretchLastSection(True)
-        hh.setMinimumSectionSize(75)
-
-        # set column width to fit contents
-        self.resizeColumnsToContents()
-
-        # set row height
-        self.resizeRowsToContents()
-
         # enable sorting
-        self.setSortingEnabled(False)
+        #self.setSortingEnabled(False)
 
     def showSelection(self, item):
         cellContent = item.data()
@@ -247,6 +236,12 @@ class OriginOffsetView(QTableView):
                         i[column])
         self.tablemodel.layoutUpdate.emit()
 
+        header = self.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(9,QHeaderView.Stretch)
+        #self.resizeColumnsToContents()
+        self.resizeRowsToContents()
+
     # We read the var file directly
     # and pull out the info we need
     # if anything goes wrong we set all the info to 0
@@ -266,30 +261,30 @@ class OriginOffsetView(QTableView):
             if not os.path.exists(self.filename):
                 printError(_('File does not exist: {}', self.filename))
                 return g54, g55, g56, g57, g58, g59, g59_1, g59_2, g59_3
-            logfile = open(self.filename, "r").readlines()
-            for line in logfile:
-                temp = line.split()
-                param = int(temp[0])
-                data = float(temp[1])
+            with open(self.filename, "r") as offsetfile:
+                for index,line in enumerate(offsetfile):
+                    temp = line.split()
+                    param = int(temp[0])
+                    data = float(temp[1])
 
-                if 5229 >= param >= 5221:
-                    g54[param - 5221] = data
-                elif 5249 >= param >= 5241:
-                    g55[param - 5241] = data
-                elif 5269 >= param >= 5261:
-                    g56[param - 5261] = data
-                elif 5289 >= param >= 5281:
-                    g57[param - 5281] = data
-                elif 5309 >= param >= 5301:
-                    g58[param - 5301] = data
-                elif 5329 >= param >= 5321:
-                    g59[param - 5321] = data
-                elif 5349 >= param >= 5341:
-                    g59_1[param - 5341] = data
-                elif 5369 >= param >= 5361:
-                    g59_2[param - 5361] = data
-                elif 5389 >= param >= 5381:
-                    g59_3[param - 5381] = data
+                    if 5229 >= param >= 5221:
+                        g54[param - 5221] = data
+                    elif 5249 >= param >= 5241:
+                        g55[param - 5241] = data
+                    elif 5269 >= param >= 5261:
+                        g56[param - 5261] = data
+                    elif 5289 >= param >= 5281:
+                        g57[param - 5281] = data
+                    elif 5309 >= param >= 5301:
+                        g58[param - 5301] = data
+                    elif 5329 >= param >= 5321:
+                        g59[param - 5321] = data
+                    elif 5349 >= param >= 5341:
+                        g59_1[param - 5341] = data
+                    elif 5369 >= param >= 5361:
+                        g59_2[param - 5361] = data
+                    elif 5389 >= param >= 5381:
+                        g59_3[param - 5381] = data
             return g54, g55, g56, g57, g58, g59, g59_1, g59_2, g59_3
         except Exception as e:
             printDebug(_("Reading parameter file failed: {}", e))
@@ -299,7 +294,7 @@ class OriginOffsetView(QTableView):
         row = new.row()
         col = new.column()
         data = self.tabledata[row][col]
-
+        printDebug("Offset changed - Row: {} Col: {} Data: {}".format(row,col,data))
         # Hack to not edit any rotational offset but Z axis
         if row == 1 and not col == 2:
             return

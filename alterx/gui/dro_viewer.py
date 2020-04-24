@@ -70,6 +70,10 @@ class DROLayout(QHBoxLayout):
             self.name, ['', 'R', 'D'][UPDATER.diameter_multiplier]))
 
     def update_position(self, stat):
+        homed = False if stat['homed'] == 0 else True
+        self.drolabel_act.setProperty("homed", QVariant(homed))
+        self.drolabel_act.setStyleSheet(self.drolabel_act.styleSheet())
+    
         #position=stat['input'] is absolute
         position = stat['input']-STAT.g5x_offset[self.num]-STAT.tool_offset[self.num] - \
             STAT.g92_offset[self.num]  # set 'output' to see commanded position
@@ -89,7 +93,8 @@ class DROWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         dro_layout = QVBoxLayout()
-        for i, axis in enumerate("xyza"):
+        self.coordinates = INI.find('TRAJ', 'COORDINATES') or []
+        for i, axis in enumerate(self.coordinates.split(" ")):
             dro_layout.addLayout(DROLayout(i, axis))
         dro_layout.addStretch()
         self.setLayout(dro_layout)

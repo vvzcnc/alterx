@@ -29,7 +29,6 @@ import locale
 import gettext
 import pkg_resources
 
-
 class translate():
     def __init__(self):
         self._locale, _encoding = locale.getdefaultlocale()

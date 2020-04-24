@@ -1,26 +1,5 @@
 #MainWindow {background: #eeeeec; }
 
-QLabel[objectName|="lbl_dro_name"] {
-    color: #2e3436;
-    font-size: 95pt;
-    }
-
-QLabel[objectName|="lbl_dro_act"] {
-    color: #4e9a06;
-    font-size: 65pt;
-    font-weight: bold;
-    }
-
-QLabel[objectName|="lbl_dro_ferror"] {
-    color: #1f1157;
-    font-size: 35pt;
-    }
-
-QLabel[objectName|="lbl_dro_dtg"] {
-    color: #a40000;
-    font-size: 35pt;
-    }
-
 QGroupBox{
     color: #000;
     background: white;
@@ -37,6 +16,34 @@ QGroupBox::title {
     subcontrol-position: top left;    
     padding: 5px 0px 0 5px;
     background: transparent;
+    }
+
+QLabel[objectName|="lbl_dro_name"] {
+    color: #2e3436;
+    font-size: 95pt;
+    }
+
+QLabel[objectName|="lbl_dro_act"] {
+    font-size: 65pt;
+    font-weight: bold;
+    }
+    
+QLabel[objectName|="lbl_dro_act"][homed=true] {
+    color: #4e9a06;
+    }
+    
+QLabel[objectName|="lbl_dro_act"][homed=false] {
+    color: #a40000;
+    }    
+
+QLabel[objectName|="lbl_dro_ferror"] {
+    color: #1f1157;
+    font-size: 35pt;
+    }
+
+QLabel[objectName|="lbl_dro_dtg"] {
+    color: #a40000;
+    font-size: 35pt;
     }
 
 QLabel[objectName|="lbl_main_screen"],
@@ -56,6 +63,10 @@ QLineEdit {
 
 QLineEdit[objectName|="edit_in_button"]{
     font-size: 20px;
+    }
+    
+QListView{
+    font-size: 15px;
     }
 
 QPushButton{
@@ -79,4 +90,14 @@ QPushButton:disabled {
     border: 2px solid #c4a000;
     }
 
-QPushButton[objectName|="btn_"] {color: transparent}
+QPushButton[objectName|="btn_"] {
+    color: transparent
+    }
+
+QHeaderView{
+    font-size: 20px;
+    }
+
+QTableView{
+    font-size: 20px;
+    }

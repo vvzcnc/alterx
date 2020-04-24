@@ -68,7 +68,7 @@ class PathViewer(QWidget):
         UPDATER.add("display_zoomout")
 
         self.glWidget = graphics_plot()
-
+        
         mainLayout = QHBoxLayout()
         mainLayout.addWidget(self.glWidget)
         self.setLayout(mainLayout)
@@ -131,7 +131,6 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
         GlCanonDraw.__init__(self, STAT, self.logger)
 
         # set defaults
-        self.current_view = 'p'
         self.fingerprint = ()
         self.select_primed = None
         self.lat = 0
@@ -155,13 +154,12 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
         self.show_tool = True
         self.show_dtg = True
         self.grid_size = 0.0
-        temp = INI.find("DISPLAY", "LATHE")
-        self.lathe_option = bool(
-            temp == "1" or temp == "True" or temp == "true")
+        self.lathe_option = INFO.machine_is_lathe
+        self.current_view = ('p' if self.lathe_option else 'y')
         self.foam_option = bool(INI.find("DISPLAY", "FOAM"))
         self.show_offsets = False
         self.show_overlay = False
-        self.enable_dro = False
+        self.enable_dro = True
         self.use_default_controls = True
         self.mouse_btn_mode = 0
         self.use_gradient_background = False
@@ -237,9 +235,9 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
             random = int(INI.find("EMCIO", "RANDOM_TOOLCHANGER") or 0)
             canon = StatCanon(self.colors, self.get_geometry(),
                               self.lathe_option, s, random)
-            parameter = INI.find("RS274NGC", "PARAMETER_FILE")
+            parameter = INFO.parameter_file
             temp_parameter = os.path.join(
-                td, os.path.basename(parameter or "linuxcnc.var"))
+                td, os.path.basename(parameter))
             if parameter:
                 shutil.copy(parameter, temp_parameter)
             canon.parameter_file = temp_parameter
@@ -647,9 +645,10 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
                            self.near,
                            self.far + self.distance)  # Far clipping plane. Keep as little as possible.
 
-        GLU.gluLookAt(0, 0, self.distance,  		# the position of your camera, in world space
-                      0, 0, 0,                                # where you want to look at, in world space
-                      0., 1., 0.)                             # probably glm::vec3(0,1,0), but (0,-1,0) would make you looking upside-down
+        GLU.gluLookAt(0, 0, self.distance,  # the position of your camera, in world space
+                      0, 0, 0,              # where you want to look at, in world space
+                      0., 1., 0.)           # probably glm::vec3(0,1,0), but (0,-1,0) would make 
+                                            # you looking upside-down
         GL.glMatrixMode(GL.GL_MODELVIEW)
         GL.glPushMatrix()
         try:
