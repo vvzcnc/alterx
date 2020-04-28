@@ -43,4 +43,3 @@ class func:
     def execute(self):
         printVerbose(_("Offset viewer prev button clicked"))
         UPDATER.emit("offsetviewer_prev")
-        UPDATER.emit("offsetviewer_edit")

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# AlterX GUI - offset viewer next
+# AlterX GUI - tool viewer add
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
@@ -41,5 +41,5 @@ class func:
             button.setStyleSheet("color:black")
 
     def execute(self):
-        printVerbose(_("Offset viewer next button clicked"))
-        UPDATER.emit("offsetviewer_next")
+        printVerbose(_("Tool viewer add button clicked"))
+        UPDATER.emit("toolviewer_add")

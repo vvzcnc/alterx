@@ -166,12 +166,12 @@ class Main():
         UPDATER.emit("screen_homing")
 
     def btn_offset_callback(self, button):
-        UPDATER.emit("reload_offsets")
         UPDATER.emit("screen_offset")
+        UPDATER.emit("reload_offsets")
 
     def btn_tool_callback(self, button):
-        UPDATER.emit("reload_tools")
         UPDATER.emit("screen_tool")
+        UPDATER.emit("reload_tools")
 
     def btn_manual_callback(self, button):
         if STAT.task_mode == LINUXCNC.MODE_MANUAL:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# AlterX GUI - offset viewer next
+# AlterX GUI - tool viewer change tool
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
@@ -26,8 +26,7 @@ from alterx.common.compat import *
 from alterx.common import *
 from alterx.gui.util import *
 
-from alterx.core.linuxcnc import UPDATER
-
+from alterx.core.linuxcnc import *
 
 class func:
     def __init__(self, button):
@@ -41,5 +40,11 @@ class func:
             button.setStyleSheet("color:black")
 
     def execute(self):
-        printVerbose(_("Offset viewer next button clicked"))
-        UPDATER.emit("offsetviewer_next")
+        printVerbose(_("Tool viewer change tool button clicked"))
+        tool = INFO.get_selected_tool()
+        if tool:
+            COMMAND.mdi("T%d M6"%tool)
+        else:
+            COMMAND.mdi("T0 M6")
+        COMMAND.wait_complete()
+        

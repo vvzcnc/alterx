@@ -35,7 +35,10 @@ import operator
 KEYWORDS = ['T', 'P', 'X', 'Y', 'Z', 'A', 'B',
             'C', 'U', 'V', 'W', 'D', 'I', 'J', 'Q', ';']
 
-
+MACHINE_UNIT_CONVERSION = 25.4
+ROW_TO_IMPERIAL = [1.0/25.4]*6+[1.0]*3+[1.0/25.4]*4
+ROW_TO_METRIC = [25.4]*6+[1.0]*3+[25.4]*4
+        
 class ToolOffsetView(QTableView):
     def __init__(self, parent=None):
         QTableView.__init__(self, parent)
@@ -53,8 +56,6 @@ class ToolOffsetView(QTableView):
         self.setEnabled(True)
         self.table = self.createTable()
 
-        self.MACHINE_UNIT_CONVERSION = [1.0/25.4]*6+[1]*3+[1.0/25.4]*4
-
         conversion = {5: "Y", 6: 'Y', 7: "Z", 8: 'Z', 9: "A",
                       10: "B", 11: "C", 12: "U", 13: "V", 14: "W"}
         for num, let in conversion.iteritems():
@@ -71,23 +72,142 @@ class ToolOffsetView(QTableView):
         self.reload_tools()
 
         UPDATER.add("reload_tools")
+        UPDATER.add("toolviewer_add")
+        UPDATER.add("toolviewer_del")
+        UPDATER.add("toolviewer_edit")
+        UPDATER.add("toolviewer_left")
+        UPDATER.add("toolviewer_right")
+        UPDATER.add("toolviewer_next")
+        UPDATER.add("toolviewer_prev")
+        UPDATER.add("toolviewer_change")
+        UPDATER.add("toolviewer_index")
+        
+        UPDATER.connect("toolviewer_add", self.add_tool)
+        UPDATER.connect("toolviewer_del", self.delete_tool)
+        UPDATER.connect("toolviewer_next", self.selection_next)
+        UPDATER.connect("toolviewer_prev", self.selection_prev)
+        UPDATER.connect("toolviewer_left", self.selection_left)
+        UPDATER.connect("toolviewer_right", self.selection_right)
+        UPDATER.connect("toolviewer_edit", self.selection_edit) 
         UPDATER.connect("reload_tools", self.reload_tools)
         UPDATER.connect("program_units", self.metricMode)
         UPDATER.connect("tool_in_spindle", self.currentTool)
 
         INFO.get_tool_info = self.get_tool_info
+        INFO.get_selected_tool = self.get_selected_tool
+
+    def get_selected_tool(self):
+        index = self.get_row()
+        if index.isValid():
+            return self.tablemodel.arraydata[index.row()][1]
+        return None
+      
+    def add_tool(self, state=None):
+        tool_num = None
+        for i in range(1,9999):
+            skip = False
+            for instr in self.tablemodel.arraydata:
+                if instr[1] == i: 
+                    skip = True
+                    break
+            if not skip:
+                tool_num = i
+                break
+        printDebug(_('Add tool request: {}',tool_num))  
+        if tool_num:
+            data = [QCheckBox(), tool_num, tool_num, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 'No Comment']
+            self.tablemodel.arraydata.append(data)
+        else:
+            printDebug(_('Failed to find new tool number'))
+            
+        self.save_tool_file(self.convert_to_standard_type(
+                            self.tablemodel.arraydata))
+        self.reload_tools()
+        
+        for n,instr in enumerate(self.tablemodel.arraydata):
+            if instr[1] == i: 
+                self.set_row(self.model().index(n, 0))
+                break
+
+    def delete_tool(self, state=None):
+        index = self.get_row()
+        if index.isValid():
+            self.selection_prev()
+            tool = self.tablemodel.arraydata[index.row()][1]
+            printDebug(_('Delete tool request: {}',tool))  
+            self.save_tool_file(self.convert_to_standard_type(
+                        self.tablemodel.arraydata), delete=(tool,))
+            self.reload_tools()
+
+    def next_visible_column(self, index, rev=True):
+        list_cols = [i for i in range(self.model().columnCount(None))]
+        if rev:
+            list_cols = [r for r in reversed(list_cols)]
+            if index.column() > 0:
+                list_cols = list_cols[self.model().columnCount(None) - index.column():]
+        else:
+            list_cols = list_cols[index.column() + 1:]
+        for i in list_cols:
+            if not self.horizontalHeader().isSectionHidden(i):
+                return i
+        return 0
+
+    def selection_left(self, stat=None):
+        self.setSelectionBehavior(QTableView.SelectItems)
+        index = self.get_row()
+        if index:
+            self.set_row(self.model().index(index.row(), self.next_visible_column(index,True)))
+
+    def selection_right(self, stat=None):
+        self.setSelectionBehavior(QTableView.SelectItems)
+        index = self.get_row()
+        if index:
+            self.set_row(self.model().index(index.row(), self.next_visible_column(index,False)))
+
+    def selection_edit(self, stat=None):
+        index = self.get_row()
+        if stat and index:
+            self.model().arraydata[index.row()][index.column()] = stat
+            self.dataChanged(index,None,None)
+
+    def selection_next(self, stat=None):
+        self.setSelectionBehavior(QTableView.SelectRows)
+        index = self.get_row()
+        if index:
+            self.set_row(self.model().index(index.row() + 1, 0))
+        else:
+            self.set_row(self.model().index(0, 0))
+
+    def selection_prev(self, stat=None):
+        self.setSelectionBehavior(QTableView.SelectRows)
+        index = self.get_row()
+        if index and index.row() > 0:
+            self.set_row(self.model().index(index.row() - 1, 0))
+        else:
+            self.set_row(self.model().index(
+                self.model().rowCount(None) - 1, 0))
+
+    def get_row(self):
+        return self.selectionModel().currentIndex()
+
+    def set_row(self, index):
+        self.setCurrentIndex(index)
 
     def get_tool_info(self, tool):
         try:
             for t in self.tablemodel.arraydata:
                 if t[1] == tool:
                     return t
-            return [None, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'No Comment']
+            return [None, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 'No Comment']
         except Exception as e:
             printError(_("Failed to get tool info: {}", e))
 
     def currentTool(self, data):
         self.current_tool = data
+        self.model().setCheckedTool(data)
+        self.model().layoutChanged.emit()
 
     def metricMode(self, state):
         if self.metric_display != INFO.get_metric():
@@ -100,7 +220,8 @@ class ToolOffsetView(QTableView):
                       0, 0, 0, 0, 0, 0, 0, 'No Comment']]
 
         # create the view
-        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSelectionMode(QTableView.SingleSelection)
+        self.setSelectionBehavior(QTableView.SelectRows)
 
         # set the table model
         header = [_('*'), _('Tool'), _('Pocket'),
@@ -127,8 +248,18 @@ class ToolOffsetView(QTableView):
         printDebug(_('Text: {}, Row: {}, Column: {}',
                      text, item.row(), item.column()))
 
-    def convert_units(self, v):
-        c = self.MACHINE_UNIT_CONVERSION
+    def convert_units_to_file(self, v):
+        if INFO.machine_is_metric:
+            c = ROW_TO_METRIC[3:]
+        else:
+            c = ROW_TO_IMPERIAL[3:]
+        return map(lambda x, y: x*y, v, c)
+
+    def convert_units_from_file(self, v):
+        if INFO.machine_is_metric:
+            c = ROW_TO_IMPERIAL
+        else:
+            c = ROW_TO_METRIC
         return map(lambda x, y: x*y, v, c)
 
     def reload_tools(self, state=None):
@@ -145,9 +276,10 @@ class ToolOffsetView(QTableView):
                 line[0] = QCheckBox()
 
             if self.metric_display != INFO.machine_is_metric:
-                line[3:16] = self.convert_units(line[3:16])
+                line[3:16] = self.convert_units_from_file(line[3:16])
 
         self.tablemodel.layoutUpdate.emit(data)
+        self.tablemodel.sort(1,Qt.AscendingOrder)
         
         header = self.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -236,13 +368,16 @@ class ToolOffsetView(QTableView):
             return True
         with open(self.toolfile, "w") as file:
             for row in new_model:
+                if self.metric_display != INFO.machine_is_metric:
+                    row[2:12] = self.convert_units_to_file(row[2:12])
+            
                 values = [value for value in row]
                 line = ""
                 skip = False
                 for num, i in enumerate(values):
                     # print KEYWORDS[num], i, #type(i), int(i)
                     if num == 0 and i in delete:
-                        printDebug(_("Delete tool ' {}", i))
+                        printDebug(_("Delete tool: {}", i))
                         skip = True
                     if num in (0, 1, 14):  # tool# pocket# orientation
                         line = line + "%s%d " % (KEYWORDS[num], i)
@@ -328,17 +463,17 @@ class ToolOffsetView(QTableView):
                     new_line[cnum-1] = int(i)
                 elif cnum == 3:
                     new_line[cnum-1] = float(i)
-                elif cnum == 4 and i != '0':
+                elif cnum == 4 and i != 0:
                     wear_flag = True
                     new_wear_line[2] = float(i)
-                elif cnum == 5 and i != '0':
+                elif cnum == 5 and i != 0:
                     new_line[cnum-2] = float(i)
-                elif cnum == 6 and i != '0':
+                elif cnum == 6 and i != 0:
                     wear_flag = True
                     new_wear_line[3] = float(i)
-                elif cnum == 7 and i != '0':
+                elif cnum == 7 and i != 0:
                     new_line[cnum-3] = float(i)
-                elif cnum == 8 and i != '0':
+                elif cnum == 8 and i != 0:
                     wear_flag = True
                     new_wear_line[4] = float(i)
                 elif cnum in(9, 10, 11, 12, 13, 14, 15, 16, 17):
@@ -362,7 +497,8 @@ class ToolOffsetView(QTableView):
         row = new.row()
         col = new.column()
         data = self.tablemodel.arraydata[row][col]
-        printDebug(_('Entered data:{} {}', data, row, col))
+        printDebug(_('Entered tool data:{} {} {}', data, row, col))
+        
         # now update linuxcnc to the change
         try:
             if STAT.task_mode == LINUXCNC.MODE_MDI:
@@ -377,19 +513,6 @@ class ToolOffsetView(QTableView):
             printError(_("Tool offsetpage widget error: MDI call error, {}", e))
             self.reload_tools()
         self.editing_flag = False
-
-    def add_tool(self):
-        if STAT.task_mode != LINUXCNC.MODE_AUTO:
-            printDebug(_('Add tool request'))
-            TOOL.ADD_TOOL()
-
-    def delete_tools(self):
-        if STAT.task_mode != LINUXCNC.MODE_AUTO:
-            printDebug(_('Delete tools request'))
-            dtools = self.tablemodel.listCheckedTools()
-            if dtools:
-                error = self.save_tool_file(self.convert_to_standard_type(
-                    self.tablemodel.arraydata), dtools)
 
     def get_checked_list(self):
         return self.tablemodel.listCheckedTools()
@@ -422,6 +545,13 @@ class ToolModel(QAbstractTableModel):
                 checkedlist.append(row[1])
         return checkedlist
 
+    def setCheckedTool(self,tool):
+        for row in self.arraydata:
+            if row[1] != tool:
+                row[0].setChecked(False)
+            else:
+                row[0].setChecked(True)
+
     def rowCount(self, parent):
         return len(self.arraydata)
 
@@ -447,7 +577,7 @@ class ToolModel(QAbstractTableModel):
     # Returns the item flags for the given index.
     def flags(self, index):
         if not index.isValid():
-            return None
+            return Qt.ItemIsEnabled
         if index.column() == 0:
             return Qt.ItemIsEnabled | Qt.ItemIsUserCheckable
         else:

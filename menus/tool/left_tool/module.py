@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# AlterX GUI - offset viewer next
+# AlterX GUI - tool viewer left
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
@@ -28,7 +28,6 @@ from alterx.gui.util import *
 
 from alterx.core.linuxcnc import UPDATER
 
-
 class func:
     def __init__(self, button):
         dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -41,5 +40,5 @@ class func:
             button.setStyleSheet("color:black")
 
     def execute(self):
-        printVerbose(_("Offset viewer next button clicked"))
-        UPDATER.emit("offsetviewer_next")
+        printVerbose(_("Tool viewer left button clicked"))
+        UPDATER.emit("toolviewer_left")

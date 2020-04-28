@@ -70,6 +70,9 @@ class linuxcnc_info():
 
     def get_tool_info(self, tool):
         pass
+        
+    def get_selected_tool(self):
+        pass
 
 
 INFO = linuxcnc_info()

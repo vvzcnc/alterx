@@ -8,7 +8,14 @@ Features:
 	Settings
 	Lathe tool table has too much columns
 	In info section rename default files
+	Change fonts
+	Include awlsim
+	LinuxCNC configurer and ini-filegen
+	Add locales
+	Current offset highlight
+	Current tool highlight
 	
 Bugs:
     path_viewer not rotated axis label
     path_viewer current view not working on startup
+    reload table after showing
