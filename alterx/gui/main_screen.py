@@ -35,7 +35,6 @@ from menus import *
 
 from functools import partial
 
-
 class BottomButton(QPushButton):
     def __init__(self, label):
         QPushButton.__init__(self, label)

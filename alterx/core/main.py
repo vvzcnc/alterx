@@ -154,6 +154,7 @@ class Main():
             printError(_("Unknown button"))
 
     def btn_abort_callback(self, button):
+        UPDATER.emit("launch_styleeditor")
         UPDATER.emit("screen_display")
 
     def btn_equipment_callback(self, button):

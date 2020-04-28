@@ -67,9 +67,9 @@ class OriginOffsetView(QTableView):
         UPDATER.add("reload_offsets")
         UPDATER.connect("reload_offsets", self.reload_offsets)
         UPDATER.connect("tool_offset", self.reload_offsets)
-        #UPDATER.connect("g5x_offset", self.reload_offsets)
         UPDATER.connect("g92_offset", self.reload_offsets)
-
+        #UPDATER.connect("g5x_offset", self.reload_offsets)
+        
         UPDATER.connect("program_units", self.metricMode)
         UPDATER.connect("g5x_index", self.currentSystem)
         UPDATER.connect("tool_in_spindle", self.currentTool)
@@ -84,20 +84,24 @@ class OriginOffsetView(QTableView):
         UPDATER.connect("offsetviewer_select", self.selection_set)
         UPDATER.connect("offsetviewer_edit", self.selection_edit)
 
+    def resizeEvent(self, event):
+        super(OriginOffsetView, self).resizeEvent(event)
+        self.resizeRowsToContents()
+
     def selection_next(self, stat=None):
         index = self.get_row()
         if index:
-            self.set_row(self.model().index(index.row() + 1, 2))
+            self.set_row(self.model().index(index.row() + 1, 3))
         else:
-            self.set_row(self.model().index(0, 2))
+            self.set_row(self.model().index(0, 3))
 
     def selection_prev(self, stat=None):
         index = self.get_row()
         if index and index.row() > 0:
-            self.set_row(self.model().index(index.row() - 1, 2))
+            self.set_row(self.model().index(index.row() - 1, 3))
         else:
             self.set_row(self.model().index(
-                self.model().rowCount(None) - 1, 2))
+                self.model().rowCount(None) - 1, 3))
 
     def selection_set(self, stat=None):
         index = self.get_row()
@@ -112,8 +116,8 @@ class OriginOffsetView(QTableView):
             except:
                 return
 
-            self.tabledata[index.row()][axis] = value
-            new_index = self.model().index(index.row(), axis)
+            self.tabledata[index.row()][axis + 1] = value
+            new_index = self.model().index(index.row(), axis + 1)
             self.dataChanged(new_index, None, None)
             self.tablemodel.layoutUpdate.emit()
 
@@ -130,6 +134,8 @@ class OriginOffsetView(QTableView):
 
     def currentSystem(self, data):
         self.current_system = self.convert_system(data-1)
+        self.model().setCheckedLine(data-1)
+        self.model().layoutChanged.emit()
 
     def currentTool(self, data):
         self.current_tool = data
@@ -148,27 +154,27 @@ class OriginOffsetView(QTableView):
 
     def createTable(self):
         # create blank taple array
-        self.tabledata = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 'Absolute Position'],
-                          [None, None, None, None, None, None, None,
+        self.tabledata = [[None,0, 0, 0, 0, 0, 0, 0, 0, 0, 'Absolute Position'],
+                          [None,None, None, None, None, None, None, None,
                               None, None, 'Rotational Offsets'],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 'G92 Offsets'],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 'Current Tool'],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 1'],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 2'],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 3'],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 4'],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 5'],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 6'],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 7'],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 8'],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 9']]
+                          [None,0, 0, 0, 0, 0, 0, 0, 0, 0, 'G92 Offsets'],
+                          [None,0, 0, 0, 0, 0, 0, 0, 0, 0, 'Current Tool'],
+                          [QCheckBox(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 1'],
+                          [QCheckBox(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 2'],
+                          [QCheckBox(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 3'],
+                          [QCheckBox(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 4'],
+                          [QCheckBox(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 5'],
+                          [QCheckBox(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 6'],
+                          [QCheckBox(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 7'],
+                          [QCheckBox(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 8'],
+                          [QCheckBox(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 'System 9']]
 
         # create the view
         self.setSelectionMode(QTableView.SingleSelection)
         self.setSelectionBehavior(QTableView.SelectRows)
 
         # set the table model
-        header = ['X', 'Y', 'Z', 'A', 'B', 'C', 'U', 'V', 'W', 'Name']
+        header = ['*', 'X', 'Y', 'Z', 'A', 'B', 'C', 'U', 'V', 'W', 'Name']
         vheader = ['ABS', 'Rot', 'G92', 'Tool', 'G54', 'G55',
                    'G56', 'G57', 'G58', 'G59', 'G59.1', 'G59.2', 'G59.3']
         self.tablemodel = OffsetModel(self.tabledata, header, vheader, self)
@@ -227,18 +233,18 @@ class OriginOffsetView(QTableView):
             for column in range(0, 9):
                 if row == 1:
                     if column == 2:
-                        self.tabledata[row][column] = self.degree_tmpl.format(
-                            rot)
+                        self.tabledata[row][column + 1] = self.degree_tmpl.format(rot)
                     else:
-                        self.tabledata[row][column] = " "
+                        self.tabledata[row][column + 1] = " "
                 else:
-                    self.tabledata[row][column] = self.linear_tmpl.format(
+                    self.tabledata[row][column + 1] = self.linear_tmpl.format(
                         i[column])
+                        
         self.tablemodel.layoutUpdate.emit()
 
         header = self.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(9,QHeaderView.Stretch)
+        header.setSectionResizeMode(10,QHeaderView.Stretch)
         #self.resizeColumnsToContents()
         self.resizeRowsToContents()
 
@@ -296,15 +302,15 @@ class OriginOffsetView(QTableView):
         data = self.tabledata[row][col]
         printDebug("Offset changed - Row: {} Col: {} Data: {}".format(row,col,data))
         # Hack to not edit any rotational offset but Z axis
-        if row == 1 and not col == 2:
+        if row == 1 and not col == 3:
             return
 
         # TODO: Save system name
-        if col == 9:
+        if col == 10:
             return
 
         if row == 1:
-            if col == 2:
+            if col == 3:
                 self.tabledata[row][col] = self.degree_tmpl.format(data)
             else:
                 self.tabledata[row][col] = " "
@@ -359,6 +365,13 @@ class OffsetModel(QAbstractTableModel):
     def update(self):
         self.layoutChanged.emit()
 
+    def setCheckedLine(self,data):
+        for i,row in enumerate(self.arraydata[4:]):
+            if i != data:
+                row[0].setChecked(False)
+            else:
+                row[0].setChecked(True)
+
     def rowCount(self, parent):
         return len(self.arraydata)
 
@@ -367,40 +380,55 @@ class OffsetModel(QAbstractTableModel):
             return len(self.arraydata[0])
         return 0
 
-    def data(self, index, role):
+    # Returns the data stored under the given role for the item referred to by the index.
+    def data(self, index, role=Qt.DisplayRole):
         if role == Qt.EditRole:
             return self.arraydata[index.row()][index.column()]
-        if role == Qt.DisplayRole:
-            return QVariant(self.arraydata[index.row()][index.column()])
+        elif role == Qt.DisplayRole:
+            return self.arraydata[index.row()][index.column()]
+        elif role == Qt.CheckStateRole:
+            if index.column() == 0 and index.row() > 3:
+                if self.arraydata[index.row()][index.column()].isChecked():
+                    return Qt.Checked
+                else:
+                    return Qt.Unchecked
         return QVariant()
 
     def flags(self, index):
         if not index.isValid():
             return None
-        if index.column() == 9 and index.row() in(0, 1, 2, 3):
+        if index.column() == 10 and index.row() in(0, 1, 2, 3):
             return Qt.ItemIsEnabled
-        elif index.row() == 1 and not index.column() == 2:
+        elif index.row() == 1 and not index.column() == 3:
             return Qt.NoItemFlags
         else:
             return Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable
 
     def setData(self, index, value, role):
         if not index.isValid():
+            printError("Offset viewer index not valid {}".format(index))
             return False
-
-        try:
-            if index.column() == 9:
-                v = str(value)
+            
+        if role == Qt.CheckStateRole and index.column() == 0:
+            if value == Qt.Checked:
+                self.arraydata[index.row()][index.column()].setChecked(True)
             else:
-                v = float(value)
-        except Exception as e:
-            printDebug(_("Set offset data failed: {}", e))
-            if index.column() == 9:
-                v = str(" ")
-            else:
-                v = float(0.0)
+                self.arraydata[index.row()][index.column()].setChecked(False)
+            return True
+        else:
+            try:
+                if index.column() == 10:
+                    v = str(value)
+                else:
+                    v = float(value)
+            except Exception as e:
+                printDebug(_("Set offset data failed: {}", e))
+                if index.column() == 10:
+                    v = str(" ")
+                else:
+                    v = float(0.0)
 
-        self.arraydata[index.row()][index.column()] = v
+            self.arraydata[index.row()][index.column()] = v
         self.dataChanged.emit(index, index)
         return True
 

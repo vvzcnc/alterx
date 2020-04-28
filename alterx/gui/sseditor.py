@@ -65,6 +65,11 @@ class StyleSheetEditor(QDialog):
         self.colorButton.setText(_("Color"))
         self.colorButton.clicked.connect(self.on_colorButton_clicked)
         layout_edit.addWidget(self.colorButton)
+        
+        self.fontButton = QPushButton()
+        self.fontButton.setText(_("Font"))
+        self.fontButton.clicked.connect(self.on_fontButton_clicked)
+        layout_edit.addWidget(self.fontButton)
 
         lay_h1 = QHBoxLayout()
         self.openButton = QPushButton()
@@ -185,6 +190,22 @@ class StyleSheetEditor(QDialog):
             self.colorButton.setStyleSheet(
                 'QPushButton {background-color: %s ;}' % Color)
             self.styleTextEdit.insertPlainText(Color)
+            
+    def on_fontButton_clicked(self):
+        _font,btn = QFontDialog.getFont()
+        if btn:
+            self.styleTextEdit.insertPlainText((
+                "font-family: {};\n"
+                "font-size: {}pt;\n"
+                "font-style: {};\n"
+                "font-weight: {};\n"
+                "text-decoration: {};\n"
+                ).format(_font.family(),
+                        _font.pointSize(),
+                        ["normal","bold","italic","oblique"][_font.style()+1],
+                        _font.weight(),
+                        "underline " if _font.underline() else " " +
+                        "line-through" if _font.strikeOut() else " "))
 
     def loadStyleSheet(self, sheetName):
         if not sheetName == 'Default':

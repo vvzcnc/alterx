@@ -96,6 +96,10 @@ class ToolOffsetView(QTableView):
         INFO.get_tool_info = self.get_tool_info
         INFO.get_selected_tool = self.get_selected_tool
 
+    def resizeEvent(self, event):
+        super(ToolOffsetView, self).resizeEvent(event)
+        self.resizeRowsToContents()
+        
     def get_selected_tool(self):
         index = self.get_row()
         if index.isValid():
@@ -206,7 +210,7 @@ class ToolOffsetView(QTableView):
 
     def currentTool(self, data):
         self.current_tool = data
-        self.model().setCheckedTool(data)
+        self.model().setCheckedLine(data)
         self.model().layoutChanged.emit()
 
     def metricMode(self, state):
@@ -545,7 +549,7 @@ class ToolModel(QAbstractTableModel):
                 checkedlist.append(row[1])
         return checkedlist
 
-    def setCheckedTool(self,tool):
+    def setCheckedLine(self,tool):
         for row in self.arraydata:
             if row[1] != tool:
                 row[0].setChecked(False)
