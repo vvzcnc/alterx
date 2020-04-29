@@ -81,8 +81,12 @@ for (o, v) in opts:
     if o in ("-i", "--ini"):
         ini = str(v)
 
-parameters = ConfigParser()
-parameters.read(ini)
+
+if ini is not None:
+    os.putenv('INI_FILE_NAME',ini)
+    os.environ['INI_FILE_NAME'] = ini
+    parameters = ConfigParser()
+    parameters.read(ini)
 
 try:
     log = parameters.get("DISPLAY", "LOG_FILE")

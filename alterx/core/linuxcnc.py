@@ -41,7 +41,6 @@ try:
 except Exception as e:
     printError(_("Failed to import LinuxCNC module: '{}'", e))
 
-
 class linuxcnc_info():
     def __init__(self):
         if INI.find('TRAJ', 'LINEAR_UNITS') in ('mm', 'metric'):
@@ -74,9 +73,7 @@ class linuxcnc_info():
     def get_selected_tool(self):
         pass
 
-
 INFO = linuxcnc_info()
-
 
 class linuxcnc_poll(QTimer):
     # 'One to many' item check

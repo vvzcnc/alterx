@@ -45,10 +45,11 @@ QLabel[objectName|="lbl_dro_dtg"] {
     color: #a40000;
     font-size: 35pt;
     }
-
+    
 QLabel[objectName|="lbl_main_screen"],
 QLabel[objectName|="lbl_geditor"],
-QLabel[objectName|="lbl_gwidget"]{
+QLabel[objectName|="lbl_gwidget"],
+QLabel[objectName|="lbl_config_editor"]{
     color: #000;
     font-size: 20px;
     }
@@ -59,6 +60,10 @@ QLineEdit {
     border-style: solid;
     border: 2px solid gray;
     border-radius: 8px;
+    }
+    
+QLineEdit[objectName|="edit_config_editor"]{
+    font-size: 20px;
     }
 
 QLineEdit[objectName|="edit_in_button"]{
@@ -75,14 +80,15 @@ QPushButton{
     padding: 5px;
     background: #cccccc;
     min-width: 40px;
+    font-size: 20px;  
     }
 
-QPushButton[active=true] {
+QPushButton[active=true]{
     background: #eeeeec;
     border: 2px solid #4e9a06;
     }
 
-QPushButton:disabled {
+QPushButton:disabled{
     background: qlineargradient(spread:repeat, 
         x1:0, y1:0, x2:0.1, y2:0.1, 
         stop:0 #fff, stop:0.495 #fff, 
@@ -90,7 +96,7 @@ QPushButton:disabled {
     border: 2px solid #c4a000;
     }
 
-QPushButton[objectName|="btn_"] {
+QPushButton[objectName|="btn_"]{
     color: transparent
     }
 
@@ -99,5 +105,42 @@ QHeaderView{
     }
 
 QTableView{
+    font-size: 20px;
+    }
+    
+QTabWidget::pane{
+    border:none;
+    }
+
+QTabWidget::tab-bar{
+    border:1px solid gray;
+    }    
+   
+QTabBar::tab{
+    font-size: 20px;       
+    border: 2px solid #555;
+    border-radius: 11px;
+    background: #cccccc;
+    color: black;
+    height: 30px;
+    width: 150px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    } 
+
+QTabBar::tab:selected{
+    background: #eeeeec;
+    }
+    
+QTextEdit{
+    background: white;
+    padding: 1px;
+    border-style: solid;
+    border: 2px solid gray;
+    border-radius: 8px;
+    }
+    
+QTextEdit[objectName|="edit_config_editor"]{
     font-size: 20px;
     }

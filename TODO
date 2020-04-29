@@ -1,15 +1,16 @@
 TODO list
 
 Features:
-	Keyboard serial listener
-	Notify transparent
-	Jog
-	Settings
-	Lathe tool table has too much columns
-	In info section rename default files
-	Change fonts
-	Include awlsim
 	LinuxCNC configurer and ini-filegen
+	Load interface in recovery mode(without linuxcnc)
+	Settings
+	Include awlsim
+	Keyboard serial listener
+    Jog
+    In info section rename default files
+	Change icons to vector
+	Change fonts
+	Notify transparent
 	Add locales
 	
 Bugs:

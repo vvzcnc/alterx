@@ -46,7 +46,6 @@ from alterx.gui.sseditor import *
 
 from functools import partial
 
-
 class MainWindow(QWidget):
     TITLE = _("AlterX v{}", VERSION_STRING)
 
@@ -129,13 +128,13 @@ class MainWindow(QWidget):
         # side buttons
         #        #layout#    #name#        #enable state#    #active state#            #
         sideWidget = [
-            ["right",    "manual",    ON_STATE,    [None, None, LINUXCNC.MODE_MANUAL, None]],
+            ["right",    "manual",    [],    [None, None, LINUXCNC.MODE_MANUAL, None]],
             ["right",    "mdi",        HOMED_STATE,[None, None, LINUXCNC.MODE_MDI, None]],
             ["right",    "auto",        HOMED_STATE,[None, None, LINUXCNC.MODE_AUTO, None]],
             ["right",    "settings",    [],            SEC_WIDGET],
             ["right",    "tabs",        ON_STATE,    SEC_WIDGET],
             ["right",    "machine",    [],            ON_STATE+[None]*3],
-            ["left",    "abort",    ON_STATE,    SEC_WIDGET],
+            ["left",    "abort",    [],    SEC_WIDGET],
             ["left",    "equipment",ON_STATE,    SEC_WIDGET],
             ["left",    "load",        AUTO_STATE,    SEC_WIDGET],
             [None],

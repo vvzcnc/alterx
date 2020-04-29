@@ -30,7 +30,10 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
+from alterx.gui.config_editor import *
 
-class SettingsWidget(QWidget):
+class SettingsWidget(QStackedWidget):
     def __init__(self, parent=None):
-        QWidget.__init__(self, parent)
+        QStackedWidget.__init__(self, parent)
+        self.addWidget(ConfigEditor())
+        
