@@ -28,7 +28,7 @@ from alterx.common.compat import *
 from alterx.common.preferences import *
 from alterx.common import *
 from alterx.core.linuxcnc import *
-
+from alterx.gui.util import *
 
 class Main():
     #------ Initialize ------#
@@ -154,8 +154,10 @@ class Main():
             printError(_("Unknown button"))
 
     def btn_abort_callback(self, button):
-        UPDATER.emit("launch_styleeditor")
-        UPDATER.emit("screen_display")
+        if Notify.count() > 0:
+            Notify.closeAll()
+        else:
+            UPDATER.emit("screen_display")
 
     def btn_equipment_callback(self, button):
         UPDATER.emit("screen_equipment")

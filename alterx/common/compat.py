@@ -41,7 +41,7 @@ if os.name == "java":
     __osName = java.lang.System.getProperty("os.name").lower()
     osIsWindows = __osName.startswith("windows")
     osIsPosix = not osIsWindows
-else:  # @nocov
+else:
     osIsWindows = os.name == "nt" or os.name == "ce"
     osIsPosix = os.name == "posix"
 osIsLinux = osIsPosix and "linux" in sys.platform.lower()

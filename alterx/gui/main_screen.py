@@ -182,7 +182,6 @@ class ToolWidget(QGroupBox):
             self.tool_number.setText("#{}".format(data))
             self.tool_comment.setText("{}".format(tool[19]))
 
-
 class GCodeWidget(QGroupBox):
     def __init__(self, parent=None):
         QGroupBox.__init__(self, parent)

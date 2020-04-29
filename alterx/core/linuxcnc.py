@@ -96,8 +96,10 @@ class linuxcnc_poll(QTimer):
             kind, text = error_data
             if kind in (LINUXCNC.NML_ERROR, LINUXCNC.OPERATOR_ERROR):
                 printError(text)
+                Notify.Error(text)
             else:
                 printInfo(text)
+                Notify.Info(text)
 
         for s in dir(STAT):
             if not s.startswith('_'):
