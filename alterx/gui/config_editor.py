@@ -46,10 +46,10 @@ class ConfigEditor(QWidget):
         vlay = QVBoxLayout()
         hlay = QHBoxLayout()
         save = QPushButton()
-        save.setText("Save")
+        save.setText(_("Save"))
         save.clicked.connect(self.save)
         load = QPushButton()
-        load.setText("Load")
+        load.setText(_("Load"))
         load.clicked.connect(self.load)        
         hlay.addWidget(load)
         hlay.addWidget(save)
@@ -57,40 +57,145 @@ class ConfigEditor(QWidget):
         self.page = QTabWidget()
         vlay.addWidget(self.page)
         self.setLayout(vlay)
+
+    def new_section(self,section):
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        widget = QWidget()
+        scroll.setWidget(widget)
     
+        vlay = QVBoxLayout()
+        vlay.setContentsMargins(20,20,20,20)
+        hlay = QHBoxLayout()
+        
+        add_button = QPushButton()
+        add_button.setText(_("New"))
+        add_button.clicked.connect(partial(self.new_line_clicked,vlay,section))
+        hlay.addWidget(add_button)
+        
+        del_section_button = QPushButton()
+        del_section_button.setText(_("Delete section"))
+        del_section_button.clicked.connect(partial(self.delete_tab_clicked,scroll,section))
+        hlay.addWidget(del_section_button)            
+        
+        hlay.addStretch()
+        vlay.addLayout(hlay)
+        widget.setLayout(vlay)
+        return scroll,vlay        
+        
+    def new_section_clicked(self,widget):
+        section = widget.text()
+        if section:
+            try:
+                self.config.add_section(section)
+                w,l = self.new_section(section)
+                l.addStretch()
+                index = self.page.addTab(w,section)
+                self.page.setCurrentIndex(index)
+            except Exception as e:
+                printDebug(_("Add section exception: {}",e))
+        widget.setText("")
+        
     def save(self):
         ini = os.environ['INI_FILE_NAME']
-        if ini:
-            with open(ini, "w") as fp:
-                if self.config._defaults:
-                    fp.write("[%s]\n" % DEFAULTSECT)
-                    for (key, value) in self.config._defaults.items():
-                        if '\n' in value:
-                            value = value.split('\n')
-                        else:
-                            value = [value]
-                        for v in value:                            
-                            if (v is not None) or (self.config._optcre == self.config.OPTCRE):
-                                key = " = ".join((key, str(v)))
-                            fp.write("%s\n" % (key))
-                    fp.write("\n")
-                for section in self.config._sections:
-                    fp.write("[%s]\n" % section)
-                    for (key, value) in self.config._sections[section].items():
-                        if key == "__name__":
-                            continue
-                        if '\n' in value:
-                            value = value.split('\n')
-                        else:
-                            value = [value]
-                        for v in value:                            
-                            if (v is not None) or (self.config._optcre == self.config.OPTCRE):
-                                k = " = ".join((key, str(v)))
-                            fp.write("%s\n" % (k))
-                    fp.write("\n")
-        else:
-            printWarning("INI-file args is not found.")
+        if not ini:
+            printWarning(_("INI-file arg is not found."))
             return
+                    
+        with open(ini, "w") as fp:
+            if self.config._defaults:
+                fp.write("[%s]\n" % DEFAULTSECT)
+                for (key, value) in self.config._defaults.items():
+                    if '\n' in value:
+                        value = value.split('\n')
+                    else:
+                        value = [value]
+                    for v in value:                            
+                        if (v is not None) or (self.config._optcre == self.config.OPTCRE):
+                            key = " = ".join((key, str(v)))
+                        fp.write("%s\n" % (key))
+                fp.write("\n")
+            for section in self.config._sections:
+                fp.write("[%s]\n" % section)
+                for (key, value) in self.config._sections[section].items():
+                    if key == "__name__":
+                        continue
+                    if '\n' in value:
+                        value = value.split('\n')
+                    else:
+                        value = [value]
+                    for v in value:                            
+                        if (v is not None) or (self.config._optcre == self.config.OPTCRE):
+                            k = " = ".join((key, str(v)))
+                        fp.write("%s\n" % (k))
+                fp.write("\n")
+    
+    def fit_to_text(self,widget):
+        height = widget.document().size().height()
+        margin = widget.document().documentMargin()
+        widget.setMaximumHeight(height+2*margin)
+        
+    def editing_finished(self,widget,section,option):
+        self.fit_to_text(widget)
+        self.config.set(section,option,widget.toPlainText())
+        printDebug(_("Option changed: {} {} {}",section,option,widget.toPlainText()))
+    
+    def delete_option(self,widget,section,option):
+        for i in reversed(range(widget.count())):
+            item = widget.itemAt(i)
+            item.widget().setVisible(False)
+            item.widget().deleteLater()
+            widget.removeItem(item)
+        self.config.remove_option(section,option)
+    
+    def new_line(self,layout,section,option):
+        label = QLabel(option)
+        label.setObjectName("lbl_config_editor_{}_{}".format(section,option))
+        layout.addWidget(label,2)
+        edit = QTextEdit()
+        edit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        edit.setText(self.config.get(section,option))
+        edit.document().documentLayout().documentSizeChanged.connect(partial(self.fit_to_text,edit))
+        edit.textChanged.connect(partial(self.editing_finished,edit,section,option))
+        edit.setObjectName("edit_config_editor_{}_{}".format(section,option))
+        layout.addWidget(edit,6)
+        button = QPushButton()
+        button.setText(_("Delete"))
+        button.clicked.connect(partial(self.delete_option,layout,section,option))
+        layout.addWidget(button,1)
+
+    def new_line_edit(self,widget,layout,section):
+        text = widget.text()
+        for i in reversed(range(layout.count())):
+            item = layout.itemAt(i)
+            if type(item.widget()) in (QLineEdit,QPushButton):
+                item.widget().setVisible(False)
+                item.widget().deleteLater()
+            layout.removeItem(item)
+        if not text:
+            return
+        else:
+            self.config.set(section,text,"0")
+            self.new_line(layout,section,text)
+            
+    def new_line_clicked(self,layout,section):
+        hlay = QHBoxLayout()
+        edit = QLineEdit()
+        edit.setObjectName("edit_config_editor_{}_{}".format(section,"new"))
+        button = QPushButton()
+        button.setText(_("Insert"))
+        button.clicked.connect(partial(self.new_line_edit,edit,hlay,section))
+        hlay.addWidget(edit,2)
+        hlay.addWidget(button,7)
+        layout.insertLayout(1,hlay)
+
+    def delete_tab_clicked(self,widget,section):
+        try:
+            self.config.remove_section(section)
+            index = self.page.indexOf(widget)
+            self.page.removeTab(index)
+        except Exception as e:
+            printDebug(_("Delete section exception: {}",e))
     
     def load(self):
         if self.page.count() > 0:
@@ -99,99 +204,41 @@ class ConfigEditor(QWidget):
                     self.page.widget(i).deleteLater()
                     self.page.removeTab(i)
                 except Exception as e:
-                    print("%s"%e)
+                    printDebug(_("Delete tab exception: {}",e))
+                
+        widget = QWidget()
+        layout = QVBoxLayout()
+        edit = QLineEdit()
+        edit.setObjectName("edit_config_editor_{}_{}".format("new","new"))
+        button = QPushButton()
+        button.setText(_("Add new section"))
+        button.clicked.connect(partial(self.new_section_clicked,edit))
+        layout.addWidget(edit,2)
+        layout.addWidget(button,7)
+        layout.addStretch()
+        widget.setLayout(layout)
+
+        self.config = ConfigParser(dict_type=MultiOrderedDict,allow_no_value=True)
+        self.config.optionxform = str
+        self.page.addTab(widget,"+")        
                 
         ini = os.environ['INI_FILE_NAME']
         if ini:
-            self.config = ConfigParser(dict_type=MultiOrderedDict,allow_no_value=True)
-            self.config.optionxform = str
             self.config.read(ini)
         else:
-            printWarning("INI-file args is not found.")
+            printWarning(_("INI-file arg is not found."))
             return
-            
-        def editing_finished(widget,section,option):
-            fit_to_text(widget)
-            self.config.set(section,option,widget.toPlainText())
-            printDebug(_("Option changed: {} {} {}",section,option,widget.toPlainText()))
-        
-        def fit_to_text(widget):
-            height = widget.document().size().height()
-            margin = widget.document().documentMargin()
-            widget.setMaximumHeight(height+2*margin)
-        
-        def delete_option(widget,section,option):
-            for i in reversed(range(widget.count())):
-                item = widget.itemAt(i)
-                item.widget().setVisible(False)
-                item.widget().deleteLater()
-                widget.removeItem(item)
-            self.config.remove_option(section,option)
-        
-        def new_line(lay,sect,opt):
-            label = QLabel(opt)
-            label.setObjectName("lbl_config_editor_{}_{}".format(sect,opt))
-            lay.addWidget(label,2)
-            edit = QTextEdit()
-            edit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-            edit.setText(self.config.get(sect,opt))
-            edit.document().documentLayout().documentSizeChanged.connect(partial(fit_to_text,edit))
-            edit.textChanged.connect(partial(editing_finished,edit,sect,opt))
-            edit.setObjectName("edit_config_editor_{}_{}".format(sect,opt))
-            lay.addWidget(edit,6)
-            del_button = QPushButton()
-            del_button.setText(_("Delete"))
-            del_button.clicked.connect(partial(delete_option,hlay,sect,opt))
-            del_button.setMaximumWidth(100)
-            lay.addWidget(del_button,1)
-        
-        for section in self.config.sections():
-            scroll = QScrollArea()
-            scroll.setWidgetResizable(True)
-            widget = QWidget()
-            scroll.setWidget(widget)
-            vlay = QVBoxLayout()
-            vlay.setContentsMargins(20,20,20,20)
 
-            def new_line_edit(widget,layout,sect):
-                text = widget.text()
-                for i in reversed(range(layout.count())):
-                    item = layout.itemAt(i)
-                    if type(item.widget()) in (QLineEdit,QPushButton):
-                        item.widget().setVisible(False)
-                        item.widget().deleteLater()
-                    layout.removeItem(item)
-                if not text:
-                    return
-                else:
-                    self.config.set(sect,text,"0")
-                    new_line(layout,sect,text)
-                    
-            def new_line_clicked(lay,sect):
-                hlay = QHBoxLayout()
-                edit = QLineEdit()
-                edit.setObjectName("edit_config_editor_{}_{}".format(sect,"new"))
-                edit.setMaximumWidth(300)
-                ok_button = QPushButton()
-                ok_button.setText(_("Ok"))
-                ok_button.clicked.connect(partial(new_line_edit,edit,hlay,sect))
-                ok_button.setMaximumWidth(50)
-                hlay.addWidget(edit)
-                hlay.addWidget(ok_button)
-                hlay.addStretch()
-                lay.insertLayout(1,hlay)
+        for s in sorted(self.config.sections()):
+            widget,layout = self.new_section(s)
             
-            add_button = QPushButton()
-            add_button.setText(_("New"))
-            add_button.clicked.connect(partial(new_line_clicked,vlay,section))
-            add_button.setMaximumWidth(100)
-            vlay.addWidget(add_button,1)
-            
-            for option in sorted(self.config.options(section)):
-                hlay = QHBoxLayout()
-                new_line(hlay,section,option)
-                vlay.addLayout(hlay)
+            for o in sorted(self.config.options(s)):
+                lay = QHBoxLayout()
+                self.new_line(lay,s,o)
+                layout.addLayout(lay)
                 
-            vlay.addStretch()
-            widget.setLayout(vlay)
-            self.page.addTab(scroll,section)
+            layout.addStretch()
+            self.page.addTab(widget,s)
+            
+        if self.page.count()>1:
+            self.page.setCurrentIndex(1)

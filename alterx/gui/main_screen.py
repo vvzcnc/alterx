@@ -401,7 +401,7 @@ class AxisWidget(QGroupBox):
     def __init__(self, parent=None):
         QGroupBox.__init__(self, parent)
         self.setTitle(_("Axis"))
-        self.coordinates = INI.find('TRAJ', 'COORDINATES') or []
+        self.coordinates = INI.find('TRAJ', 'COORDINATES') or ""
         h1 = QHBoxLayout()
         self.drolabel = QLabel(self.coordinates)
         self.drolabel.setObjectName("lbl_main_screen_dro_all")

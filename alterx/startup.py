@@ -30,6 +30,7 @@ from alterx.gui.util import *
 
 import getopt
 
+logger = logListener()
 
 def usage():
     print(_("AlterX version {}", VERSION_STRING))
@@ -38,6 +39,7 @@ def usage():
     print("")
     print(_("Options:"))
     print(_(" -h|--help             Print this help text"))
+    print(_(" -i|--ini              Set config file path"))
     print(_(" -L|--loglevel LVL     Set the log level:"))
     print(_("                       0: Log nothing"))
     print(_("                       1: Debug logging"))
@@ -46,43 +48,54 @@ def usage():
     print(_("                       4: Log errors"))
     print(_("                       5: Log critical"))
     print(_(" -l|--lang             Set locale"))
+    print(_(" -v|--verbose          Set verbose output"))
 
-
-opt_loglevel = logListener.LOG_INFO
-opt_lang = None
-ini = None
-verbose = None
 try:
     if(sys.argv[1] == "-ini"):
         sys.argv[1] = "--ini"
+except:
+    pass
+        
+try:
     (opts, args) = getopt.getopt(sys.argv[1:],
                                  "vhL:l:i:",
                                  ["verbose", "help", "loglevel=", "lang=", "ini="])
-except getopt.GetoptError as e:
-    printError(str(e))
+except Exception as e:
+    printError(e)
     usage()
     sys.exit(ExitCodes.EXIT_ERR_CMDLINE)
+
+ini = None
 
 for (o, v) in opts:
     if o in ("-h", "--help"):
         usage()
         sys.exit(ExitCodes.EXIT_OK)
     if o in ("-L", "--loglevel"):
-
         try:
-            opt_loglevel = int(v)
+            logger.setLoglevel(int(v))
         except ValueError:
             printError("-L|--loglevel: Invalid log level")
             sys.exit(ExitCodes.EXIT_ERR_CMDLINE)
     if o in ("-l", "--lang"):
-        opt_lang = str(v)
+        _.setup(str(v))
     if o in ("-v", "--verbose"):
-        verbose = True
+        logListener.setVerbose(True)
+        logger.setLoglevel(1)
     if o in ("-i", "--ini"):
         ini = str(v)
 
+qapp = QApplication(sys.argv)
 
-if ini is not None:
+if not ini:
+    QMessageBox.critical(None,
+    _("AlterX: Config file not found"),
+    _("There is no option '--ini config_file_path'.\n"
+    "Without a configuration file, launch is not possible."),
+    QMessageBox.Ok,
+    QMessageBox.Ok)
+    sys.exit(ExitCodes.EXIT_ERR_CMDLINE)
+else:
     os.putenv('INI_FILE_NAME',ini)
     os.environ['INI_FILE_NAME'] = ini
     parameters = ConfigParser()
@@ -90,26 +103,20 @@ if ini is not None:
 
 try:
     log = parameters.get("DISPLAY", "LOG_FILE")
+    logger.setLogfile(os.path.expanduser(log))
 except Exception as e:
-    printError(_("Get preference error: {} ", detail))
+    printError(_("Get preference error: {} ", e))
 
-logListener.setVerbose(verbose)
-logger = logListener(os.path.expanduser(log), opt_loglevel)
-
-_.setup(opt_lang)
-
-printVerbose(_("Loglevel: {}", opt_loglevel))
+printVerbose(_("Loglevel: {}", logger.loglevel))
+printVerbose(_("Logfile: {}", logger.logfile))
 
 from alterx.gui.main_window import *
 from alterx.common.keyboard_listener import *
-
-qapp = QApplication(sys.argv)
 
 printInfo(_('Using {} GUI framework', getGuiFrameworkName()))
 
 # Create the main window.
 mainwnd = MainWindow.start()
-QToolTip.setFont(getDefaultFixedFont())
 
 # Install a handler for unhandled exceptions.
 def __unhandledExceptionHook(etype, value, tb):

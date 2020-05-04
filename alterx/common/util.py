@@ -73,22 +73,15 @@ class logListener(object):
     verbose = False
     loglevel = LOG_WARNING
 
-    def __init__(self, path=None, loglevel=LOG_WARNING):
-        self.loglevel = loglevel
+    def __init__(self):
+        self.loglevel = self.LOG_WARNING
+        self.logfile = None
+        
         FORMAT = '%(asctime)s %(levelname)-8s %(name)s: %(message)s'
 
         logging.basicConfig(level=self.loglevel,
                             format=FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
         root = logging.getLogger()
-
-        try:
-            handler = logging.handlers.RotatingFileHandler(
-                path, 'a', 1000000, 10)
-            formatter = logging.Formatter(FORMAT)
-            handler.setFormatter(formatter)
-            root.addHandler(handler)
-        except Exception as e:
-            print("Log file handler creating failed")
 
         listener = Thread(target=self.listener_thread, args=(QLOG,))
         listener.daemon = True
@@ -109,12 +102,6 @@ class logListener(object):
             except Exception as e:
                 printError('Log listener thread error: %s' % e)
 
-    def printLog(self, level, text):
-        if self.log is not None:
-            self.log.log(level, text)
-        else:
-            print("Logging is not configured yet!\n Message: \n%s" % text)
-
     @classmethod
     def getVerbose(cls):
         return cls.verbose
@@ -122,6 +109,16 @@ class logListener(object):
     @classmethod
     def setVerbose(cls, state):
         cls.verbose = state
+
+    def setLogfile(self,path):
+        try:
+            handler = logging.handlers.RotatingFileHandler(
+                path, 'a', 1000000, 10)
+            formatter = logging.Formatter(FORMAT)
+            handler.setFormatter(formatter)
+            root.addHandler(handler)
+        except Exception as e:
+            printError("Log file handler creating failed")
 
     def setLoglevel(self, level):
         if level in (0, 1, 2, 3, 4, 5):

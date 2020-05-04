@@ -37,3 +37,24 @@ class SettingsWidget(QStackedWidget):
         QStackedWidget.__init__(self, parent)
         self.addWidget(ConfigEditor())
         
+        UPDATER.add("settings_page_next")
+        UPDATER.add("settings_page_prev")
+        
+        UPDATER.connect("settings_page_next",self.next_page)
+        UPDATER.connect("settings_page_prev",self.prev_page)
+        
+    def next_page(self,state=None):
+        if self.currentIndex() < 0 :
+            self.setCurrentIndex(0)
+        elif self.currentIndex() == self.count()-1:
+            self.setCurrentIndex(0)
+        else:
+            self.setCurrentIndex(self.currentIndex()+1)
+
+    def prev_page(self,state=None):
+        if self.currentIndex() < 0 :
+            self.setCurrentIndex(0)
+        elif self.currentIndex() < 1:
+            self.setCurrentIndex(self.count()-1)
+        else:
+            self.setCurrentIndex(self.currentIndex()-1)

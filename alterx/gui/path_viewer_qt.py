@@ -117,15 +117,15 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
             return [int(x * 255) for x in s + (a,)]
         # requires linuxcnc running before laoding this widget
 
-        self.logger = LINUXCNC.positionlogger(STAT,
-                                              C('backplotjog'),
-                                              C('backplottraverse'),
-                                              C('backplotfeed'),
-                                              C('backplotarc'),
-                                              C('backplottoolchange'),
-                                              C('backplotprobing'),
-                                              self.get_geometry()
-                                              )
+        self.logger = POSLOG(STAT,
+                              C('backplotjog'),
+                              C('backplottraverse'),
+                              C('backplotfeed'),
+                              C('backplotarc'),
+                              C('backplottoolchange'),
+                              C('backplotprobing'),
+                              self.get_geometry()
+                              )
         # start tracking linuxcnc position so we can plot it
         thread.start_new_thread(self.logger.start, (.01,))
         GlCanonDraw.__init__(self, STAT, self.logger)
@@ -170,7 +170,7 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
 
         live_axis_count = 0
         for i, j in enumerate("XYZABCUVW"):
-            if self.stat.axis_mask & (1 << i) == 0:
+            if STAT.axis_mask & (1 << i) == 0:
                 continue
             live_axis_count += 1
         self.num_joints = int(INI.find("KINS", "JOINTS") or live_axis_count)
@@ -188,12 +188,6 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
         self.Green = QColor.fromCmykF(0.40, 0.0, 1.0, 0.0)
 
     def poll(self):
-        s = self.stat
-        try:
-            s.poll()
-        except:
-            return
-
         if UPDATER.check("display_clear"):
             self.clear_live_plotter()
 
@@ -206,15 +200,15 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
         if UPDATER.check("display_zoomout"):
             self.zoomout()
 
-        if self._current_file != s.file:
+        if self._current_file != STAT.file:
             self.load()
 
         self.metric_units = INFO.get_metric()
 
         fingerprint = (self.logger.npts, self.soft_limits(),
-                       s.actual_position, s.joint_actual_position,
-                       s.homed, s.g5x_offset, s.g92_offset, s.limit, s.tool_in_spindle,
-                       s.motion_mode, s.current_vel)
+                       STAT.actual_position, STAT.joint_actual_position,
+                       STAT.homed, STAT.g5x_offset, STAT.g92_offset, STAT.limit, STAT.tool_in_spindle,
+                       STAT.motion_mode, STAT.current_vel)
 
         if fingerprint != self.fingerprint:
             self.fingerprint = fingerprint
@@ -222,11 +216,9 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
         return True
 
     def load(self, filename=None):
-        s = self.stat
-        s.poll()
-        if not filename and s.file:
-            filename = s.file
-        elif not filename and not s.file:
+        if not filename and STAT.file:
+            filename = STAT.file
+        elif not filename and not STAT.file:
             return
 
         td = tempfile.mkdtemp()
@@ -241,7 +233,7 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
             if parameter:
                 shutil.copy(parameter, temp_parameter)
             canon.parameter_file = temp_parameter
-            unitcode = "G%d" % (20 + (s.linear_units == 1))
+            unitcode = "G%d" % (20 + (STAT.linear_units == 1))
             initcode = INI.find("RS274NGC", "RS274NGC_STARTUP_CODE") or ""
             result, seq = self.load_preview(
                 filename, canon, unitcode, initcode)
@@ -253,8 +245,6 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
             self.gcode_properties = None
         finally:
             shutil.rmtree(td)
-
-        self.set_current_view()
 
     def calculate_gcode_properties(self, canon):
         def dist((x, y, z), (p, q, r)):
@@ -344,11 +334,7 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
     # setup details when window shows
     def realize(self):
         self.set_current_view()
-        s = self.stat
-        try:
-            s.poll()
-        except:
-            return
+
         self._current_file = None
 
         self.font_base, width, linespace = \
@@ -357,7 +343,7 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
         self.font_charwidth = width
         GlCanonDraw.realize(self)
 
-        if s.file:
+        if STAT.file:
             self.load()
 
     # gettter / setters

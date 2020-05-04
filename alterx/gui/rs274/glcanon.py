@@ -915,9 +915,9 @@ class GlCanonDraw:
         ax = self.stat.axis
         return (
             self.to_internal_units([fudge(ax[i]['min_position_limit'])
-                                    for i in range(3)]),
+                                    for i in range(int(self.stat.axes))]),
             self.to_internal_units([fudge(ax[i]['max_position_limit'])
-                                    for i in range(3)]))
+                                    for i in range(int(self.stat.axes))]))
 
     def get_foam_z(self):
         if self.canon:

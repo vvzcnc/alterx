@@ -32,6 +32,7 @@ import pkg_resources
 class translate():
     def __init__(self):
         self._locale, _encoding = locale.getdefaultlocale()
+        self._ = lambda s: s
 
     def __call__(self, source, *args):
         t = ""

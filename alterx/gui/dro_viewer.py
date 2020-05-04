@@ -93,7 +93,7 @@ class DROWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         dro_layout = QVBoxLayout()
-        self.coordinates = INI.find('TRAJ', 'COORDINATES') or []
+        self.coordinates = INI.find('TRAJ', 'COORDINATES') or ""
         for i, axis in enumerate(self.coordinates.split(" ")):
             dro_layout.addLayout(DROLayout(i, axis))
         dro_layout.addStretch()

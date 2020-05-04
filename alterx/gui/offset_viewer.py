@@ -206,9 +206,12 @@ class OriginOffsetView(QTableView):
         if g54 is None:
             return
 
+        # Fake linuxcnc is not producing lists        
+        if not isinstance(STAT.actual_position, list): 
+            return
+            
         # Get the offsets arrays and convert the units if the display
         # is not in machine native units
-
         ap = STAT.actual_position
         tool = STAT.tool_offset
         g92 = STAT.g92_offset

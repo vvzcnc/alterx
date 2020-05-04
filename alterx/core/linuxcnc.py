@@ -21,7 +21,7 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-__all__ = ['STAT', 'COMMAND', 'INI', 'UPDATER', 'LINUXCNC', 'INFO']
+__all__ = ['STAT', 'COMMAND', 'INI', 'UPDATER', 'LINUXCNC', 'INFO', 'POSLOG']
 
 from alterx.common.locale import _
 from alterx.common.compat import *
@@ -30,16 +30,54 @@ from alterx.gui.qt_bindings import *
 
 import time
 
+class fake_linuxcnc():
+    axis = []
+    def __call__(self, source, *args):
+        return 0
+
+    def __getattr__(self,name):
+        return 0
+
+    def __dir__(self):
+        return []
+        
+    def poll(self):
+        return 0
+        
+    def find(self,section,option):
+        return ""
+        
+class fake_position_logger():
+    def __getattr__(self,name):
+        return 0
+
+    def __call__(self, source, *args):
+        return self
+        
+    def start(self, *args):
+        return 0
+        
+class fake_command():
+    def __getattr__(self,name):
+        return lambda *args: None
+
 try:
     import linuxcnc as LINUXCNC
 
     STAT = LINUXCNC.stat()
     COMMAND = LINUXCNC.command()
     ERROR = LINUXCNC.error_channel()
-    INI = LINUXCNC.ini(sys.argv[2])
+    POSLOG = LINUXCNC.positionlogger
+    INI = LINUXCNC.ini(os.environ['INI_FILE_NAME'])
 
 except Exception as e:
     printError(_("Failed to import LinuxCNC module: '{}'", e))
+    LINUXCNC = fake_linuxcnc()
+    STAT = fake_linuxcnc()
+    COMMAND = fake_command()
+    POSLOG = fake_position_logger()
+    ERROR = fake_linuxcnc()
+    INI = fake_linuxcnc()
 
 class linuxcnc_info():
     def __init__(self):
@@ -84,8 +122,8 @@ class linuxcnc_poll(QTimer):
         try:
             STAT.poll()
             error_data = ERROR.poll()
-        except LINUXCNC.error, detail:
-            printError(_("Failed to poll LinuxCNC stat: '{}'", detail))
+        except LINUXCNC.error as e:
+            printError(_("Failed to poll LinuxCNC stat: '{}'", e))
             # continue
             return
 
