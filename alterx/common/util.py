@@ -72,11 +72,9 @@ class logListener(object):
 
     verbose = False
     loglevel = LOG_WARNING
+    logfile = None
 
     def __init__(self):
-        self.loglevel = self.LOG_WARNING
-        self.logfile = None
-        
         FORMAT = '%(asctime)s %(levelname)-8s %(name)s: %(message)s'
 
         logging.basicConfig(level=self.loglevel,
@@ -102,13 +100,11 @@ class logListener(object):
             except Exception as e:
                 printError('Log listener thread error: %s' % e)
 
-    @classmethod
-    def getVerbose(cls):
-        return cls.verbose
-
-    @classmethod
-    def setVerbose(cls, state):
-        cls.verbose = state
+    def getVerbose(self):
+        return self.verbose
+        
+    def setVerbose(self, state):
+        self.verbose = state
 
     def setLogfile(self,path):
         try:
@@ -123,6 +119,8 @@ class logListener(object):
     def setLoglevel(self, level):
         if level in (0, 1, 2, 3, 4, 5):
             self.loglevel = level*10
+            logging.getLogger("alterx").setLevel(self.loglevel)
+            logging.getLogger().setLevel(self.loglevel)
         else:
             printError("Invalid log level")
 
@@ -133,9 +131,8 @@ class logListener(object):
 def printDebug(text):
     logging.getLogger("alterx").debug(text)
 
-
 def printVerbose(text):
-    if logListener.getVerbose():
+    if logListener().getVerbose():
         logging.getLogger("alterx").debug(text)
 
 

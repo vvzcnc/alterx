@@ -45,16 +45,16 @@ import warnings
 try:
     from PyQt5.QtOpenGL import QGLWidget
 except ImportError:
-    printError(
-        _("Qtvcp error with path_viewer, package python-pyqt5.qtopengl not installed"))
+    printError(_("Error with path_viewer."
+                "Package python-pyqt5.qtopengl not installed."))
 
 LIB_GOOD = True
 try:
     from OpenGL import GL
     from OpenGL import GLU
 except ImportError:
-    printError(
-        _("Qtvcp Error with path_viewer, package python-openGL not installed"))
+    printError(_("Error with path_viewer."
+                "Package python-openGL not installed."))
     LIB_GOOD = False
 
 
@@ -155,6 +155,7 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
         self.show_dtg = True
         self.grid_size = 0.0
         self.lathe_option = INFO.machine_is_lathe
+        self.show_lathe_radius = True
         self.current_view = ('p' if self.lathe_option else 'y')
         self.foam_option = bool(INI.find("DISPLAY", "FOAM"))
         self.show_offsets = False
@@ -183,11 +184,14 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
         # add a 100ms timer to poll linuxcnc stats
         self.timer = QTimer()
         self.timer.timeout.connect(self.poll)
-        self.timer.start(100)
+        self.timer.start(INFO.display_cycle_time/1000)
 
         self.Green = QColor.fromCmykF(0.40, 0.0, 1.0, 0.0)
 
-    def poll(self):
+    def poll(self):   
+        if self.lathe_option:  
+            self.show_lathe_radius = False if UPDATER.check("diameter_multiplier") == 2 else True
+    
         if UPDATER.check("display_clear"):
             self.clear_live_plotter()
 

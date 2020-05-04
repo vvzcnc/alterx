@@ -171,4 +171,4 @@ class MainWindow(QWidget):
                 else:
                     self.mainLayout.leftLayout.addWidget(sidebutton)
 
-        UPDATER.start(100)
+        UPDATER.start(INFO.display_cycle_time)

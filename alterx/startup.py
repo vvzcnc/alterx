@@ -80,7 +80,7 @@ for (o, v) in opts:
     if o in ("-l", "--lang"):
         _.setup(str(v))
     if o in ("-v", "--verbose"):
-        logListener.setVerbose(True)
+        logger.setVerbose(True)
         logger.setLoglevel(1)
     if o in ("-i", "--ini"):
         ini = str(v)

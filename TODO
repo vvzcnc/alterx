@@ -2,20 +2,17 @@ TODO list
 
 Features:
 	Settings
+	    Load default INI-file or INI-creator
 	    LinuxCNC status
 	    LinuxCNC parameters page
 	    Halshow page
 	    PID calibrate page
-	    INI-default page
-	    Config editor add "add/delete section"
 	    Include awlsim
 	    Lock settings
 	Keyboard serial listener
-	Interface cycle time
 	Position feedback actual/commanded
 	Startup open ngc file
     Jog
-    In info section rename default files
 	Change icons to vector
 	Change fonts
 	Notify transparent

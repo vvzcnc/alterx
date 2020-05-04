@@ -208,6 +208,11 @@ class OriginOffsetView(QTableView):
 
         # Fake linuxcnc is not producing lists        
         if not isinstance(STAT.actual_position, list): 
+            header = self.horizontalHeader()
+            header.setSectionResizeMode(QHeaderView.ResizeToContents)
+            header.setSectionResizeMode(10,QHeaderView.Stretch)
+            #self.resizeColumnsToContents()
+            self.resizeRowsToContents()
             return
             
         # Get the offsets arrays and convert the units if the display

@@ -34,8 +34,7 @@ from alterx.core.linuxcnc import *
 class MDI(QLineEdit):
     def __init__(self, parent=None):
         QLineEdit.__init__(self, parent)
-        self.mdi_history_file = INI.find(
-            'DISPLAY', 'MDI_HISTORY_FILE') or '.mdi_history'
+        self.mdi_history_file = INFO.mdi_history_file
         self.returnPressed.connect(lambda: self.submit())
 
     def submit(self):
@@ -76,11 +75,6 @@ class MDIHistory(QWidget):
         lay.addWidget(self.MDI)
 
         self.fp = self.MDI.mdi_history_file
-        try:
-            open(self.fp, 'r')
-        except:
-            open(self.fp, 'a+')
-            printVerbose(_('MDI History file created: {}', self.fp))
         self.reload()
         self.select_row('last')
 
@@ -92,12 +86,13 @@ class MDIHistory(QWidget):
                     line = line.rstrip('\n')
                     item = QStandardItem(line)
                     self.model.appendRow(item)
-            self.list.setModel(self.model)
-            self.list.scrollToBottom()
-            if self.MDI.hasFocus():
-                self.select_row('last')
         except:
-            printDebug(_('File path is not valid: {}', fp))
+            printDebug(_('MDI history file path is not valid: {}', self.fp))
+
+        self.list.setModel(self.model)
+        self.list.scrollToBottom()
+        if self.MDI.hasFocus():
+            self.select_row('last')            
 
     def selectionChanged(self, old, new):
         cmd = self.getSelected()

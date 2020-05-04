@@ -69,15 +69,24 @@ try:
     ERROR = LINUXCNC.error_channel()
     POSLOG = LINUXCNC.positionlogger
     INI = LINUXCNC.ini(os.environ['INI_FILE_NAME'])
-
+    
+    STAT.poll()
+    ERROR.poll()
 except Exception as e:
     printError(_("Failed to import LinuxCNC module: '{}'", e))
+    
     LINUXCNC = fake_linuxcnc()
     STAT = fake_linuxcnc()
     COMMAND = fake_command()
     POSLOG = fake_position_logger()
     ERROR = fake_linuxcnc()
     INI = fake_linuxcnc()
+    
+    QMessageBox.critical(None,
+            _("AlterX: Failed to import LinuxCNC"),
+            _("AlterX interface launched in recovery mode!"),
+            QMessageBox.Ok,
+            QMessageBox.Ok)
 
 class linuxcnc_info():
     def __init__(self):
@@ -96,6 +105,7 @@ class linuxcnc_info():
         self.parameter_file = INI.find("RS274NGC", "PARAMETER_FILE") or 'cnc.var'
         self.preferences_file = INI.find("DISPLAY", "PREFERENCE_FILE_PATH") or 'preferences.var'
         self.position_file = INI.find("TRAJ", "POSITION_FILE") or 'position.var'
+        self.mdi_history_file = INI.find("DISPLAY", "MDI_HISTORY_FILE") or 'mdi.log'
         
         self.dro_format = "{:.3f}"
         self.linear_units = _("mm")
@@ -104,6 +114,8 @@ class linuxcnc_info():
         self.spindle_per_units = _("min")
         self.feed_per_units = _("min")
         self.angular_per_units = _("min")
+
+        self.display_cycle_time = float(INI.find("DISPLAY", "CYCLE_TIME") or '0.1')*1000
 
     def get_tool_info(self, tool):
         pass
@@ -116,15 +128,11 @@ INFO = linuxcnc_info()
 class linuxcnc_poll(QTimer):
     # 'One to many' item check
     def run(self):
-        # while self.running == True:
-        #	time.sleep(0.1)
-
         try:
             STAT.poll()
             error_data = ERROR.poll()
         except LINUXCNC.error as e:
             printError(_("Failed to poll LinuxCNC stat: '{}'", e))
-            # continue
             return
 
         if error_data:
@@ -174,7 +182,7 @@ class linuxcnc_poll(QTimer):
 
             self.custom_signals[name] = value
         else:
-            printError(_("Failed emit signal. Signal '{}' no exist", name))
+            printError(_("Failed to emit signal. Signal '{}' no exist", name))
 
     # Create custom signal in database
     def add(self, name, value=False):
@@ -182,7 +190,7 @@ class linuxcnc_poll(QTimer):
             self.custom_signals[name] = value
             self.custom_signals_old[name] = value
         else:
-            printError(_("Failed add signal. Signal '{}' already exist", name))
+            printError(_("Failed to add signal. Signal '{}' already exist", name))
 
     # Add signal to 'one to many' database
     def connect(self, name, handler):
@@ -195,21 +203,18 @@ class linuxcnc_poll(QTimer):
         try:
             return self.custom_signals[name]
         except Exception as e:
-            printError(_("Failed get atribute {}: {}", name, e))
+            printError(_("Failed to get atribute {}: {}", name, e))
         return None
 
     def __init__(self):
         QTimer.__init__(self)
         self.timeout.connect(self.run)
-        #self.running = True
         self.stat_old = {}
         self._observers = {}
         self.custom_signals = {}
         self.custom_signals_old = {}
 
     def __del__(self):
-        #self.running = False
         self.wait()
-
 
 UPDATER = linuxcnc_poll()

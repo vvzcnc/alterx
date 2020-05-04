@@ -29,7 +29,7 @@ from alterx.common import *
 from alterx.core.linuxcnc import *
 
 class Preferences(ConfigParser):
-    def __init__(self, path=None):
+    def __init__(self):
         ConfigParser.__init__(self)
         self.types = {
             bool: self.getboolean,
@@ -39,21 +39,22 @@ class Preferences(ConfigParser):
             repr: lambda section, option: eval(self.get(section, option)),
         }
 
-        if not path:
-            path = INFO.preferences_file
+        path = INFO.preferences_file
 
         self.fn = os.path.expanduser(path)
         if os.path.exists(self.fn):
             self.read(self.fn)
+        else:
+            printDebug(_("Preferences file is not exist."))
 
     def getpref(self, option, default=False, type=bool):
         m = self.types.get(type)
         try:
             o = m("DEFAULT", option)
-        except Exception, detail:
-            printWarning(_("Get preference error: {} ", detail))
+        except Exception as e:
+            printDebug(_("Failed to get preference: {} ", e))
 
-            self.putpref(option, default)
+            #self.putpref(option, default)
 
             if type in(bool, float, int):
                 o = type(default)
