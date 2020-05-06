@@ -37,7 +37,6 @@ class StyleSheetEditor(QWidget):
         
     def __init__(self, parent=None, path=None):
         QWidget.__init__(self, parent)
-        self.setMinimumSize(640, 480)
 
         layout = QVBoxLayout()
         
@@ -49,6 +48,7 @@ class StyleSheetEditor(QWidget):
         layout_view = QVBoxLayout()
 
         self.styleSheetCombo = QComboBox()
+        self.styleSheetCombo.setCurrentIndex(-1)
         layout.addWidget(self.styleSheetCombo)
 
         self.tabWidget = QTabWidget()
@@ -122,16 +122,24 @@ class StyleSheetEditor(QWidget):
         self.styleSheetCombo.currentIndexChanged.connect(self.selectionChanged)
 
     def setPath(self):
-        self.styleSheetCombo.addItem('Default')
+        default =  PREF.getpref("stylesheet", "default.qss", str)
         model = self.styleSheetCombo.model()
-
         try:
             fileNames = [f for f in os.listdir(
-                STYLESHEET_DIR) if f.endswith('.qss')]
+                STYLESHEET_DIR) if f.lower().endswith('.qss')]
+                
+            if len(fileNames) == 0:
+                item = QStandardItem(default)
+                item.setData(STYLESHEET_DIR, role=Qt.UserRole + 1)
+                model.appendRow(item)
+                
             for i in(fileNames):
                 item = QStandardItem(i)
                 item.setData(STYLESHEET_DIR, role=Qt.UserRole + 1)
-                model.appendRow(item)
+                index = model.appendRow(item)
+                if i == default:
+                    self.styleSheetCombo.setCurrentIndex(
+                        self.styleSheetCombo.findText(os.path.basename(i)))
         except Exception as e:
             print(e)
 
@@ -159,18 +167,17 @@ class StyleSheetEditor(QWidget):
         dialog = QFileDialog(self)
         dialog.setDirectory(STYLESHEET_DIR)
         fileName, _ = dialog.getOpenFileName()
-        if fileName:
-            file = QFile(fileName)
-            file.open(QFile.ReadOnly)
-            stylesheet = file.readAll()
-            try:
+        try:
+            with open(fileName,'r') as file:
+                stylesheet = file.read()
                 # Python v2.
                 stylesheet = unicode(stylesheet, encoding='utf8')
-            except NameError:
-                # Python v3.
-                stylesheet = str(styleSheet, encoding='utf8')
-
-            self.styleTextView.setPlainText(stylesheet)
+                self.setStyleSheet(stylesheet)
+        except NameError:
+            # Python v3.
+            stylesheet = str(stylesheet, encoding='utf8')
+        except Exception as e:
+            printWarning(_("Failed to load stylesheet {}",e))
 
     def on_saveButton_clicked(self):
         dialog = QFileDialog()
@@ -179,14 +186,18 @@ class StyleSheetEditor(QWidget):
         dialog.setDirectory(STYLESHEET_DIR)
         dialog.setAcceptMode(QFileDialog.AcceptSave)
         dialog.setNameFilters(["QSS (*.qss)"])
+        if self.styleSheetCombo.currentText() != "Default":
+            dialog.selectFile(self.styleSheetCombo.currentText())
         if dialog.exec_() == QDialog.Accepted:
             fileName = dialog.selectedFiles()[0]
             self.saveStyleSheet(fileName)
-            if self.styleSheetCombo.currentText() != fileName:
+            if self.styleSheetCombo.currentText() != os.path.basename(fileName):
                 model = self.styleSheetCombo.model()
                 item = QStandardItem(os.path.basename(fileName))
                 item.setData(STYLESHEET_DIR, role=Qt.UserRole + 1)
                 model.appendRow(item)
+                self.styleSheetCombo.setCurrentIndex(
+                    self.styleSheetCombo.findText(os.path.basename(fileName)))
 
     def on_clearButton_clicked(self):
         self.styleTextEdit.clear()
@@ -220,7 +231,7 @@ class StyleSheetEditor(QWidget):
                         "line-through" if _font.strikeOut() else " "))
 
     def loadStyleSheet(self, sheetName):
-        if not sheetName == 'Default':
+        if not sheetName == "Default":
             qssname = os.path.join(STYLESHEET_DIR, sheetName)
             file = QFile(qssname)
             file.open(QFile.ReadOnly)
@@ -238,9 +249,8 @@ class StyleSheetEditor(QWidget):
 
     def saveStyleSheet(self, fileName):
         styleSheet = self.styleTextEdit.toPlainText()
-        file = QFile(fileName)
-        if file.open(QFile.WriteOnly):
-            QTextStream(file) << styleSheet
-        else:
-            QMessageBox.information(
-                self, _("Unable to open file"), file.errorString())
+        try:
+            with open(fileName,'w') as file:
+                file.write(styleSheet)
+        except Exception as e:
+            printWarning(_("Failed to save stylesheet {}",e))

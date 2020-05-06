@@ -33,12 +33,15 @@ from alterx.core.linuxcnc import *
 from alterx.gui.config_editor import *
 from alterx.gui.halpin_viewer import *
 from alterx.gui.style_editor import *
+from alterx.gui.status_viewer import *
 
 class SettingsWidget(QStackedWidget):
     def __init__(self, parent=None):
         QStackedWidget.__init__(self, parent)
-        self.addWidget(ConfigEditor())
+
+        self.addWidget(StatusWidget())
         self.addWidget(HalPinWidget())
+        self.addWidget(ConfigEditor())
         self.addWidget(StyleSheetEditor(self))
         
         UPDATER.add("settings_page_next")

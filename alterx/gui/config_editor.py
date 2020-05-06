@@ -62,6 +62,8 @@ class ConfigEditor(QWidget):
         self.page = QTabWidget()
         vlay.addWidget(self.page)
         self.setLayout(vlay)
+        
+        self.load()
 
     def new_section(self,section):
         scroll = QScrollArea()

@@ -3,9 +3,7 @@ TODO list
 Features:
 	Settings
 	    Load default INI-file or INI-creator
-	    LinuxCNC status
 	    LinuxCNC parameters page
-	    Halshow page
 	    PID calibrate page
 	    Include awlsim
 	    Lock settings
