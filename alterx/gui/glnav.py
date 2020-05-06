@@ -19,7 +19,10 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
+#from OpenGL.GL import *
+#from OpenGL.GLU import *
 from minigl import *
+
 import math
 import array
 import itertools
@@ -81,10 +84,9 @@ def use_pango_font(font, start, count, will_call_prepost=False):
         if not will_call_prepost:
             pango_font_pre()
         if w and h:
+            #for OpenGL, not minigl
+            #glDrawPixels(w, h, GL_LUMINANCE, GL_UNSIGNED_BYTE, a.tolist())
             glDrawPixels(w, h, GL_LUMINANCE, GL_UNSIGNED_BYTE, a)
-        glBitmap(0, 0, 0, 0, w, -h+d, '')
-        if not will_call_prepost:
-            pango_font_post()
         glEndList()
 
     glPopClientAttrib()
@@ -128,7 +130,12 @@ def glRotateScene(w, s, xcenter, ycenter, zcenter, x, y, mousex, mousey):
     mat = glGetDoublev(GL_MODELVIEW_MATRIX)
 
     glLoadIdentity()
+    #for OpenGL, not minigl
+    #tx = mat[3][0]
+    #ty = mat[3][1]
+    #tz = mat[3][2]
     tx, ty, tz = mat[12:15]
+
     glTranslatef(tx, ty, tz)
     glRotatef(snap(lat), *w.rotation_vectors[0])
     glRotatef(snap(lon), *w.rotation_vectors[1])

@@ -1,4 +1,13 @@
+*{
+    color: #000;
+    font-size: 20px;
+}
+
 #MainWindow {background: #eeeeec; }
+
+QComboBox{
+    font-size: 20px;
+    }
 
 QGroupBox{
     color: #000;
@@ -7,7 +16,6 @@ QGroupBox{
     border: 2px solid gray;
     border-radius: 8px;
     padding: 25px 10px 5px 10px  ;
-    font-size: 20px;
     font-weight: bold;
     }
 
@@ -45,14 +53,6 @@ QLabel[objectName|="lbl_dro_dtg"] {
     color: #a40000;
     font-size: 35pt;
     }
-    
-QLabel[objectName|="lbl_main_screen"],
-QLabel[objectName|="lbl_geditor"],
-QLabel[objectName|="lbl_gwidget"],
-QLabel[objectName|="lbl_config_editor"]{
-    color: #000;
-    font-size: 20px;
-    }
 
 QLineEdit {
     background: white;
@@ -60,14 +60,6 @@ QLineEdit {
     border-style: solid;
     border: 2px solid gray;
     border-radius: 8px;
-    }
-    
-QLineEdit[objectName|="edit_config_editor"]{
-    font-size: 20px;
-    }
-
-QLineEdit[objectName|="edit_in_button"]{
-    font-size: 20px;
     }
     
 QListView{
@@ -99,14 +91,6 @@ QPushButton:disabled{
 QPushButton[objectName|="btn_"]{
     color: transparent
     }
-
-QHeaderView{
-    font-size: 20px;
-    }
-
-QTableView{
-    font-size: 20px;
-    }
     
 QTabWidget::pane{
     border:none;
@@ -117,7 +101,6 @@ QTabWidget::tab-bar{
     }    
    
 QTabBar::tab{
-    font-size: 20px;       
     border: 2px solid #555;
     border-radius: 11px;
     background: #cccccc;
@@ -139,8 +122,4 @@ QTextEdit{
     border-style: solid;
     border: 2px solid gray;
     border-radius: 8px;
-    }
-    
-QTextEdit[objectName|="edit_config_editor"]{
-    font-size: 20px;
     }

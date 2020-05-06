@@ -29,12 +29,22 @@ from alterx.common import *
 from alterx.gui.util import *
 
 
-class StyleSheetEditor(QDialog):
+class StyleSheetEditor(QWidget):
+    mainwindow = None
+    @classmethod
+    def setMainwindow(cls, parent):
+        cls.mainwindow = parent
+        
     def __init__(self, parent=None, path=None):
-        QDialog.__init__(self, parent)
+        QWidget.__init__(self, parent)
         self.setMinimumSize(640, 480)
 
         layout = QVBoxLayout()
+        
+        label = QLabel("Stylesheet Editor")
+        label.setObjectName("lbl_settings_styleeditor")
+        layout.addWidget(label)
+        
         layout_edit = QVBoxLayout()
         layout_view = QVBoxLayout()
 
@@ -45,10 +55,11 @@ class StyleSheetEditor(QDialog):
         layout.addWidget(self.tabWidget)
 
         self.styleTextView = QTextEdit()
+        self.styleTextView.setReadOnly(True)
         layout_view.addWidget(self.styleTextView)
 
         self.copyButton = QPushButton()
-        self.copyButton.setText(_("Copy"))
+        self.copyButton.setText(_("Copy and Edit"))
         self.copyButton.clicked.connect(self.on_copyButton_clicked)
         layout_view.addWidget(self.copyButton)
 
@@ -97,26 +108,18 @@ class StyleSheetEditor(QDialog):
         editWidget.setLayout(layout_edit)
         self.tabWidget.addTab(editWidget, _("Edit"))
 
-        self.closeButton = QPushButton()
-        self.closeButton.setText(_("Close"))
-        self.closeButton.clicked.connect(self.on_closeButton_clicked)
-        layout.addWidget(self.closeButton)
-
         self.setLayout(layout)
         self.applyButton.setEnabled(False)
 
         self.setWindowTitle(_("Style sheet editor"))
-        self.parent = parent
-        self.origStyleSheet = self.parent.styleSheet()
+        
+        if self.mainwindow:
+            self.origStyleSheet = self.mainwindow.styleSheet()
+            self.styleTextView.setPlainText(self.origStyleSheet)
+            
         self.setPath()
 
         self.styleSheetCombo.currentIndexChanged.connect(self.selectionChanged)
-
-    def load_dialog(self):
-        self.origStyleSheet = self.parent.styleSheet()
-        self.styleTextView.setPlainText(self.origStyleSheet)
-        self.show()
-        self.activateWindow()
 
     def setPath(self):
         self.styleSheetCombo.addItem('Default')
@@ -140,15 +143,17 @@ class StyleSheetEditor(QDialog):
         else:
             sheetName = os.path.join(path, name)
         self.loadStyleSheet(sheetName)
+        PREF.putpref("stylesheet", name)
 
     def on_styleTextView_textChanged(self):
         self.applyButton.setEnabled(True)
 
     def on_applyButton_clicked(self):
-        if self.tabWidget.currentIndex() == 0:
-            self.parent.setStyleSheet(self.styleTextView.toPlainText())
-        else:
-            self.parent.setStyleSheet(self.styleTextEdit.toPlainText())
+        if self.mainwindow:
+            if self.tabWidget.currentIndex() == 0:
+                self.mainwindow.setStyleSheet(self.styleTextView.toPlainText())
+            else:
+                self.mainwindow.setStyleSheet(self.styleTextEdit.toPlainText())
 
     def on_openButton_clicked(self):
         dialog = QFileDialog(self)
@@ -168,20 +173,27 @@ class StyleSheetEditor(QDialog):
             self.styleTextView.setPlainText(stylesheet)
 
     def on_saveButton_clicked(self):
-        dialog = QFileDialog(self)
+        dialog = QFileDialog()
+        dialog.setFilter(dialog.filter()|QDir.Hidden)
+        dialog.setDefaultSuffix("qss")
         dialog.setDirectory(STYLESHEET_DIR)
-        fileName, _ = dialog.getSaveFileName(self)
-        if fileName:
+        dialog.setAcceptMode(QFileDialog.AcceptSave)
+        dialog.setNameFilters(["QSS (*.qss)"])
+        if dialog.exec_() == QDialog.Accepted:
+            fileName = dialog.selectedFiles()[0]
             self.saveStyleSheet(fileName)
-
-    def on_closeButton_clicked(self):
-        self.close()
+            if self.styleSheetCombo.currentText() != fileName:
+                model = self.styleSheetCombo.model()
+                item = QStandardItem(os.path.basename(fileName))
+                item.setData(STYLESHEET_DIR, role=Qt.UserRole + 1)
+                model.appendRow(item)
 
     def on_clearButton_clicked(self):
         self.styleTextEdit.clear()
 
     def on_copyButton_clicked(self):
         self.styleTextEdit.setPlainText(self.styleTextView.toPlainText())
+        self.tabWidget.setCurrentIndex(1)
 
     def on_colorButton_clicked(self):
         _color = QColorDialog.getColor()

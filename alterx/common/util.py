@@ -28,6 +28,7 @@ __all__ = [
     "printError",
     "logListener",
     "QLOG",
+    "QueueHandler",
 ]
 
 from alterx.common.compat import *
@@ -40,6 +41,24 @@ from multiprocessing import Queue
 
 QLOG = Queue(-1)
 
+
+class QueueHandler(logging.Handler):
+    def __init__(self, queue):
+        logging.Handler.__init__(self)
+        self.queue = queue
+        
+    def emit(self, record):
+        try:
+            ei = record.exc_info
+            if ei:
+                dummy = self.format(record) # just to get traceback text into record.exc_text
+                record.exc_info = None  # not needed any more
+            print(record)
+            #self.queue.put_nowait(record)
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.handleError(record)
 
 def singleton(class_):
     class class_w(class_):
@@ -60,7 +79,6 @@ def singleton(class_):
             class_w.__name__ = class_.__name__
     return class_w
 
-
 @singleton
 class logListener(object):
     LOG_NONE = 0
@@ -70,17 +88,15 @@ class logListener(object):
     LOG_ERROR = 40
     LOG_CRITICAL = 50
 
+    FORMAT = '%(asctime)s %(levelname)-8s %(name)s: %(message)s'
+
     verbose = False
     loglevel = LOG_WARNING
     logfile = None
 
     def __init__(self):
-        FORMAT = '%(asctime)s %(levelname)-8s %(name)s: %(message)s'
-
         logging.basicConfig(level=self.loglevel,
-                            format=FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
-        root = logging.getLogger()
-
+                            format=self.FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
         listener = Thread(target=self.listener_thread, args=(QLOG,))
         listener.daemon = True
         listener.start()
@@ -107,14 +123,16 @@ class logListener(object):
         self.verbose = state
 
     def setLogfile(self,path):
+        self.logfile = path
         try:
+            root = logging.getLogger()
             handler = logging.handlers.RotatingFileHandler(
-                path, 'a', 1000000, 10)
-            formatter = logging.Formatter(FORMAT)
+                self.logfile, 'a', 1000000, 10)
+            formatter = logging.Formatter(self.FORMAT)
             handler.setFormatter(formatter)
             root.addHandler(handler)
         except Exception as e:
-            printError("Log file handler creating failed")
+            printError("Log file handler creating failed: {}".format(e))
 
     def setLoglevel(self, level):
         if level in (0, 1, 2, 3, 4, 5):

@@ -10,7 +10,6 @@ Features:
 	    Include awlsim
 	    Lock settings
 	Keyboard serial listener
-	Position feedback actual/commanded
 	Startup open ngc file
     Jog
 	Change icons to vector
@@ -19,5 +18,5 @@ Features:
 	Add locales
 	
 Bugs:
-    path_viewer not rotated axis label
-    path_viewer current view not working on startup
+    Path viewer with OpenGL is very slow (now using minigl lib from linuxcnc)
+    Path viewer exception not rised

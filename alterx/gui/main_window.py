@@ -42,7 +42,7 @@ from alterx.gui.tool_viewer import *
 from alterx.gui.dro_viewer import *
 from alterx.gui.tabs_viewer import *
 from alterx.gui.settings_viewer import *
-from alterx.gui.sseditor import *
+from alterx.gui.style_editor import *
 
 from functools import partial
 
@@ -89,15 +89,10 @@ class MainWindow(QWidget):
 
             self.setStyleSheet(stylesheet)
 
-    def launch_styleeditor(self, data=None):
-        se = StyleSheetEditor(self)
-        se.load_dialog()
-
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
 
-        UPDATER.add("launch_styleeditor")
-        UPDATER.connect("launch_styleeditor", self.launch_styleeditor)
+        StyleSheetEditor.setMainwindow(self)
         self.set_stylesheet()
 
         # Main layout

@@ -407,6 +407,11 @@ class AxisWidget(QGroupBox):
         self.drolabel.setObjectName("lbl_main_screen_dro_all")
         h1.addWidget(self.drolabel)
         self.setLayout(h1)
+        if (INI.find("DISPLAY", "POSITION_FEEDBACK") or "ACTUAL").lower() == "actual":
+            self.feedback_actual = True
+        else:
+            self.feedback_actual = False
+        
         UPDATER.connect("axis", lambda axis: self.update_position(axis))
         UPDATER.connect("task_mode", self.task_mode_handler)
         UPDATER.connect("diameter_multiplier", self.diameter_mode)
@@ -418,9 +423,14 @@ class AxisWidget(QGroupBox):
         text = ""
         for i, axis in enumerate(self.coordinates.split(' ')):
             #position=stat[i]['input'] is absolute
-            # set 'output' to see commanded position
-            position = stat[i]['input']-STAT.g5x_offset[i] - \
-                STAT.tool_offset[i]-STAT.g92_offset[i]
+
+            if self.feedback_actual:
+                position = stat[i]['input']
+            else:
+                position = stat[i]['output']
+                
+            position -= STAT.g5x_offset[i] + STAT.tool_offset[i] + \
+                STAT.g92_offset[i]
 
             if axis == 'X' and INFO.machine_is_lathe:
                 text += '{}{}:'.format(axis, ['', 'R', 'D'][UPDATER.diameter_multiplier]) + \

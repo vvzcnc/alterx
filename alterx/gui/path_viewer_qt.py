@@ -41,6 +41,7 @@ import tempfile
 import shutil
 import thread
 import warnings
+import logging
 
 try:
     from PyQt5.QtOpenGL import QGLWidget
@@ -50,12 +51,16 @@ except ImportError:
 
 LIB_GOOD = True
 try:
+    #import OpenGL
+    #OpenGL.FULL_LOGGING = True
+    #OpenGL.ERROR_CHECKING = True
     from OpenGL import GL
     from OpenGL import GLU
 except ImportError:
     printError(_("Error with path_viewer."
-                "Package python-openGL not installed."))
+                "Package python-opengl not installed."))
     LIB_GOOD = False
+
 
 
 class PathViewer(QWidget):
@@ -156,7 +161,7 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
         self.grid_size = 0.0
         self.lathe_option = INFO.machine_is_lathe
         self.show_lathe_radius = True
-        self.current_view = ('p' if self.lathe_option else 'y')
+        self.current_view = ('y' if self.lathe_option else 'p')
         self.foam_option = bool(INI.find("DISPLAY", "FOAM"))
         self.show_offsets = False
         self.show_overlay = False
@@ -196,7 +201,8 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
             self.clear_live_plotter()
 
         if UPDATER.check("display_view"):
-            getattr(self, 'set_view_%s' % UPDATER.display_view)()
+            self.current_view = UPDATER.display_view
+            self.set_current_view()
 
         if UPDATER.check("display_zoomin"):
             self.zoomin()
@@ -217,6 +223,7 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
         if fingerprint != self.fingerprint:
             self.fingerprint = fingerprint
             self.update()
+
         return True
 
     def load(self, filename=None):
@@ -230,7 +237,7 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
         try:
             random = int(INI.find("EMCIO", "RANDOM_TOOLCHANGER") or 0)
             canon = StatCanon(self.colors, self.get_geometry(),
-                              self.lathe_option, s, random)
+                              self.lathe_option, STAT, random)
             parameter = INFO.parameter_file
             temp_parameter = os.path.join(
                 td, os.path.basename(parameter))
@@ -337,8 +344,6 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
 
     # setup details when window shows
     def realize(self):
-        self.set_current_view()
-
         self._current_file = None
 
         self.font_base, width, linespace = \
@@ -349,7 +354,9 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
 
         if STAT.file:
             self.load()
-
+            
+        self.set_current_view()
+            
     # gettter / setters
     def get_font_info(self):
         return self.font_charwidth, self.font_linespace, self.font_base

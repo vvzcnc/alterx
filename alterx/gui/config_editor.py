@@ -44,6 +44,11 @@ class ConfigEditor(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         vlay = QVBoxLayout()
+        
+        label = QLabel("Config Editor")
+        label.setObjectName("lbl_settings_configeditor")
+        vlay.addWidget(label)
+        
         hlay = QHBoxLayout()
         save = QPushButton()
         save.setText(_("Save"))

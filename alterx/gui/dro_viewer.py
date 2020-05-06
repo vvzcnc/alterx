@@ -57,7 +57,10 @@ class DROLayout(QHBoxLayout):
         h1.addWidget(self.drolabel_dtg)
         h1.addWidget(self.drolabel_ferror)
         v1.addLayout(h1)
-
+        if (INI.find("DISPLAY", "POSITION_FEEDBACK") or "ACTUAL").lower() == "actual":
+            self.feedback_actual = True
+        else:
+            self.feedback_actual = False
         self.addLayout(v1, 12)
         UPDATER.connect("axis", lambda axis: self.update_position(axis[num]))
         if name == 'X' and INFO.machine_is_lathe:
@@ -75,8 +78,12 @@ class DROLayout(QHBoxLayout):
         self.drolabel_act.setStyleSheet(self.drolabel_act.styleSheet())
     
         #position=stat['input'] is absolute
-        position = stat['input']-STAT.g5x_offset[self.num]-STAT.tool_offset[self.num] - \
-            STAT.g92_offset[self.num]  # set 'output' to see commanded position
+        if self.feedback_actual:
+            position = stat['input']
+        else:
+            position = stat['output']
+        position -= STAT.g5x_offset[self.num] + STAT.tool_offset[self.num] + \
+            STAT.g92_offset[self.num]
 
         if self.name == 'X' and INFO.machine_is_lathe:
             self.drolabel_act.setText(INFO.dro_format.format(

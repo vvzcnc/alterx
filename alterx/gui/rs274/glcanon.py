@@ -16,7 +16,11 @@
 #    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 from rs274 import Translated, ArcsToSegmentsMixin, OpenGLTk
+
+#from OpenGL.GL import *
+#from OpenGL.GLU import *
 from minigl import *
+
 import math
 import glnav
 import hershey
@@ -1577,7 +1581,6 @@ class GlCanonDraw:
                 return "XYZABCUVW".index(aletter)
 
     def posstrs(self):
-
         s = self.stat
         limit = list(s.limit[:])
         homed = list(s.homed[:])
