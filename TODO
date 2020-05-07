@@ -3,7 +3,6 @@ TODO list
 Features:
 	Settings
 	    Load default INI-file or INI-creator
-	    LinuxCNC parameters page
 	    PID calibrate page
 	    Include awlsim
 	    Lock settings
@@ -14,6 +13,7 @@ Features:
 	Change fonts
 	Notify transparent
 	Add locales
+	Add notes
 	
 Bugs:
     Path viewer with OpenGL is very slow (now using minigl lib from linuxcnc)

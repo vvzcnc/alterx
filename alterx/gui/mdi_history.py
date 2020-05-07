@@ -43,7 +43,7 @@ class MDI(QLineEdit):
             return
 
         COMMAND.mdi(text+'\n')
-
+        print(text)
         try:
             fp = os.path.expanduser(self.mdi_history_file)
             fp = open(fp, 'a')

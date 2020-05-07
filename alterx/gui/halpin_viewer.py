@@ -37,7 +37,7 @@ class HalPinWidget(QWidget):
         QWidget.__init__(self, parent)
         layout = QVBoxLayout()
 
-        label = QLabel("Hal Pin Viewer")
+        label = QLabel(_("Hal Pin Viewer"))
         label.setObjectName("lbl_settings_halpin")
         layout.addWidget(label)
         hlay = QHBoxLayout()

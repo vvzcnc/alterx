@@ -45,7 +45,7 @@ class ConfigEditor(QWidget):
         QWidget.__init__(self, parent)
         vlay = QVBoxLayout()
         
-        label = QLabel("Config Editor")
+        label = QLabel(_("Config Editor"))
         label.setObjectName("lbl_settings_configeditor")
         vlay.addWidget(label)
         
