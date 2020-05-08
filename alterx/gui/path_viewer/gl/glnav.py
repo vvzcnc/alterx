@@ -27,7 +27,6 @@ import math
 import array
 import itertools
 
-
 def use_pango_font(font, start, count, will_call_prepost=False):
     import pango
     import cairo

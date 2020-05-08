@@ -86,6 +86,8 @@ for (o, v) in opts:
         ini = str(v)
 
 qapp = QApplication(sys.argv)
+icon = QIcon(os.path.join(IMAGE_DIR,"Logo.png"))
+qapp.setWindowIcon(icon)
 
 if not ini:
     QMessageBox.critical(None,

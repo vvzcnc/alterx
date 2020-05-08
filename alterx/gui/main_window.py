@@ -33,7 +33,7 @@ from alterx.core.linuxcnc import *
 
 from alterx.gui.util import *
 from alterx.gui.main_screen import *
-from alterx.gui.path_viewer_qt import *
+from alterx.gui.path_viewer import *
 from alterx.gui.mdi_history import *
 from alterx.gui.gcode_editor import *
 from alterx.gui.file_manager import *

@@ -64,6 +64,8 @@ class OriginOffsetView(QTableView):
 
         self.reload_offsets()
 
+        INFO.get_offset_table = self.get_offset_table
+
         UPDATER.add("reload_offsets")
         UPDATER.connect("reload_offsets", self.reload_offsets)
         UPDATER.connect("tool_offset", self.reload_offsets)
@@ -83,6 +85,9 @@ class OriginOffsetView(QTableView):
         UPDATER.connect("offsetviewer_prev", self.selection_prev)
         UPDATER.connect("offsetviewer_select", self.selection_set)
         UPDATER.connect("offsetviewer_edit", self.selection_edit)
+
+    def get_offset_table(self):
+        return self.tabledata
 
     def resizeEvent(self, event):
         super(OriginOffsetView, self).resizeEvent(event)

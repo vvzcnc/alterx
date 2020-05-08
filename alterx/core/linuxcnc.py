@@ -117,6 +117,17 @@ class linuxcnc_info():
 
         self.display_cycle_time = float(INI.find("DISPLAY", "CYCLE_TIME") or '0.1')*1000
 
+    def get_offset_table(self):
+        return [[0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0],]
+
     def get_tool_info(self, tool):
         pass
         

@@ -14,9 +14,11 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+from __future__ import division, absolute_import, print_function, unicode_literals
+
 import math
 import gcode
-
 
 class Translated:
     g92_offset_x = g92_offset_y = g92_offset_z = 0
@@ -107,38 +109,38 @@ class ArcsToSegmentsMixin:
 
 class PrintCanon:
     def set_g5x_offset(self, *args):
-        print "set_g5x_offset", args
+        print( "set_g5x_offset {}".format(args))
 
     def set_g92_offset(self, *args):
-        print "set_g92_offset", args
+        print( "set_g92_offset {}".format(args))
 
     def next_line(self, state):
-        print "next_line", state.sequence_number
+        print( "next_line {}".format(state.sequence_number))
         self.state = state
 
     def set_plane(self, plane):
-        print "set plane", plane
+        print( "set plane {}".format(plane))
 
     def set_feed_rate(self, arg):
-        print "set feed rate", arg
+        print( "set feed rate {}".format(arg))
 
     def comment(self, arg):
-        print "#", arg
+        print( "# {}".format(arg))
 
     def straight_traverse(self, *args):
-        print "straight_traverse %.4g %.4g %.4g  %.4g %.4g %.4g" % args
+        print( "straight_traverse %.4g %.4g %.4g  %.4g %.4g %.4g" % args)
 
     def straight_feed(self, *args):
-        print "straight_feed %.4g %.4g %.4g  %.4g %.4g %.4g" % args
+        print( "straight_feed %.4g %.4g %.4g  %.4g %.4g %.4g" % args)
 
     def dwell(self, arg):
         if arg < .1:
-            print "dwell %f ms" % (1000 * arg)
+            print( "dwell %f ms" % (1000 * arg))
         else:
-            print "dwell %f seconds" % arg
+            print( "dwell %f seconds" % arg)
 
     def arc_feed(self, *args):
-        print "arc_feed %.4g %.4g  %.4g %.4g %.4g  %.4g  %.4g %.4g %.4g" % args
+        print( "arc_feed %.4g %.4g  %.4g %.4g %.4g  %.4g  %.4g %.4g %.4g" % args)
 
 
 class StatMixin:

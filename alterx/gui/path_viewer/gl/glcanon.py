@@ -15,7 +15,9 @@
 #    along with this program; if not, write to the Free Software
 #    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-from rs274 import Translated, ArcsToSegmentsMixin, OpenGLTk
+from __future__ import division, absolute_import, print_function, unicode_literals
+
+from . import interpret
 
 #from OpenGL.GL import *
 #from OpenGL.GLU import *
@@ -83,7 +85,7 @@ limiticon = array.array('B',
                          0,   0,    0, 0])
 
 
-class GLCanon(Translated, ArcsToSegmentsMixin):
+class GLCanon(interpret.Translated, interpret.ArcsToSegmentsMixin):
     lineno = -1
 
     def __init__(self, colors, geometry, is_foam=0):
@@ -268,7 +270,7 @@ class GLCanon(Translated, ArcsToSegmentsMixin):
         self.first_move = False
         self.in_arc = True
         try:
-            ArcsToSegmentsMixin.arc_feed(self, *args)
+            interpret.ArcsToSegmentsMixin.arc_feed(self, *args)
         finally:
             self.in_arc = False
 
@@ -475,7 +477,7 @@ class GlCanonDraw:
                     try:
                         test = temp % 1.234
                     except:
-                        print "Error: invalid [DISPLAY] DRO_FORMAT_IN in INI file"
+                        print( "Error: invalid [DISPLAY] DRO_FORMAT_IN in INI file")
                     else:
                         self.dro_in = temp
                 if self.inifile.find("DISPLAY", "DRO_FORMAT_MM"):
@@ -483,7 +485,7 @@ class GlCanonDraw:
                     try:
                         test = temp % 1.234
                     except:
-                        print "Error: invalid [DISPLAY] DRO_FORMAT_MM in INI file"
+                        print( "Error: invalid [DISPLAY] DRO_FORMAT_MM in INI file")
                     else:
                         self.dro_mm = temp
                         self.dro_in = temp
@@ -505,8 +507,8 @@ class GlCanonDraw:
         self.kinsmodule = kinsmodule
         self.no_joint_display = self.stat.kinematics_type == linuxcnc.KINEMATICS_IDENTITY
         if (msg != ""):
-            print "init_glcanondraw %s coords=%s kinsmodule=%s no_joint_display=%d" % (
-                msg, self.trajcoordinates, self.kinsmodule, self.no_joint_display)
+            print( "init_glcanondraw %s coords=%s kinsmodule=%s no_joint_display=%d" % (
+                msg, self.trajcoordinates, self.kinsmodule, self.no_joint_display))
 
     def realize(self):
         self.hershey = hershey.Hershey()

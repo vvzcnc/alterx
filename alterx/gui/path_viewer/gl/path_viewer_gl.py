@@ -26,11 +26,12 @@ __all__ = ['PathViewer']
 from alterx.common.locale import _
 from alterx.common.compat import *
 from alterx.common import *
-from alterx.gui.glnav import *
-from alterx.gui.rs274.glcanon import *
-from alterx.gui.rs274.interpret import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
+
+from . import glnav 
+from . import interpret
+from . import glcanon
 
 import math
 import gcode
@@ -61,8 +62,6 @@ except ImportError:
                 "Package python-opengl not installed."))
     LIB_GOOD = False
 
-
-
 class PathViewer(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
@@ -88,25 +87,25 @@ class DummyProgress:
     def progress(self): pass
 
 
-class StatCanon(GLCanon, StatMixin):
+class StatCanon(glcanon.GLCanon, interpret.StatMixin):
     def __init__(self, colors, geometry, lathe_view_option, stat, random):
-        GLCanon.__init__(self, colors, geometry)
-        StatMixin.__init__(self, stat, random)
+        glcanon.GLCanon.__init__(self, colors, geometry)
+        interpret.StatMixin.__init__(self, stat, random)
         self.progress = DummyProgress()
         self.lathe_view_option = lathe_view_option
 
     def is_lathe(self): return self.lathe_view_option
 
     def change_tool(self, pocket):
-        GLCanon.change_tool(self, pocket)
-        StatMixin.change_tool(self, pocket)
+        glcanon.GLCanon.change_tool(self, pocket)
+        interpret.StatMixin.change_tool(self, pocket)
 
 ###############################
 # widget for graphics plotting
 ###############################
 
 
-class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
+class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
     xRotationChanged = pyqtSignal(int)
     yRotationChanged = pyqtSignal(int)
     zRotationChanged = pyqtSignal(int)
@@ -114,7 +113,7 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
 
     def __init__(self, parent=None):
         QGLWidget.__init__(self, parent)
-        GlNavBase.__init__(self)
+        glnav.GlNavBase.__init__(self)
 
         def C(s):
             a = self.colors[s + "_alpha"]
@@ -133,7 +132,7 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
                               )
         # start tracking linuxcnc position so we can plot it
         thread.start_new_thread(self.logger.start, (.01,))
-        GlCanonDraw.__init__(self, STAT, self.logger)
+        glcanon.GlCanonDraw.__init__(self, STAT, self.logger)
 
         # set defaults
         self.fingerprint = ()
@@ -347,10 +346,10 @@ class graphics_plot(QGLWidget, GlCanonDraw, GlNavBase):
         self._current_file = None
 
         self.font_base, width, linespace = \
-            use_pango_font('courier bold 16', 0, 128)
+            glnav.use_pango_font('courier bold 16', 0, 128)
         self.font_linespace = linespace
         self.font_charwidth = width
-        GlCanonDraw.realize(self)
+        glcanon.GlCanonDraw.realize(self)
 
         if STAT.file:
             self.load()

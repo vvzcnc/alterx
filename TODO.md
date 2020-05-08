@@ -2,10 +2,11 @@ TODO list
 
 Features:
 	Settings
-	    Load default INI-file or INI-creator
+	    Load default INI-file or INI-creator, HAL-creator
 	    PID calibrate page
 	    Include awlsim
 	    Lock settings
+    Installation scripts
 	Keyboard serial listener
 	Startup open ngc file
     Jog
@@ -13,8 +14,4 @@ Features:
 	Change fonts
 	Notify transparent
 	Add locales
-	Add notes
-	
-Bugs:
-    Path viewer with OpenGL is very slow (now using minigl lib from linuxcnc)
-    Path viewer exception not rised
+	Add notes inside widgets
