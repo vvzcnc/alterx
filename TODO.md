@@ -6,6 +6,7 @@ Features:
 	    PID calibrate page
 	    Include awlsim
 	    Lock settings
+	    Osciloscope rt_component
     Installation scripts
 	Keyboard serial listener
 	Startup open ngc file
@@ -14,4 +15,9 @@ Features:
 	Change fonts
 	Notify transparent
 	Add locales
-	Add notes inside widgets
+	Add notes inside widgets    
+	Add DRO to VTK Path Viewer 
+	Add units rewrite to VTK Path Viewer 
+    Hal pin value float format
+    Status tooltable
+    

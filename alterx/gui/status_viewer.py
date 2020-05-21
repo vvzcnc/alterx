@@ -37,7 +37,7 @@ class StatusWidget(QWidget):
         layout = QHBoxLayout()
         
         vlay1 = QVBoxLayout()
-        label = QLabel(_("Status Viewer"))
+        label = QLabel(_("Status"))
         label.setObjectName("lbl_settings_statusviewer")
         vlay1.addWidget(label)
         
@@ -51,7 +51,7 @@ class StatusWidget(QWidget):
         vlay1.addWidget(self.tree)
         
         vlay2 = QVBoxLayout()
-        label = QLabel(_("Parameters Editor"))
+        label = QLabel(_("Parameters"))
         label.setObjectName("lbl_settings_parameditor")
         vlay2.addWidget(label)
         

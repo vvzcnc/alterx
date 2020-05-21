@@ -1,3 +1,24 @@
+# -*- coding: utf-8 -*-
+#
+# AlterX GUI - base backplot
+#
+# Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 __all__ = ['BaseBackPlot']
@@ -14,30 +35,15 @@ import os
 from . import base_canon
 
 class BaseBackPlot(object):
-    def __init__(self, inifile=None, canon=base_canon.BaseCanon):
-        inifile = inifile or os.getenv("INI_FILE_NAME")
-        if inifile is None or not os.path.isfile(inifile):
-            raise ValueError("Invalid INI file: %s", inifile)
-
+    def __init__(self, canon=base_canon.BaseCanon):
         self.canon_class = canon
         self.canon = None
-
         self.stat = STAT
-        self.config_dir = os.path.dirname(inifile)
-
-        temp = INI.find("EMCIO", "RANDOM_TOOLCHANGER")
-        self.random = int(temp or 0)
-
-        temp = INI.find("DISPLAY", "GEOMETRY") or 'XYZ'
-        self.geometry = temp.upper()
-
-        temp = INI.find("DISPLAY", "LATHE") or "false"
-        self.lathe_option = temp.lower() in ["1", "true", "yes"]
-
-        temp = INI.find("RS274NGC", "PARAMETER_FILE") or "linuxcnc.var"
-        self.parameter_file = os.path.join(self.config_dir, temp)
+        self.random = int(INI.find("EMCIO", "RANDOM_TOOLCHANGER") or 0)
+        self.geometry = (INI.find("DISPLAY", "GEOMETRY") or 'XYZ').upper()
+        self.lathe_option = INFO.machine_is_lathe
+        self.parameter_file = INFO.parameter_file
         self.temp_parameter_file = os.path.join(self.parameter_file + '.bak')
-
         self.last_filename = None
 
     def load(self, filename=None, *args, **kwargs):

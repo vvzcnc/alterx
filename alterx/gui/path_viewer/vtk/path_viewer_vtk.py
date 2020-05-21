@@ -1,3 +1,24 @@
+# -*- coding: utf-8 -*-
+#
+# AlterX GUI - VTK path viewer
+#
+# Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 __all__ = ['PathViewer']
@@ -15,10 +36,8 @@ import vtk
 
 # Fix poligons not drawing correctly on some GPU
 # https://stackoverflow.com/questions/51357630/vtk-rendering-not-working-as-expected-inside-pyqt?rq=1
-
 import vtk.qt
 vtk.qt.QVTKRWIBase = "QGLWidget"
-
 # Fix end
 
 from vtk.util.colors import tomato, yellow, mint
@@ -700,7 +719,6 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
             path_offset = list(map(add, self.g92_offset, self.original_g92_offset))
 
             for origin, actor in self.path_actors.items():
-                # printDebug('G92 Update Started')
                 # determine change in g92 offset since path was drawn
                 index = self.origin_map[origin] - 1
 
@@ -736,7 +754,7 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
 
 
     def update_rotation_xy(self, rotation):
-        pass
+        printDebug('TODO:update rotation')
     #
     #     self.rotation_offset = rotation
     #
@@ -911,10 +929,9 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
 
 
     def alphaBlend(self, alpha):
-        printDebug('alpha blend')
+        printDebug('TODO:alpha blend')
 
     def showGrid(self, grid):
-        printDebug('show grid')
         if grid:
             self.machine_actor.DrawXGridlinesOn()
             self.machine_actor.DrawYGridlinesOn()
