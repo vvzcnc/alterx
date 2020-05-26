@@ -35,14 +35,18 @@ class translate():
         self._ = lambda s: s
 
     def __call__(self, source, *args):
-        t = ""
         if len(args) > 0:
+            args_decoded = []
+            for a in args:
+                args_decoded.append(
+                    str(a).decode('utf-8') if type(a) not in (int,float) else a)
+
             try:
-                t = self._(source).format(*args)
+                t = self._(source).format(*args_decoded)
             except Exception as e:
                 printVerbose(
                     "Bad translation for ({}), error ({})".format(source, e))
-                t = source.format(*args)
+                t = source.format(*args_decoded)
         else:
             t = self._(source)
         return t

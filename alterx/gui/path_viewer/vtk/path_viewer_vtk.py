@@ -266,8 +266,8 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         for k, v in self.index_map.items():
             self.origin_map[v] = k
 
-        self.g5x_offset = self.status.g5x_offset
-        self.g92_offset = self.status.g92_offset
+        self.g5x_offset = self.status.g5x_offset or [0,0,0,0,0,0] 
+        self.g92_offset = self.status.g92_offset or [0,0,0,0,0,0] 
         self.rotation_offset = self.status.rotation_xy
 
         self.original_g5x_offset = [0.0] * 9
@@ -325,8 +325,12 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
 
         self.path_cache = PathCache(self.tooltip_position)
         self.path_cache_actor = self.path_cache.get_actor()
-        self.tool = Tool(self.status.tool_table[0], self.status.tool_offset)
-        self.tool_actor = self.tool.get_actor()
+        if self.status.tool_table:
+            self.tool = Tool(self.status.tool_table, self.status.tool_offset)
+            self.tool_actor = self.tool.get_actor()
+        else:
+            self.tool = None
+            self.tool_actor = None
 
         self.offset_axes = OrderedDict()
         self.extents = OrderedDict()
@@ -1235,16 +1239,16 @@ class Machine:
 
         cube_axes_actor = vtk.vtkCubeAxesActor()
 
-        x_max = axis[0]["max_position_limit"]
-        x_min = axis[0]["min_position_limit"]
-
-        y_max = axis[1]["max_position_limit"]
-        y_min = axis[1]["min_position_limit"]
-
-        z_max = axis[2]["max_position_limit"]
-        z_min = axis[2]["min_position_limit"]
-
-        cube_axes_actor.SetBounds(x_min, x_max, y_min, y_max, z_min, z_max)
+        axes_minmax = []
+        for i in range(3):
+            if i < len(axis):
+                axes_minmax.append(axis[i]["max_position_limit"])
+                axes_minmax.append(axis[i]["min_position_limit"])
+            else:
+                axes_minmax.append(0)
+                axes_minmax.append(0)
+                
+        cube_axes_actor.SetBounds(*axes_minmax)
 
         cube_axes_actor.SetXLabelFormat("%6.3f")
         cube_axes_actor.SetYLabelFormat("%6.3f")

@@ -3,7 +3,7 @@ TODO list
 Features:
 	Settings
 	    Load default INI-file or INI-creator, HAL-creator
-	    PID calibrate page
+	    PID calibrate widget
 	    Include awlsim
 	    Lock settings
 	    Osciloscope rt_component
@@ -18,6 +18,5 @@ Features:
 	Add notes inside widgets    
 	Add DRO to VTK Path Viewer 
 	Add units rewrite to VTK Path Viewer 
-    Hal pin value float format
     Status tooltable
     

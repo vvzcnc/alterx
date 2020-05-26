@@ -294,8 +294,10 @@ class StatCanon(BaseCanon):
         self.random = random
 
         self.stat = stat
-
-        self.tools = list(self.stat.tool_table)
+        if self.stat.tool_table:
+            self.tools = list(self.stat.tool_table)
+        else:
+            self.tools = []
 
     def change_tool(self, pocket):
         if self.random:
