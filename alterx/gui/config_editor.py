@@ -32,6 +32,7 @@ from alterx.core.linuxcnc import *
 
 from functools import partial
 from collections import OrderedDict
+from shutil import copyfile
 
 class MultiOrderedDict(OrderedDict):
     def __setitem__(self, key, value):
@@ -52,18 +53,39 @@ class ConfigEditor(QWidget):
         hlay = QHBoxLayout()
         save = QPushButton()
         save.setText(_("Save"))
-        save.clicked.connect(self.save)
+        save.clicked.connect(self.save_clicked)
         load = QPushButton()
         load.setText(_("Load"))
-        load.clicked.connect(self.load)        
+        load.clicked.connect(self.load_clicked)    
+        load_default = QPushButton()
+        load_default.setText(_("Load default"))
+        load_default.clicked.connect(self.load_default_clicked)
+        save_as = QPushButton()
+        save_as.setText(_("Save as"))
+        save_as.clicked.connect(self.save_as_clicked)
+        run_wizard = QPushButton()
+        run_wizard.setText(_("Run wizard"))
+        run_wizard.clicked.connect(self.run_wizard_clicked)
+        hlay.addWidget(load_default)
         hlay.addWidget(load)
+        hlay.addWidget(run_wizard)
         hlay.addWidget(save)
+        hlay.addWidget(save_as)
         vlay.addLayout(hlay)
         self.page = QTabWidget()
         vlay.addWidget(self.page)
         self.setLayout(vlay)
-        
-        self.load()
+        self.config_dir = pkg_resources.resource_filename("alterx", "configs")
+        self.load_clicked()
+
+    def run_wizard_clicked(self):
+        if self.page.count() > 0:
+            for i in reversed(range(self.page.count())):
+                try:
+                    self.page.widget(i).deleteLater()
+                    self.page.removeTab(i)
+                except Exception as e:
+                    printDebug(_("Delete tab exception: {}",e))
 
     def new_section(self,section):
         scroll = QScrollArea()
@@ -103,11 +125,30 @@ class ConfigEditor(QWidget):
                 printDebug(_("Add section exception: {}",e))
         widget.setText("")
         
-    def save(self):
-        ini = os.environ['INI_FILE_NAME']
+    def save_as_clicked(self):
+        filename = QFileDialog.getSaveFileName(self,_('Save as'),"",'INI (*.ini)')
+        if filename:
+            if '.ini' not in filename[0]:
+                fn = filename[0] + '.ini'
+            else:
+                fn = filename[0]
+            self.save_clicked(fn)
+        
+    def save_clicked(self,default_file=None):
+        if default_file:
+            ini = default_file
+        else:
+            ini = os.environ['INI_FILE_NAME']
+            if not os.path.isfile(ini):
+                ini = None
+            
         if not ini:
             printWarning(_("INI-file arg is not found."))
             return
+                  
+        default_hal = os.path.join(os.path.dirname(ini),"default.hal")  
+        if not os.path.isfile(default_hal):
+            copyfile(os.path.join(self.config_dir,"default_hal.cfg"),default_hal)
                     
         with open(ini, "w") as fp:
             if self.config._defaults:
@@ -204,7 +245,10 @@ class ConfigEditor(QWidget):
         except Exception as e:
             printDebug(_("Delete section exception: {}",e))
     
-    def load(self):
+    def load_default_clicked(self):
+        self.load_clicked(os.path.join(self.config_dir,"default_ini.cfg"))
+    
+    def load_clicked(self,default_file=None):
         if self.page.count() > 0:
             for i in reversed(range(self.page.count())):
                 try:
@@ -229,7 +273,11 @@ class ConfigEditor(QWidget):
         self.config.optionxform = str
         self.page.addTab(widget,"+")        
                 
-        ini = os.environ['INI_FILE_NAME']
+        if default_file:
+            ini = default_file
+        else:
+            ini = os.environ['INI_FILE_NAME']
+        
         if ini:
             self.config.read(ini)
         else:

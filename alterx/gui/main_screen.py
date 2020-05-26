@@ -412,12 +412,12 @@ class AxisWidget(QGroupBox):
         else:
             self.feedback_actual = False
         
-        UPDATER.connect("axis", lambda axis: self.update_position(axis))
+        UPDATER.connect(INFO.axes_list, lambda axis: self.update_position(axis))
         UPDATER.connect("task_mode", self.task_mode_handler)
         UPDATER.connect("diameter_multiplier", self.diameter_mode)
 
     def diameter_mode(self, data):
-        self.update_position(STAT.axis)
+        self.update_position(getattr(STAT,INFO.axes_list))
 
     def update_position(self, stat):
         text = ""

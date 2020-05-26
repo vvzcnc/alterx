@@ -28,7 +28,7 @@ from alterx.common.compat import *
 from alterx.common import *
 from alterx.core.linuxcnc import *
 
-import gcode
+from alterx.core.linuxcnc import GCODE 
 import shutil
 import os
 
@@ -77,10 +77,10 @@ class BaseBackPlot(object):
         # call back to the canon with motion commands, and record a history
         # of all the movements.
 
-        result, seq = gcode.parse(filename, self.canon, unitcode, initcode)
+        result, seq = GCODE.parse(filename, self.canon, unitcode, initcode)
 
-        if result > gcode.MIN_ERROR:
-            msg = gcode.strerror(result)
+        if result > GCODE.MIN_ERROR:
+            msg = GCODE.strerror(result)
             fname = os.path.basename(filename)
             printDebug(_("3D plot", "Error in {} line {}\n{}",fname, seq - 1, msg))
             # raise SyntaxError("Error in %s line %i: %s" % (fname, seq - 1, msg))

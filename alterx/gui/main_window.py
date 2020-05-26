@@ -79,18 +79,18 @@ class MainWindow(QWidget):
             
         if not os.path.isfile(ss_name):
             ss_name = os.path.join(STYLESHEET_DIR, "default.qss")
-            
         try:
             with open(ss_name,'r') as file:
                 stylesheet = file.read()
-                # Python v2.
-                stylesheet = unicode(stylesheet, encoding='utf8')
+                try:
+                    # Python v2.
+                    stylesheet = unicode(stylesheet, encoding='utf-8')
+                except NameError:
+                    # Python v3.
+                    stylesheet = str(stylesheet)
                 self.setStyleSheet(stylesheet)
-        except NameError:
-            # Python v3.
-            stylesheet = str(stylesheet, encoding='utf8')
         except Exception as e:
-            printWarning(_("Failed to load stylesheet {}",e))
+            printWarning(_("Failed to load stylesheet: {}",e))
             
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)

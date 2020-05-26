@@ -21,7 +21,7 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-__all__ = ['STAT', 'COMMAND', 'INI', 'UPDATER', 'LINUXCNC', 'INFO', 'POSLOG']
+__all__ = ['STAT', 'COMMAND', 'INI', 'UPDATER', 'LINUXCNC', 'INFO', 'POSLOG','GCODE']
 
 from alterx.common.locale import _
 from alterx.common.compat import *
@@ -32,6 +32,7 @@ import time
 
 class fake_linuxcnc():
     axis = []
+    joints = []
     def __call__(self, source, *args):
         return 0
 
@@ -63,6 +64,7 @@ class fake_command():
 
 try:
     import linuxcnc as LINUXCNC
+    import gcode as GCODE
 
     STAT = LINUXCNC.stat()
     COMMAND = LINUXCNC.command()
@@ -81,6 +83,7 @@ except Exception as e:
     POSLOG = fake_position_logger()
     ERROR = fake_linuxcnc()
     INI = fake_linuxcnc()
+    GCODE = fake_linuxcnc()
     
     QMessageBox.critical(None,
             _("AlterX: Failed to import LinuxCNC"),
@@ -95,14 +98,14 @@ class linuxcnc_info():
         else:
             self.machine_is_metric = False
 
-        self.coordinates = INI.find('TRAJ', 'COORDINATES').split(' ')
+        self.coordinates = (INI.find('TRAJ', 'COORDINATES') or ' ').split(' ')
 
         self.machine_is_lathe = True if INI.find('DISPLAY', 'LATHE') else False
 
         self.get_metric = lambda: False if STAT.program_units == 1 else True
         
-        self.tool_file = INI.find('EMCIO', 'TOOL_TABLE') or 'tool.var'
-        self.parameter_file = INI.find("RS274NGC", "PARAMETER_FILE") or 'cnc.var'
+        self.tool_file = INI.find('EMCIO', 'TOOL_TABLE') or 'tools.var'
+        self.parameter_file = INI.find("RS274NGC", "PARAMETER_FILE") or 'parameters.var'
         self.preferences_file = INI.find("DISPLAY", "PREFERENCE_FILE_PATH") or 'preferences.var'
         self.position_file = INI.find("TRAJ", "POSITION_FILE") or 'position.var'
         self.mdi_history_file = INI.find("DISPLAY", "MDI_HISTORY_FILE") or 'mdi.log'
@@ -116,6 +119,8 @@ class linuxcnc_info():
         self.angular_per_units = _("min")
 
         self.display_cycle_time = float(INI.find("DISPLAY", "CYCLE_TIME") or '0.1')*1000
+        
+        self.axes_list = "joint" if hasattr(STAT, "joint") else "axis"
 
     def get_offset_table(self):
         return [[0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -225,7 +230,7 @@ class linuxcnc_poll(QTimer):
         self.custom_signals = {}
         self.custom_signals_old = {}
 
-    def __del__(self):
-        self.wait()
+    #def __del__(self):
+    #    self.wait()
 
 UPDATER = linuxcnc_poll()

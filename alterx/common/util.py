@@ -114,7 +114,7 @@ class logListener(object):
             except (KeyboardInterrupt, SystemExit):
                 raise
             except Exception as e:
-                printError('Log listener thread error: %s' % e)
+                printError('Log listener thread error: %s' % str(e).decode('utf-8'))
 
     def getVerbose(self):
         return self.verbose
@@ -132,7 +132,7 @@ class logListener(object):
             handler.setFormatter(formatter)
             root.addHandler(handler)
         except Exception as e:
-            printError("Log file handler creating failed: {}".format(e))
+            printError("Log file handler creating failed: {}".format(str(e).decode('utf-8')))
 
     def setLoglevel(self, level):
         if level in (0, 1, 2, 3, 4, 5):

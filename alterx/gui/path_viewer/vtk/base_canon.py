@@ -18,7 +18,7 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 import math
-import gcode
+from alterx.core.linuxcnc import GCODE 
 
 class BaseCanon(object):
     def __init__(self):
@@ -107,7 +107,7 @@ class BaseCanon(object):
 
     def calc_extents(self):
         self.min_extents, self.max_extents, self.min_extents_notool, \
-        self.max_extents_notool = gcode.calc_extents(self.arcfeed, self.feed, self.traverse)
+        self.max_extents_notool = GCODE.calc_extents(self.arcfeed, self.feed, self.traverse)
 
     def rotate_and_translate(self, x, y, z, a, b, c, u, v, w):
         x += self.g92_offset_x
@@ -234,7 +234,7 @@ class BaseCanon(object):
         self.in_arc = True
         try:
             self.lo = tuple(self.last_pos)
-            segs = gcode.arc_to_segments(self, end_x, end_y, center_x, center_y,
+            segs = GCODE.arc_to_segments(self, end_x, end_y, center_x, center_y,
                                          rot, end_z, a, b, c, u, v, w, self.arcdivision)
             self.straight_arcsegments(segs)
         finally:

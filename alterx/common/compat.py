@@ -79,15 +79,12 @@ isPy3Compat = sys.version_info[0] == 3
 isPy2Compat = sys.version_info[0] == 2
 
 # Python 2/3 helper selection
-
-
 def py23(py2, py3):
     if isPy3Compat:
         return py3
     if isPy2Compat:
         return py2
     raise Exception("Failed to detect Python version")
-
 
 if isPy2Compat:
     from ConfigParser import ConfigParser

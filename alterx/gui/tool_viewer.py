@@ -58,7 +58,7 @@ class ToolOffsetView(QTableView):
 
         conversion = {5: "Y", 6: 'Y', 7: "Z", 8: 'Z', 9: "A",
                       10: "B", 11: "C", 12: "U", 13: "V", 14: "W"}
-        for num, let in conversion.iteritems():
+        for num, let in conversion.items():
             if let in INFO.coordinates:
                 continue
             self.hideColumn(num)

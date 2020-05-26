@@ -65,7 +65,7 @@ except Exception as e:
     usage()
     sys.exit(ExitCodes.EXIT_ERR_CMDLINE)
 
-ini = None
+ini = ""
 
 for (o, v) in opts:
     if o in ("-h", "--help"):
@@ -89,25 +89,24 @@ qapp = QApplication(sys.argv)
 icon = QIcon(os.path.join(IMAGE_DIR,"Logo.png"))
 qapp.setWindowIcon(icon)
 
+os.putenv('INI_FILE_NAME',ini)
+os.environ['INI_FILE_NAME'] = ini
+
 if not ini:
     QMessageBox.critical(None,
     _("AlterX: Config file not found"),
-    _("There is no option '--ini config_file_path'.\n"
-    "Without a configuration file, launch is not possible."),
+    _("There is no option '--ini config_file_path'.\n"),
     QMessageBox.Ok,
     QMessageBox.Ok)
-    sys.exit(ExitCodes.EXIT_ERR_CMDLINE)
 else:
-    os.putenv('INI_FILE_NAME',ini)
-    os.environ['INI_FILE_NAME'] = ini
     parameters = ConfigParser()
     parameters.read(ini)
 
-try:
-    log = parameters.get("DISPLAY", "LOG_FILE")
-    logger.setLogfile(os.path.expanduser(log))
-except Exception as e:
-    printError(_("Get preference error: {} ", e))
+    try:
+        log = parameters.get("DISPLAY", "LOG_FILE")
+        logger.setLogfile(os.path.expanduser(log))
+    except Exception as e:
+        printError(_("Get preference error: {} ", e))
 
 printVerbose(_("Loglevel: {}", logger.loglevel))
 printVerbose(_("Logfile: {}", logger.logfile))

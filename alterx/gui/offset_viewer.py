@@ -57,7 +57,7 @@ class OriginOffsetView(QTableView):
 
         conversion = {0: "X", 1: "Y", 2: "Z", 3: "A",
                       4: "B", 5: "C", 6: "U", 7: "V", 8: "W"}
-        for num, let in conversion.iteritems():
+        for num, let in conversion.items():
             if let in INFO.coordinates:
                 continue
             self.hideColumn(num)

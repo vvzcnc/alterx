@@ -42,7 +42,6 @@ cleanup()
 
 cleanup
 trap cleanup EXIT
-cp "$basedir/linuxcnc_demo.ngc" /tmp/ || die "Failed to copy linuxcnc-demo.ngc"
 
 # Start LinuxCNC
 (

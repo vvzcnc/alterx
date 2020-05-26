@@ -41,7 +41,7 @@ class GcodeLexer(QsciLexerCustom):
             3: 'Assignment',
             4: 'Value',
         }
-        for key, value in self._styles.iteritems():
+        for key, value in self._styles.items():
             setattr(self, value, key)
         font = QFont()
         font.setFamily('Courier')

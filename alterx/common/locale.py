@@ -38,8 +38,15 @@ class translate():
         if len(args) > 0:
             args_decoded = []
             for a in args:
-                args_decoded.append(
-                    str(a).decode('utf-8') if type(a) not in (int,float) else a)
+                if type(a) not in (int,float) and a:
+                    a = str(a)
+                    try:
+                        # Python v2.
+                        a = unicode(a, encoding='utf-8')
+                    except NameError:
+                        # Python v3.
+                        pass
+                args_decoded.append(a)
 
             try:
                 t = self._(source).format(*args_decoded)

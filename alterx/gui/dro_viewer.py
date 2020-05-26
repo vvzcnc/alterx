@@ -62,13 +62,13 @@ class DROLayout(QHBoxLayout):
         else:
             self.feedback_actual = False
         self.addLayout(v1, 12)
-        UPDATER.connect("axis", lambda axis: self.update_position(axis[num]))
+        UPDATER.connect(INFO.axes_list, lambda axis: self.update_position(axis[num]))
         if name == 'X' and INFO.machine_is_lathe:
             UPDATER.connect("diameter_multiplier",
                             lambda m: self.diameter_mode(m, num, name))
 
     def diameter_mode(self, data):
-        self.update_position(STAT.axis[self.num])
+        self.update_position(getattr(STAT,INFO.axes_list)[self.num])
         self.drolabel_name.setText("{}{}".format(
             self.name, ['', 'R', 'D'][UPDATER.diameter_multiplier]))
 

@@ -325,8 +325,9 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
 
         self.path_cache = PathCache(self.tooltip_position)
         self.path_cache_actor = self.path_cache.get_actor()
+
         if self.status.tool_table:
-            self.tool = Tool(self.status.tool_table, self.status.tool_offset)
+            self.tool = Tool(self.status.tool_table[0], self.status.tool_offset)
             self.tool_actor = self.tool.get_actor()
         else:
             self.tool = None

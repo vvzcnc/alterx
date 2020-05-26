@@ -2,7 +2,7 @@ TODO list
 
 Features:
 	Settings
-	    Load default INI-file or INI-creator, HAL-creator
+	    INI-creator and HAL-creator
 	    PID calibrate widget
 	    Include awlsim
 	    Lock settings
@@ -19,4 +19,5 @@ Features:
 	Add DRO to VTK Path Viewer 
 	Add units rewrite to VTK Path Viewer 
     Status tooltable
-    
+    Start script and/or desktop launch
+    Binary linuxcnc and gcode not compatible with Py3
