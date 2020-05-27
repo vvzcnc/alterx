@@ -99,7 +99,7 @@ if not ini:
     QMessageBox.Ok,
     QMessageBox.Ok)
 else:
-    parameters = ConfigParser()
+    parameters = ConfigParser.ConfigParser()
     parameters.read(ini)
 
     try:

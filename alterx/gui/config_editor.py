@@ -34,6 +34,71 @@ from functools import partial
 from collections import OrderedDict
 from shutil import copyfile
 
+class WizardWidget(QWidget):
+    def __init__(self,parent,parameters):
+        QWidget.__init__(self)
+        lay = QVBoxLayout()
+        caption = QLabel(parameters[0])
+        text = QLabel(parameters[1])
+        self.p = parameters
+        self.parser = parent.config
+        self.page = parent.page
+        self.parent = parent
+        self.edit = QLineEdit()
+        buttonYes = QPushButton()
+        buttonYes.setText(_("Yes"))
+        buttonYes.clicked.connect(self.yes_clicked)
+        buttonNo = QPushButton()
+        buttonNo .setText(_("No"))
+        buttonNo.clicked.connect(self.no_clicked)
+        
+        lay.addWidget(caption)
+        if parameters[2]:
+            lay.addWidget(self.edit)
+        lay.addWidget(text)
+        
+        lay.addStretch()
+        
+        if not parameters[2]:
+            lay.addWidget(buttonNo)
+        lay.addWidget(buttonYes)
+        
+        self.setLayout(lay)
+        
+    def yes_clicked(self):
+        p = int(self.p[3])
+        if p<0:
+            cur = self.page.currentIndex()
+            self.page.setCurrentIndex(cur + 1)
+        else:
+            self.page.setCurrentIndex(p)
+        options = self.p[5].split(',')
+        
+        for opt in options:
+            if len(opt.split(' ')) == 1:
+                if opt == "add_axes":
+                    self.parent.add_default_axes()
+                elif opt == "stop_wizard":
+                    self.parent.stop_wizard()
+                
+                continue
+        
+            section,option,value = opt.split(' ')
+            self.parser.set(section,option,value.format(self.edit.text()))
+        
+    def no_clicked(self): 
+        p = int(self.p[4])
+        if p<0:
+            cur = self.page.currentIndex()
+            self.page.setCurrentIndex(cur + 1)
+        else:
+            self.page.setCurrentIndex(p)
+            
+        options = self.p[6].split(',')
+        for opt in options:
+            section,option,value = opt.split(' ')
+            self.parser.set(section,option,value.format(self.edit.text()))   
+
 class MultiOrderedDict(OrderedDict):
     def __setitem__(self, key, value):
         if isinstance(value, list) and key in self:
@@ -63,12 +128,12 @@ class ConfigEditor(QWidget):
         save_as = QPushButton()
         save_as.setText(_("Save as"))
         save_as.clicked.connect(self.save_as_clicked)
-        run_wizard = QPushButton()
-        run_wizard.setText(_("Run wizard"))
-        run_wizard.clicked.connect(self.run_wizard_clicked)
+        self.run_wizard = QPushButton()
+        self.run_wizard.setText(_("Run wizard"))
+        self.run_wizard.clicked.connect(self.run_wizard_clicked)
         hlay.addWidget(load_default)
         hlay.addWidget(load)
-        hlay.addWidget(run_wizard)
+        hlay.addWidget(self.run_wizard)
         hlay.addWidget(save)
         hlay.addWidget(save_as)
         vlay.addLayout(hlay)
@@ -76,7 +141,72 @@ class ConfigEditor(QWidget):
         vlay.addWidget(self.page)
         self.setLayout(vlay)
         self.config_dir = pkg_resources.resource_filename("alterx", "configs")
+        self.config = ConfigParser.ConfigParser(
+            dict_type=MultiOrderedDict,allow_no_value=True)
+        self.config.optionxform = str
         self.load_clicked()
+        self.wizard = False
+
+    def add_default_axes(self):
+        num_axes = self.config.get("KINS","JOINTS")
+        version = self.config.get("EMC","CORE")
+        coordinates = self.config.get("TRAJ","COORDINATES")
+        
+        if int(num_axes) != len(coordinates.split(' ')):
+            QMessageBox.critical(None,_("COORDINATES not equal AXES"),
+                _("The number of axes and coordinates does not converge.\n"
+                "Check [TRAJ]COORDINATES and [KINS]JOINTS"),
+                QMessageBox.Ok,QMessageBox.Ok)
+            return
+            
+        if len(version)<3:
+            QMessageBox.critical(None,_("Wrong core version"),
+                _("Invalid parameter [EMC]CORE.\n"),
+                QMessageBox.Ok,QMessageBox.Ok)
+            return
+            
+        default = os.path.join(self.config_dir,"default_axis_ini.cfg")
+        self.config.read(default)
+
+        try:
+            items = self.config.items(
+                "DEFAULT_AXIS_{}".format(version[:3]))
+                
+            if version[:3] == '2.7':
+                axes_list = range(int(num_axes))    
+                joints_list = []
+            else:
+                axes_list = coordinates.split(' ')
+                joints_list = range(int(num_axes))    
+            
+            for axis in axes_list:
+                name = "AXIS_{}".format(axis)
+                self.config.add_section(name)
+                for item in items:
+                    self.config.set(name,item[0],item[1])
+                    
+            items = self.config.items(
+                "DEFAULT_JOINT_{}".format(version[:3]))
+                   
+            for joint in joints_list:
+                name = "JOINT_{}".format(joint)
+                self.config.add_section(name)
+                for item in items:
+                    self.config.set(name,item[0],item[1])
+
+            for s in self.config.sections():
+                if s.startswith("DEFAULT_"):
+                    self.config.remove_section(s)
+        except ConfigParser.NoSectionError as e:
+            QMessageBox.critical(None,_("Can't find section"),
+                _("Can't find section. {}.\n"
+                "Probably wrong core version.",e),
+                QMessageBox.Ok,QMessageBox.Ok)
+        except Exception as e:
+            printDebug(_("Add default axis exception: {}",e))
+
+    def stop_wizard(self):
+        self.load_clicked(default_file=None,only_update=True)
 
     def run_wizard_clicked(self):
         if self.page.count() > 0:
@@ -86,6 +216,24 @@ class ConfigEditor(QWidget):
                     self.page.removeTab(i)
                 except Exception as e:
                     printDebug(_("Delete tab exception: {}",e))
+                    
+        if self.wizard:
+            self.stop_wizard()
+        else:
+            self.wizard = True
+            self.run_wizard.setText(_("Stop wizard"))
+                    
+            default_wizard = os.path.join(self.config_dir,"default_wizard.cfg")  
+                        
+            with open(default_wizard, "r") as fp:
+                for line in fp:
+                    try:
+                        c,t,e,nYes,nNo,aYes,aNo = line.split(';')[:-1]
+                    except Exception as e:
+                        printDebug(_("Broken wizard line: {}\n{}",e,line))
+                        continue
+                    p = (c,t,e,nYes,nNo,aYes,aNo)
+                    self.page.addTab(WizardWidget(self,p),c)
 
     def new_section(self,section):
         scroll = QScrollArea()
@@ -248,7 +396,10 @@ class ConfigEditor(QWidget):
     def load_default_clicked(self):
         self.load_clicked(os.path.join(self.config_dir,"default_ini.cfg"))
     
-    def load_clicked(self,default_file=None):
+    def load_clicked(self,default_file=None,only_update=False):
+        self.wizard = False
+        self.run_wizard.setText(_("Run wizard"))
+        
         if self.page.count() > 0:
             for i in reversed(range(self.page.count())):
                 try:
@@ -269,20 +420,22 @@ class ConfigEditor(QWidget):
         layout.addStretch()
         widget.setLayout(layout)
 
-        self.config = ConfigParser(dict_type=MultiOrderedDict,allow_no_value=True)
-        self.config.optionxform = str
-        self.page.addTab(widget,"+")        
-                
         if default_file:
             ini = default_file
         else:
             ini = os.environ['INI_FILE_NAME']
         
         if ini:
-            self.config.read(ini)
+            if not only_update:
+                self.config = ConfigParser.ConfigParser(
+                    dict_type=MultiOrderedDict,allow_no_value=True)
+                self.config.optionxform = str
+                self.config.read(ini)
         else:
             printWarning(_("INI-file arg is not found."))
             return
+
+        self.page.addTab(widget,"+")   
 
         for s in sorted(self.config.sections()):
             widget,layout = self.new_section(s)

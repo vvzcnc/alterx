@@ -87,6 +87,6 @@ def py23(py2, py3):
     raise Exception("Failed to detect Python version")
 
 if isPy2Compat:
-    from ConfigParser import ConfigParser
+    import ConfigParser
 else:
-    from configparser import ConfigParser
+    import configparser as ConfigParser

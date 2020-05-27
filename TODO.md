@@ -2,11 +2,14 @@ TODO list
 
 Features:
 	Settings
-	    INI-creator and HAL-creator
+	    HAL-creator
 	    PID calibrate widget
 	    Include awlsim
 	    Lock settings
 	    Osciloscope rt_component
+	    Halshow rt_component
+	    Make page buttons bigger in config editor
+	    Add tranlation support for ini-wizard
     Installation scripts
 	Keyboard serial listener
 	Startup open ngc file

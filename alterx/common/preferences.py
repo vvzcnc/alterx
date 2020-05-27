@@ -28,9 +28,9 @@ from alterx.common import *
 
 from alterx.core.linuxcnc import *
 
-class Preferences(ConfigParser):
+class Preferences(ConfigParser.ConfigParser):
     def __init__(self):
-        ConfigParser.__init__(self)
+        ConfigParser.ConfigParser.__init__(self)
         self.types = {
             bool: self.getboolean,
             float: self.getfloat,
