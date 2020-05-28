@@ -2,7 +2,6 @@ TODO list
 
 Features:
 	Settings
-	    HAL-creator
 	    PID calibrate widget
 	    Include awlsim
 	    Lock settings
@@ -10,6 +9,13 @@ Features:
 	    Halshow rt_component
 	    Make page buttons bigger in config editor
 	    Add tranlation support for ini-wizard
+	Wizard:
+	    lpt config
+	    hm2 config
+	    hm2_eth config
+	    servo config
+	    stepper config
+	    default configs
     Installation scripts
 	Keyboard serial listener
 	Startup open ngc file

@@ -109,6 +109,7 @@ class linuxcnc_info():
         self.preferences_file = INI.find("DISPLAY", "PREFERENCE_FILE_PATH") or 'preferences.var'
         self.position_file = INI.find("TRAJ", "POSITION_FILE") or 'position.var'
         self.mdi_history_file = INI.find("DISPLAY", "MDI_HISTORY_FILE") or 'mdi.log'
+        self.working_dir = os.path.dirname(os.environ['INI_FILE_NAME'])
         
         self.dro_format = "{:.3f}"
         self.linear_units = _("mm")

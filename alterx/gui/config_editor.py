@@ -51,6 +51,9 @@ class WizardWidget(QWidget):
         buttonNo = QPushButton()
         buttonNo .setText(_("No"))
         buttonNo.clicked.connect(self.no_clicked)
+        buttonNext = QPushButton()
+        buttonNext .setText(_("Next"))
+        buttonNext.clicked.connect(self.next_clicked)
         
         lay.addWidget(caption)
         if parameters[2]:
@@ -62,8 +65,17 @@ class WizardWidget(QWidget):
         if not parameters[2]:
             lay.addWidget(buttonNo)
         lay.addWidget(buttonYes)
-        
+        lay.addWidget(buttonNext)        
+
         self.setLayout(lay)
+  
+    def next_clicked(self):
+        p = int(self.p[3])
+        if p<0:
+            cur = self.page.currentIndex()
+            self.page.setCurrentIndex(cur + 1)
+        else:
+            self.page.setCurrentIndex(p) 
         
     def yes_clicked(self):
         p = int(self.p[3])
@@ -72,19 +84,32 @@ class WizardWidget(QWidget):
             self.page.setCurrentIndex(cur + 1)
         else:
             self.page.setCurrentIndex(p)
+            
         options = self.p[5].split(',')
-        
         for opt in options:
             if len(opt.split(' ')) == 1:
                 if opt == "add_axes":
                     self.parent.add_default_axes()
                 elif opt == "stop_wizard":
                     self.parent.stop_wizard()
+                elif "copy_hal" in opt:
+                    try:
+                        self.parent.copy_default_hal(
+                            (opt.split('=')[1]).format(self.p[0]))
+                    except Exception as e:
+                        printDebug(_("Default hal file copy failed, {}",e))
+                elif opt == "axis_wizard":
+                    self.parent.run_axis_wizard()
                 
                 continue
         
             section,option,value = opt.split(' ')
-            self.parser.set(section,option,value.format(self.edit.text()))
+            try:
+                last = self.parser.get(section,option)+'\n'
+            except:
+                last = ''
+            self.parser.set(section,option,value.format(last,self.edit.text(),
+                                                        self.p[0]))   
         
     def no_clicked(self): 
         p = int(self.p[4])
@@ -96,8 +121,15 @@ class WizardWidget(QWidget):
             
         options = self.p[6].split(',')
         for opt in options:
+            if len(opt.split(' ')) == 1:
+                continue
+                
             section,option,value = opt.split(' ')
-            self.parser.set(section,option,value.format(self.edit.text()))   
+            try:
+                last = self.parser.get(section,option)
+            except:
+                last = ''
+            self.parser.set(section,option,value.format(last,self.edit.text()))   
 
 class MultiOrderedDict(OrderedDict):
     def __setitem__(self, key, value):
@@ -172,7 +204,7 @@ class ConfigEditor(QWidget):
             items = self.config.items(
                 "DEFAULT_AXIS_{}".format(version[:3]))
                 
-            if version[:3] == '2.7':
+            if float(version[:3]) <= '2.7':
                 axes_list = range(int(num_axes))    
                 joints_list = []
             else:
@@ -205,8 +237,56 @@ class ConfigEditor(QWidget):
         except Exception as e:
             printDebug(_("Add default axis exception: {}",e))
 
+    def copy_default_hal(self,param):
+        p = param.split('|')
+        name_from = p[0]
+        name_to = p[1]
+        with open(os.path.join(self.config_dir,name_from)) as fr:
+            with open(name_to, "w") as fw:
+                for line in fr:
+                   if len(p)>2:
+                       fw.write(line.replace(p[2],p[3])) 
+                   else:
+                       fw.write(line)
+
     def stop_wizard(self):
         self.load_clicked(default_file=None,only_update=True)
+
+    def run_axis_wizard(self):
+        if self.page.count() > 0:
+            for i in reversed(range(self.page.count())):
+                try:
+                    self.page.widget(i).deleteLater()
+                    self.page.removeTab(i)
+                except Exception as e:
+                    printDebug(_("Delete tab exception: {}",e))
+
+        version = self.config.get("EMC","CORE")
+
+        if float(version[:3]) <= '2.7':
+            default_wizard = os.path.join(self.config_dir,"axis_wizard.cfg")  
+        else:
+            default_wizard = os.path.join(self.config_dir,"joint_wizard.cfg")  
+
+        coordinates = self.config.get("TRAJ","COORDINATES")
+
+        with open(default_wizard, "r") as fp:
+            for line in fp:
+                if line.startswith('#') or not line:
+                    continue
+                for i,axis in enumerate(coordinates.split(' ')):
+                    try:
+                        c,t,e,nYes,nNo,aYes,aNo = line.split(';')[:-1]
+                    except Exception as e:
+                        printDebug(_("Broken wizard line: {}\n{}",e,line))
+                        continue
+                        
+                    if float(version[:3]) <= '2.7':
+                        num = {'X':0,'Y':1,'Z':2,'A':3,'B':4,'C':5,'U':6,'V':7,'W':8}[axis]
+                    else:
+                        num = i
+                    p = (c.format(num,axis),t.format(num,axis),e,nYes,nNo,aYes,aNo)
+                    self.page.addTab(WizardWidget(self,p),c.format(num,axis))
 
     def run_wizard_clicked(self):
         if self.page.count() > 0:
@@ -227,6 +307,8 @@ class ConfigEditor(QWidget):
                         
             with open(default_wizard, "r") as fp:
                 for line in fp:
+                    if line.startswith('#') or not line:
+                        continue
                     try:
                         c,t,e,nYes,nNo,aYes,aNo = line.split(';')[:-1]
                     except Exception as e:
@@ -243,20 +325,25 @@ class ConfigEditor(QWidget):
     
         vlay = QVBoxLayout()
         vlay.setContentsMargins(20,20,20,20)
-        hlay = QHBoxLayout()
-        
-        add_button = QPushButton()
-        add_button.setText(_("New"))
-        add_button.clicked.connect(partial(self.new_line_clicked,vlay,section))
-        hlay.addWidget(add_button)
+        hlay1 = QHBoxLayout()
+        hlay2 = QHBoxLayout()
         
         del_section_button = QPushButton()
         del_section_button.setText(_("Delete section"))
-        del_section_button.clicked.connect(partial(self.delete_tab_clicked,scroll,section))
-        hlay.addWidget(del_section_button)            
+        del_section_button.clicked.connect(partial(self.delete_tab_clicked,
+                                                    scroll,section))
+        hlay1.addWidget(del_section_button)            
+
+        add_button = QPushButton()
+        add_button.setText(_("New option"))
+        add_button.clicked.connect(partial(self.new_line_clicked,vlay,section))
+        hlay2.addWidget(add_button)
         
-        hlay.addStretch()
-        vlay.addLayout(hlay)
+        hlay1.addStretch()
+        hlay2.addStretch()
+        
+        vlay.addLayout(hlay1)
+        vlay.addLayout(hlay2)
         widget.setLayout(vlay)
         return scroll,vlay        
         
@@ -351,7 +438,8 @@ class ConfigEditor(QWidget):
         edit = QTextEdit()
         edit.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         edit.setText(self.config.get(section,option))
-        edit.document().documentLayout().documentSizeChanged.connect(partial(self.fit_to_text,edit))
+        edit.document().documentLayout().documentSizeChanged.connect(
+            partial(self.fit_to_text,edit))
         edit.textChanged.connect(partial(self.editing_finished,edit,section,option))
         edit.setObjectName("edit_config_editor_{}_{}".format(section,option))
         layout.addWidget(edit,6)

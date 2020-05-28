@@ -141,17 +141,19 @@ class StyleSheetEditor(QWidget):
                     self.styleSheetCombo.setCurrentIndex(
                         self.styleSheetCombo.findText(os.path.basename(i)))
         except Exception as e:
-            print(e)
+            printDebug(_("Failed to set stylesheet path,{}",e))
 
     def selectionChanged(self, i):
         path = self.styleSheetCombo.itemData(i, role=Qt.UserRole + 1)
         name = self.styleSheetCombo.itemData(i, role=Qt.DisplayRole)
         if name == 'Default':
             sheetName = name
+            self.loadStyleSheet(sheetName)
+            PREF.putpref("stylesheet", name)
         else:
             sheetName = os.path.join(path, name)
-        self.loadStyleSheet(sheetName)
-        PREF.putpref("stylesheet", name)
+            styleSheet = self.origStyleSheet
+            self.styleTextView.setPlainText(styleSheet)
 
     def on_styleTextView_textChanged(self):
         self.applyButton.setEnabled(True)
@@ -167,17 +169,7 @@ class StyleSheetEditor(QWidget):
         dialog = QFileDialog(self)
         dialog.setDirectory(STYLESHEET_DIR)
         fileName, _ = dialog.getOpenFileName()
-        try:
-            with open(fileName,'r') as file:
-                stylesheet = file.read()
-                # Python v2.
-                stylesheet = unicode(stylesheet, encoding='utf8')
-                self.setStyleSheet(stylesheet)
-        except NameError:
-            # Python v3.
-            stylesheet = str(stylesheet, encoding='utf8')
-        except Exception as e:
-            printWarning(_("Failed to load stylesheet {}",e))
+        self.loadStyleSheet(fileName)
 
     def on_saveButton_clicked(self):
         dialog = QFileDialog()
@@ -230,21 +222,20 @@ class StyleSheetEditor(QWidget):
                         "underline " if _font.underline() else " " +
                         "line-through" if _font.strikeOut() else " "))
 
-    def loadStyleSheet(self, sheetName):
-        if not sheetName == "Default":
-            qssname = os.path.join(STYLESHEET_DIR, sheetName)
-            file = QFile(qssname)
-            file.open(QFile.ReadOnly)
-            styleSheet = file.readAll()
-            try:
-                # Python v2.
-                styleSheet = unicode(styleSheet, encoding='utf8')
-            except NameError:
-                # Python v3.
-                styleSheet = str(styleSheet, encoding='utf8')
-        else:
-            styleSheet = self.origStyleSheet
-
+    def loadStyleSheet(self, fileName):
+        try:
+            with open(fileName,'r') as file:
+                styleSheet = file.read()
+                try:
+                    # Python v2.
+                    styleSheet = unicode(stylesheet, encoding='utf8')
+                except NameError:
+                    # Python v3.
+                    styleSheet = str(stylesheet, encoding='utf8')
+        except Exception as e:
+            printWarning(_("Failed to load stylesheet {}",e))
+           
+        self.styleTextEdit.setPlainText(styleSheet) 
         self.styleTextView.setPlainText(styleSheet)
 
     def saveStyleSheet(self, fileName):
