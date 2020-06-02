@@ -7,6 +7,7 @@ Features:
 	    Lock settings
 	    Osciloscope rt_component
 	    Halshow rt_component
+	    HAL-editor rt_component
 	    Make page buttons bigger in config editor
 	    Add tranlation support for ini-wizard
 	Wizard:
