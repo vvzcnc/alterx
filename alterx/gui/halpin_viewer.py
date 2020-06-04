@@ -32,6 +32,14 @@ from alterx.core.linuxcnc import *
 
 import subprocess
 import pyqtgraph
+import socket
+import struct
+
+class HSeparator(QFrame):
+    def __init__(self, parent=None):
+        QFrame.__init__(self, parent)
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Sunken)
 
 class HalPinWidget(QWidget):
     def __init__(self, parent=None):
@@ -50,7 +58,7 @@ class HalPinWidget(QWidget):
 
         self.tree = QTreeWidget()
         self.tree.setObjectName("tree_halpin_widget")
-        self.tree.setHeaderLabels([_("Name"),_("Type"),_("Dir."),_("Link")])
+        self.tree.setHeaderLabels([_("Name"),_("Type"),_("Dir."),_("Addr.")])
         self.tree.hideColumn(3)
         self.tree.itemDoubleClicked.connect(self.on_tree_doubleclick)
         header = self.tree.header()
@@ -64,8 +72,10 @@ class HalPinWidget(QWidget):
         self.cmd_history_index = 0
         self.watched_list = QTableWidget()
         self.watched_list.setObjectName("table_halpin_widget")
-        self.watched_list.setColumnCount(4)
-        self.watched_list.setHorizontalHeaderLabels([_("Osc."),_("Pin"),_("Type"),_("Value")])
+        self.watched_list.setColumnCount(6)
+        self.watched_list.setHorizontalHeaderLabels([_("Osc."),_("Pin"),_("Type"),_("Value"),_("Addr."),_("Dir.")])
+        self.watched_list.hideColumn(4)
+        self.watched_list.hideColumn(5)
         self.watched_list.setSelectionMode(QTableView.SingleSelection)
         self.watched_list.setSelectionBehavior(QTableView.SelectRows)
         self.watched_list.cellChanged.connect(self.on_table_changed)
@@ -110,7 +120,7 @@ class HalPinWidget(QWidget):
         
         osclay = QHBoxLayout()
         self.graphWidget = pyqtgraph.PlotWidget()
-        osclay.addWidget(self.graphWidget)
+        osclay.addWidget(self.graphWidget,9)
         
         plot = self.graphWidget.plotItem
         self.plots = [plot]
@@ -121,21 +131,128 @@ class HalPinWidget(QWidget):
         oscilloscope = QWidget()
         oscilloscope.setLayout(osclay)
         
-        self.test_submit = QPushButton()
-        self.test_submit.setText(_("Run command"))
-        osclay.addWidget(self.test_submit)
+        controllay = QVBoxLayout()
+        
+        rslay = QHBoxLayout()
+        osc_run = QPushButton()
+        osc_run.setText(_("Run"))
+        osc_run.clicked.connect(self.on_oscrun_clicked)
+        rslay.addWidget(osc_run)
+        osc_stop = QPushButton()
+        osc_stop.setText(_("Stop"))
+        osc_stop.clicked.connect(self.on_oscstop_clicked)
+        rslay.addWidget(osc_stop)
+        controllay.addLayout(rslay)
+        
+        controllay.addWidget(HSeparator())
+        
+        oswidget = QWidget()
+        oslay = QHBoxLayout()
+        osc_auto = QRadioButton()
+        osc_auto.mode = 0
+        osc_auto.setText(_("Auto"))
+        osc_auto.setChecked(True)
+        osc_auto.toggled.connect(self.osc_mode_changed)
+        oslay.addWidget(osc_auto)
+        osc_shot = QRadioButton()
+        osc_shot.mode = 1
+        osc_shot.setText(_("One Shot"))
+        osc_shot.toggled.connect(self.osc_mode_changed)
+        oslay.addWidget(osc_shot)
+        oswidget.setLayout(oslay)
+        controllay.addWidget(oswidget)
+        
+        controllay.addWidget(HSeparator())
+        
+        trigwidget = QWidget()
+        triglay = QVBoxLayout()
+        trig_none = QRadioButton()
+        trig_none.trig = 1
+        trig_none.setText(_("None"))
+        trig_none.setChecked(True)
+        trig_none.toggled.connect(self.osc_trig_changed)
+        triglay.addWidget(trig_none)
+        trig_change = QRadioButton()
+        trig_change.trig = 5
+        trig_change.setText(_("Change"))
+        trig_change.toggled.connect(self.osc_trig_changed)
+        triglay.addWidget(trig_change)
+        trig_high = QRadioButton()
+        trig_high.trig = 3
+        trig_high.setText(_("High"))
+        trig_high.toggled.connect(self.osc_trig_changed)
+        triglay.addWidget(trig_high)
+        trig_low = QRadioButton()
+        trig_low.setText(_("Low"))
+        trig_low.trig = 4
+        trig_low.toggled.connect(self.osc_trig_changed)
+        triglay.addWidget(trig_low)
+        trigwidget.setLayout(triglay)
+        controllay.addWidget(trigwidget)
+        
+        controllay.addWidget(HSeparator())
+
+        controllay.addWidget(QLabel(_("Trigger signal:")))
+        self.trig_combo = QComboBox()
+        self.trig_combo.setCurrentIndex(-1)
+        self.trig_combo.currentIndexChanged.connect(self.trigger_changed)
+        controllay.addWidget(self.trig_combo)
+        
+        controllay.addWidget(HSeparator())
+        
+        controllay.addWidget(QLabel(_("Trigger value:")))
+        self.trig_edit = QLineEdit()
+        controllay.addWidget(self.trig_edit)
+
+        controllay.addStretch()
+        osclay.addLayout(controllay,1)
         tabs.addTab(oscilloscope,_("Oscilloscope"))
+        
+        self.trigger_mode = 1
+        self.shot_mode = 0
         
         self.clear_plot()
         self.load_data()
         
-        timer = QTimer(self)
-        timer.timeout.connect(self.update_watched_list)
-        timer.start(1000)
+        timer_viewer = QTimer(self)
+        timer_viewer.timeout.connect(self.update_watched_list)
+        timer_viewer.start(1000)
         
-        timer2 = QTimer(self)
-        timer2.timeout.connect(self.plot_update_data)
-        timer2.start(1000)
+        timer_osc = QTimer(self)
+        timer_osc.timeout.connect(self.plot_update_data)
+        timer_osc.start(1000)
+
+    def trigger_changed(self,i):
+        name = self.trig_combo.itemData(i, role=Qt.DisplayRole)
+        if name:
+            stype = self.trig_combo.itemData(i, role=Qt.UserRole + 1)
+            addr = self.trig_combo.itemData(i, role=Qt.UserRole + 2)
+            
+            self.send_packet(4,stype,addr)
+
+    def on_oscrun_clicked(self):
+        try:
+            t = self.trig_edit.text()
+            if t:
+                t = float(t)
+            else:
+                t = 0
+            self.send_packet(5,self.trigger_mode,t)
+        except Exception as e:
+            printInfo(_("Failed to send run cmd: {}",e))
+        
+    def on_oscstop_clicked(self):
+        self.send_packet(0,0,0)
+
+    def osc_trig_changed(self):
+        rb = self.sender()
+        if rb.isChecked():
+            self.trigger_mode = rb.trig
+        
+    def osc_mode_changed(self):
+        rb = self.sender()
+        if rb.isChecked():
+            self.shot_mode = rb.mode
 
     def eventFilter(self, source, event):
         if (event.type() == QEvent.KeyPress and
@@ -154,37 +271,48 @@ class HalPinWidget(QWidget):
         return QWidget.eventFilter(self, source, event)
 
     def plot_update_data(self):
-        if not self.test_submit.visibleRegion().isEmpty():
+        if not self.trig_edit.visibleRegion().isEmpty():
+            #Check (Check,0,0)
+            data = self.send_packet(6,0,0)
+            if data[:-1] in "2":
+                #Get (Get,0,0)
+                data = self.send_packet(7,0,0)
+                if self.shot_mode:
+                    self.on_oscstop_clicked()
+                else:
+                    self.on_oscrun_clicked()
+            else:
+                return
+                
+            if not data:
+                return
+
             self.clear_plot()
 
-            color =  ['blue', 'green', 'red', 'orange', 'violet', 'brown', 'gray', 'white']
+            color =  ['blue', 'green', 'red', 'orange', 'violet', 'brown',
+                        'gray', 'white']
             lineStyle = [Qt.SolidLine,Qt.DashLine,Qt.DotLine,Qt.DashDotLine,
                         Qt.DashDotDotLine,Qt.SolidLine,Qt.SolidLine]
                    
+            watchedlist = []
             for r in range(self.watched_list.rowCount()):
                 if self.watched_list.item(r,0).checkState():
-                    self.data[0]=[self.watched_list.item(r,1).text(),[],[]]
-            
-            data = None    
-            try:
-                data = subprocess.check_output(["halsampler", "-t", "-n" , "1000"])
-            except Exception as e:
-                printInfo(_("Failed to load sampler: {}",e))   
-                
+                    name = self.watched_list.item(r,1).text()
+                    watchedlist.append(name)
+                    self.data[name]=[[],[]]
 
-            if data:
-                if "overrun" in data:
-                    data = data[8:]
-                data = data.split(' \n')
-                for d in data:
-                    items = d.split(' ')
-                    if len(items) != len(self.data)+1:
-                        continue
-                    else:
-                        for i,key in enumerate(items[1:]):
-                            self.data[i][1].append(int(items[0]))
-                            self.data[i][2].append(float(key))
-                   
+            if "overrun" in data:
+                data = data[8:]
+            data = data.split('\n')
+            for i,d in enumerate(data):
+                s = d.split(' ')
+                if len(s) == 2:
+                    channel = s[0]
+                    value = s[1]
+                
+                self.data[watchedlist[int(channel)]][0].append(int(i))
+                self.data[watchedlist[int(channel)]][1].append(float(value))               
+
             for i,key in enumerate(self.data):
                 axis = pyqtgraph.AxisItem('right')
                 axis.tickFont = QFont("Helvetica",pointSize = 13,weight = 1,
@@ -195,10 +323,10 @@ class HalPinWidget(QWidget):
                 axis.linkToView(view)
                 view.setXLink(self.plots[0])
                 self.plots.append(view)
-                axis.setLabel(self.data[key][0],**{'color': color[i], 'font-size': '16pt'})
+                axis.setLabel(key,**{'color': color[i], 'font-size': '16pt'})
                 pen = pyqtgraph.mkPen(QColor(color[i]), width=2, 
                                         style=lineStyle[i])
-                curve = pyqtgraph.PlotCurveItem(self.data[key][2], pen=pen)
+                curve = pyqtgraph.PlotCurveItem(self.data[key][1], pen=pen)
                 view.addItem(curve)
                 
             self.updateViews()
@@ -224,52 +352,38 @@ class HalPinWidget(QWidget):
         self.plots[0].vb.autoRange()
 
     def halscope_list_update(self):
-        try:
-            data = subprocess.check_output(["halcmd", "unloadrt", "sampler"])
-        except:
-            pass
-
         watchlist = []
         for r in range(self.watched_list.rowCount()):
             if self.watched_list.item(r,0).checkState():
-                watchlist.append([self.watched_list.item(r,1).text(),
-                                    self.watched_list.item(r,2).text()])
+                watchlist.append([self.watched_list.item(r,4).text(),
+                    self.watched_list.item(r,5).text(),
+                    self.watched_list.item(r,1).text()])
 
         if not watchlist:
             return 
             
-        cfg = ""
-        for i in watchlist:
-            if i[1] == "bit":
-                cfg += "b"
-            elif i[1] == "float":
-                cfg += "f"
-            elif i[1] == "s32":
-                cfg += "s"
-            elif i[1] == "u32":
-                cfg += "u"
-        try:
-            data = subprocess.check_output(["halcmd", "loadrt", "sampler",
-                                            "cfg=%s"%cfg,"depth=4000"])
-            data = subprocess.check_output(["halcmd", "addf", "sampler.0", 
-                                            "servo-thread"])
-        except Exception as e:
-            printInfo(_("Failed to load sampler: {}",e))
-            return                
-
+        self.trig_combo.clear()
+        model = self.trig_combo.model()
+        
         for i,key in enumerate(watchlist):
-            try:
-                data = subprocess.check_output(["halcmd", "delsig",
-                                                "sampler_net_%s"%str(i)])
-            except Exception as e:
-                pass
-                
-            try:
-                data = subprocess.check_output(["halcmd", "net",
-                    "sampler_net_%s"%str(i), "sampler.0.pin.%s"%str(i),key[0]])
-            except Exception as e:
-                printInfo(_("Failed to load sampler: {}",e))
-                
+            #Set (Channel, NChannel*10+ChannelType, Pin offset)
+            if key[1] in ("RO","RW"):
+                stype = 2
+            elif key[1] in ("In","Out","IO"):
+                stype = 0
+            else:
+                continue
+            self.send_packet(3,i*10+stype,int(key[0],16))
+            item = QStandardItem(key[2])
+            item.setData(stype, role=Qt.UserRole + 1)
+            item.setData(int(key[0],16), role=Qt.UserRole + 2)
+            model.appendRow(item)
+
+        self.trig_combo.setCurrentIndex(-1)
+        
+        #Clear data old data
+        self.send_packet(3,(i+1)*10,0)
+           
         self.plot_update_data()
 
     def on_update_clicked(self):
@@ -302,15 +416,22 @@ class HalPinWidget(QWidget):
     def update_watched_list(self):
         if not self.watched_list.visibleRegion().isEmpty():
             for r in range(self.watched_list.rowCount()):
-                item = self.watched_list.item(r,1)
-                if item and item.text():
+                addr = self.watched_list.item(r,4)
+                pdir = self.watched_list.item(r,5)
+                if addr and addr.text() and pdir and pdir.text():
                     try:
-                        data = subprocess.check_output(["halcmd", "getp", item.text()])
+                        if pdir.text() in ("RO","RW"):
+                            stype = 2
+                        elif pdir.text() in ("In","Out","IO"):
+                            stype = 0
+                        else:
+                            continue
+                        data = self.send_packet(2,stype,int(addr.text(),16))
                     except:
-                        data = None
-                        
+                        continue
+
                     if data:
-                        data = data[:-1]
+                        data = data[:-1].replace(' ','')
                         value = self.watched_list.item(r,3)
                         if value:
                             value.setText(data)
@@ -321,6 +442,8 @@ class HalPinWidget(QWidget):
         if item.text(1):
             pin = item.text(0)
             pin_type = item.text(1)
+            pin_dir = item.text(2)
+            pin_addr = item.text(3)
             while item.parent():
                 item = item.parent()
                 pin = item.text(0)+'.'+pin
@@ -332,19 +455,47 @@ class HalPinWidget(QWidget):
             self.watched_list.setItem(0,1,QTableWidgetItem(pin))
             self.watched_list.setItem(0,2,QTableWidgetItem(pin_type))
             self.watched_list.setItem(0,3,QTableWidgetItem("..."))
+            self.watched_list.setItem(0,4,QTableWidgetItem(pin_addr))
+            self.watched_list.setItem(0,5,QTableWidgetItem(pin_dir))
+
+    def send_packet(self,cmd,stype,value):
+        answer = ""
+        HOST = '127.0.0.1'  # The server's hostname or IP address
+        PORT = 5000     # The port used by the server
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        #print("> ",cmd,stype,value)
+        try:
+            s.connect((HOST, PORT))
+            packet = struct.pack("BBd" if type(value) == float else "BBl",
+                                    cmd,stype,value)
+            s.sendall(packet)
+            while True:
+                data = s.recv(1024)
+                answer += data
+                if not data:
+                    break
+                    
+        except Exception as e:
+            printInfo(_("Failed to send packet: {}",e))
+        finally:
+            s.close()
+        #print("< ",answer)
+        return answer
 
     def load_data(self):
         self.tree.clear()
         
         try:
-            data_pin = subprocess.check_output(["halcmd", "show", "pin"])
-            data_pin = data_pin.split('\n')[2:]
-            data_pin = filter(lambda a: len(a)>4,
+            #Get (Hal list, Hal pin, 0)
+            data_pin = self.send_packet(1,0,0)
+            data_pin = data_pin.split('\n')
+            data_pin = filter(lambda a: len(a)==4,
                 [[c for c in s.split(' ') if len(c)>0] for s in data_pin])
-
-            data_param = subprocess.check_output(["halcmd", "show", "param"])
-            data_param = data_param.split('\n')[2:]
-            data_param = filter(lambda a: len(a)>4,
+                
+            #Get (Hal list, Hal param, 0) 
+            data_param = self.send_packet(1,2,0)
+            data_param = data_param.split('\n')
+            data_param = filter(lambda a: len(a)==4,
                 [[c for c in s.split(' ') if len(c)>0] for s in data_param])
 
             data = data_pin + data_param
@@ -354,23 +505,36 @@ class HalPinWidget(QWidget):
         
         self.get_tree(data,self.tree)
 
+    def get_type_text(self,stype):
+        t={'-1':'NULL','1':'BIT','2':'FLOAT','3':'S32','4':'U32','5':'PORT'}
+        if stype in t:
+            return t[stype]   
+        else:
+            return stype
+ 
+    def get_dir_text(self,sdir):
+        t={'-1':'None','16':'In','32':'Out','48':'IO','64':'RO','192':'RW'}
+        if sdir in t:
+            return t[sdir] 
+        else:
+            return sdir
+
     def get_tree(self,pins,parent):
         cat_list = []
         for pin in pins:
-            if '.' in pin[4]:
-                cat = pin[4].split('.')[0]
+            if '.' in pin[3]:
+                cat = pin[3].split('.')[0]
                 if cat in cat_list:
                     continue
                 cat_list.append(cat)
                 child = QTreeWidgetItem(parent)
                 child.setText(0,"{}".format(cat))
-                self.get_tree(map(lambda s: s[:4]+[s[4][len(cat)+1:]]+s[5:],
-                              filter(lambda s: s[4].startswith(cat+".") and
-                                '.' in s[4],pins)),child)
+                self.get_tree(map(lambda s: s[:3]+[s[3][len(cat)+1:]],
+                              filter(lambda s: s[3].startswith(cat+".") and
+                                '.' in s[3],pins)),child)
             else:
                 child = QTreeWidgetItem(parent)
-                child.setText(0,pin[4])
-                child.setText(1,pin[1])
-                child.setText(2,pin[2])
-                if len(pin) == 7:
-                    child.setText(3,pin[6])
+                child.setText(0,pin[3])
+                child.setText(1,self.get_type_text(pin[1]))
+                child.setText(2,self.get_dir_text(pin[2]))
+                child.setText(3,pin[0])

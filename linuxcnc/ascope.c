@@ -1,20 +1,43 @@
+/*
+# -*- coding: utf-8 -*-
+#
+# AlterX GUI - ascope - linuxcnc rt component for oscilloscope
+#
+# Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+*/
+
 #include "ascope.h"
                        
 /* module information */
-MODULE_AUTHOR("Uncle Yura");
-MODULE_DESCRIPTION("Oscilloscope for Alterx EMC HAL");
+MODULE_AUTHOR("uncle-yura (uncle-yura@tuta.io)");
+MODULE_DESCRIPTION("Oscilloscope for Alterx GUI");
 MODULE_LICENSE("GPL");
 
 static int comp_id;
 hal_data_t *hal_data;
 int listenfd = 0;
-char sendBuff[1025];
+char sendBuff[1024];
 pthread_t thread_id;
 socket_req_t request;
 pthread_mutex_t mxq;
-int ch[NUM_CHANNELS];
+channels_t ch[NUM_CHANNELS];
 trigger_t tr;
-float data[NUM_SAMPLES];
+data_t data[NUM_SAMPLES];
 int sample_pointer;
         
 int rtapi_app_main(void) 
@@ -35,15 +58,6 @@ int rtapi_app_main(void)
 	    return -1;
     }
     
-    retval = hal_export_funct("ascope.communicate", communicate, NULL, 0, 0, comp_id);
-    if (retval != 0) 
-    {
-	    rtapi_print_msg(RTAPI_MSG_ERR,
-    	    "ASCOPE: ERROR: communicate funct export failed\n");
-	    hal_exit(comp_id);
-	    return -1;
-    }
-    
     listenfd = socket(AF_INET,SOCK_STREAM,0);
     if (listenfd < 0)
     {
@@ -55,8 +69,8 @@ int rtapi_app_main(void)
     
     struct sockaddr_in serv_addr;
 
-    memset(&serv_addr, '0', sizeof(serv_addr));
-    memset(sendBuff, '0', sizeof(sendBuff));
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    memset(sendBuff, 0, sizeof(sendBuff));
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -72,12 +86,12 @@ int rtapi_app_main(void)
     
     listen(listenfd, 10);
 
-    pthread_mutex_init(&mxq,NULL);
+    pthread_mutex_init(&mxq, NULL);
     pthread_mutex_lock(&mxq);
 
-    thread_arg_t arg = { &mxq, &request, &ch, &tr, data, &sample_pointer };
+    thread_arg_t arg = { &mxq, &request, ch, &tr, data, &sample_pointer };
     
-    if( pthread_create( &thread_id, NULL,  connection_handler, &arg ) < 0)
+    if( pthread_create( &thread_id, NULL, connection_handler, &arg ) < 0)
     {
 	    rtapi_print_msg(RTAPI_MSG_ERR,
     	    "ASCOPE: ERROR: socket thread create failed\n");
@@ -99,9 +113,9 @@ void connection_handler(void *arg)
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(listenfd, &fds);
-    while( !needQuit(mtx))
+    while( !need_quit(mtx))
     {
-        tv.tv_sec = 3;
+        tv.tv_sec = 1;
         tv.tv_usec = 0;
         readfds = fds;
         retval=select(listenfd+1,&readfds, NULL, NULL,&tv);
@@ -134,8 +148,12 @@ void connection_handler(void *arg)
                 ta->request->value);
                 */
                 
-            if( ta->request->cmd==STOP );
-            else if( ta->request->cmd==LIST )
+            if( ta->request->cmd == OSC_STOP )
+            {
+                ta->trigger->cmd = SAMPLE_IDLE;
+                *(ta->pointer) = 0;
+            }
+            else if( ta->request->cmd == OSC_LIST )
             {
                 if( ta->request->type == HAL_PIN )
                 {
@@ -144,8 +162,8 @@ void connection_handler(void *arg)
                     while(next != 0) 
                     {
                         source = SHMPTR(next);
-                        snprintf(sendBuff, sizeof(sendBuff), "%s %d %X\n",\
-                            source->name,source->type,next);
+                        snprintf(sendBuff, sizeof(sendBuff), "%X %d %d %s\n",\
+                            next,source->type,source->dir,source->name);
                         write(connfd, sendBuff, strlen(sendBuff));
                         next = source->next_ptr; 
                     }
@@ -157,8 +175,8 @@ void connection_handler(void *arg)
                     while(next != 0) 
                     {
                         source = SHMPTR(next);
-                        snprintf(sendBuff, sizeof(sendBuff), "%s %d %X\n",\
-                            source->name,source->type,next);
+                        snprintf(sendBuff, sizeof(sendBuff), "%X %d %s\n",\
+                            next,source->type,source->name);
                         write(connfd, sendBuff, strlen(sendBuff));
                         next = source->next_ptr; 
                     }
@@ -170,8 +188,8 @@ void connection_handler(void *arg)
                     while(next != 0) 
                     {
                         source = SHMPTR(next);
-                        snprintf(sendBuff, sizeof(sendBuff), "%s %d %X\n",\
-                            source->name,source->type,next);
+                        snprintf(sendBuff, sizeof(sendBuff), "%X %d %d %s\n",\
+                            next,source->type,source->dir,source->name);
                         write(connfd, sendBuff, strlen(sendBuff));
                         next = source->next_ptr; 
                     }
@@ -183,36 +201,33 @@ void connection_handler(void *arg)
                     continue;
                 }   
             }
-            else if( ta->request->cmd==STATE )
+            else if( ta->request->cmd == OSC_STATE )
             {
                 char *value_str;
                 if( ta->request->type == HAL_PIN )
                 {
                     hal_pin_t *source=SHMPTR(ta->request->value.u);
                     if (source->signal == 0) 
-                        value_str = data_value(source->type, &(source->dummysig));
+                        value_str = get_data_value(source->type, &(source->dummysig));
                     else 
                     {
                         hal_sig_t *sig;
                         sig = SHMPTR(source->signal);
-                        value_str = data_value(source->type, SHMPTR(sig->data_ptr));
+                        value_str = get_data_value(source->type, SHMPTR(sig->data_ptr));
                     }
-                    snprintf(sendBuff, sizeof(sendBuff), "%s %d %s\n",\
-                        source->name,source->type,value_str);
+                    snprintf(sendBuff, sizeof(sendBuff), "%s\n",value_str);
                 }
                 else if( ta->request->type == HAL_SIG )
                 {
                     hal_sig_t *source=SHMPTR(ta->request->value.u);
-                    value_str = data_value(source->type, SHMPTR(source->data_ptr));
-                    snprintf(sendBuff, sizeof(sendBuff), "%s %d %s\n",\
-                        source->name,source->type,value_str);
+                    value_str = get_data_value(source->type, SHMPTR(source->data_ptr));
+                    snprintf(sendBuff, sizeof(sendBuff), "%s\n",value_str);
                 }
                 else if( ta->request->type == HAL_PARAMETER )
                 {
-                    hal_param_t *source=SHMPTR(ta->request->value.u);
-                    value_str = data_value(source->type, SHMPTR(source->data_ptr));
-                    snprintf(sendBuff, sizeof(sendBuff), "%s %d %s\n",\
-                        source->name,source->type,value_str);
+                    hal_param_t *source = SHMPTR(ta->request->value.u);
+                    value_str = get_data_value(source->type, SHMPTR(source->data_ptr));
+                    snprintf(sendBuff, sizeof(sendBuff), "%s\n",value_str);
                 }
                 else
                 {
@@ -222,42 +237,90 @@ void connection_handler(void *arg)
                 }   
                 write(connfd, sendBuff, strlen(sendBuff));
             }
-            else if( ta->request->cmd==CHANNEL )
+            else if( ta->request->cmd == OSC_CHANNEL )
             {
-                ta->channels[ta->request->type] = ta->request->value.u;
+                if( ta->request->type/10 < NUM_CHANNELS )
+                {
+                    ta->channels[ta->request->type/10].offset = ta->request->value.u;
+                    ta->channels[ta->request->type/10].type = ta->request->type%10;
+                }
             }
-            else if( ta->request->cmd==TRIG )
+            else if( ta->request->cmd == OSC_TRIG )
             {
                 ta->trigger->cmd = SAMPLE_IDLE;
                 ta->trigger->type = ta->request->type;
                 ta->trigger->pin = ta->request->value.u;
             }
-            else if( ta->request->cmd==RUN )
+            else if( ta->request->cmd == OSC_RUN )
             {
-                ta->trigger->cmd = SAMPLE_RUN;
-            }
-            else if( ta->request->cmd==CHECK )
-            {
-                if(ta->trigger->cmd != SAMPLE_COMPLETE)
+                *(ta->pointer) = 0;
+                
+                ta->trigger->value = ta->request->value.f;
+                
+                data_t l;
+                if( ta->trigger->type == HAL_PIN )
                 {
-                    snprintf(sendBuff, sizeof(sendBuff), "Pass\n");
-                    write(connfd, sendBuff, strlen(sendBuff));
+                    hal_pin_t *source=SHMPTR( ta->trigger->pin );
+                    if (source->signal == 0) 
+                        set_data_value(source->type, &(source->dummysig),&l);
+                    else 
+                    {
+                        hal_sig_t *sig;
+                        sig = SHMPTR(source->signal);
+                        set_data_value(source->type, SHMPTR(sig->data_ptr),&l);
+                    }
                 }
-                else
+                else if( ta->trigger->type == HAL_SIG )
                 {
-                    snprintf(sendBuff, sizeof(sendBuff), "Ready\n");
-                    write(connfd, sendBuff, strlen(sendBuff));
+                    hal_sig_t *source=SHMPTR( ta->trigger->pin );
+                    set_data_value(source->type, SHMPTR(source->data_ptr),&l);
                 }
-            }
-            else if( ta->request->cmd==GET )
-            {
-            
-                for(int i=0; i<*(ta->pointer);i++)
+                else if( ta->trigger->type == HAL_PARAMETER )
                 {
-                    snprintf(sendBuff, sizeof(sendBuff), "%f\n",ta->array[i]);
-                    write(connfd, sendBuff, strlen(sendBuff));
+                    hal_param_t *source = SHMPTR( ta->trigger->pin );
+                    set_data_value(source->type, SHMPTR(source->data_ptr),&l);
                 }
                 
+                ta->trigger->last.u = l.value.u;
+                ta->trigger->cmd = ta->request->type;
+            }
+            else if( ta->request->cmd == OSC_CHECK )
+            {
+                snprintf(sendBuff, sizeof(sendBuff), "%d\n", ta->trigger->cmd);
+                write(connfd, sendBuff, strlen(sendBuff));
+            }
+            else if( ta->request->cmd == OSC_GET )
+            {
+                for(int i=0; i<*(ta->pointer);i++)
+                {
+                    switch (ta->array[i].type) 
+                    {
+                        case HAL_BIT:
+                        	snprintf(sendBuff, sizeof(sendBuff), "%d %d\n",
+                        	    ta->array[i].channel, ta->array[i].value.b);
+	                    break;
+
+                        case HAL_FLOAT:
+                        	snprintf(sendBuff, sizeof(sendBuff), "%d %f\n",
+                        	    ta->array[i].channel, ta->array[i].value.f);
+                        break;
+                        
+                        case HAL_S32:
+                        	snprintf(sendBuff, sizeof(sendBuff), "%d %d\n",
+                        	    ta->array[i].channel, ta->array[i].value.s);
+                        break;
+                        
+                        case HAL_U32:
+                        	snprintf(sendBuff, sizeof(sendBuff), "%d %d\n",
+                        	    ta->array[i].channel, ta->array[i].value.u);
+                        break;
+                        
+                        default:
+                            /* Shouldn't get here, but just in case... */
+                        break;
+                    }
+                    write(connfd, sendBuff, strlen(sendBuff));
+                }
                 *(ta->pointer) = 0;
             }
             else
@@ -278,17 +341,178 @@ void rtapi_app_exit(void)
     hal_exit(comp_id);
 }
 
-static void communicate(void *arg, long period)
-{
-
-}
-
 static void sample(void *arg, long period)
 {
+    if( sample_pointer < NUM_SAMPLES && tr.cmd == SAMPLE_RUN )
+    {
+        for( int i=0; i < NUM_CHANNELS; i++ )
+        {
+            if( ch[i].offset!=0 )
+            {
+                if( ch[i].type == HAL_PIN )
+                {
+                    hal_pin_t *source=SHMPTR( ch[i].offset );
+                    if (source->signal == 0) 
+                        set_data_value(source->type, &(source->dummysig),
+                            data+sample_pointer);
+                    else 
+                    {
+                        hal_sig_t *sig;
+                        sig = SHMPTR(source->signal);
+                        set_data_value(source->type, SHMPTR(sig->data_ptr),
+                            data+sample_pointer);
+                    }
+                }
+                else if( ch[i].type == HAL_SIG )
+                {
+                    hal_sig_t *source=SHMPTR( ch[i].offset );
+                    set_data_value(source->type, SHMPTR(source->data_ptr),
+                        data+sample_pointer);
+                }
+                else if( ch[i].type == HAL_PARAMETER )
+                {
+                    hal_param_t *source = SHMPTR( ch[i].offset );
+                    set_data_value(source->type, SHMPTR(source->data_ptr),
+                        data+sample_pointer);
+                }
+                else
+                    continue;
+                    
+                data[sample_pointer].channel = i;
 
+                sample_pointer++;
+                if( sample_pointer == NUM_SAMPLES )
+                    break;
+            }
+        }
+    }
+    else if( tr.cmd == SAMPLE_RUN )
+    {
+        tr.cmd = SAMPLE_COMPLETE;
+    }
+    else if( tr.cmd == SAMPLE_CHANGE 
+            || tr.cmd == SAMPLE_HIGH 
+            || tr.cmd == SAMPLE_LOW )
+    {
+        data_t now;
+        hal_data_u last = tr.last;
+        int type;
+
+        if( tr.type == HAL_PIN )
+        {
+            hal_pin_t *source=SHMPTR( tr.pin );
+            if (source->signal == 0) 
+            {
+                set_data_value(source->type, &(source->dummysig),&now);
+                set_data_value(source->type, &(source->dummysig),&tr.last);
+                type = source->type;
+            }
+            else 
+            {
+                hal_sig_t *sig;
+                sig = SHMPTR(source->signal);
+                set_data_value(source->type, SHMPTR(sig->data_ptr),&now);
+                set_data_value(source->type, SHMPTR(sig->data_ptr),&tr.last);
+                type = source->type;
+            }
+        }
+        else if( tr.type == HAL_SIG )
+        {
+            hal_sig_t *source=SHMPTR( tr.pin );
+            set_data_value(source->type, SHMPTR(source->data_ptr),&now);
+            set_data_value(source->type, SHMPTR(source->data_ptr),&tr.last);
+            type = source->type;
+        }
+        else if( tr.type == HAL_PARAMETER )
+        {
+            hal_param_t *source = SHMPTR( tr.pin );
+            set_data_value(source->type, SHMPTR(source->data_ptr),&now);
+            set_data_value(source->type, SHMPTR(source->data_ptr),&tr.last);
+            type = source->type;
+        }          
+        else
+            return;
+
+        switch(type)
+        {
+            case HAL_BIT:
+            	if ( (now.value.b >= tr.value) != (last.b >= tr.value) )
+            	{
+            	    if( tr.cmd == SAMPLE_CHANGE ||
+            	        ( tr.cmd == SAMPLE_HIGH && now.value.b >= tr.value ) ||
+            	        ( tr.cmd == SAMPLE_LOW && now.value.b < tr.value ))
+            	        tr.cmd = SAMPLE_RUN;
+            	}
+        	break;
+        
+            case HAL_FLOAT:
+            	if ( (now.value.f >= tr.value) != (last.f >= tr.value) )
+            	{
+            	    if( tr.cmd == SAMPLE_CHANGE ||
+            	        ( tr.cmd == SAMPLE_HIGH && now.value.f >= tr.value ) ||
+            	        ( tr.cmd == SAMPLE_LOW && now.value.f < tr.value ))
+            	        tr.cmd = SAMPLE_RUN;
+            	}
+	        break;
+            
+            case HAL_S32:
+            	if ( (now.value.s >= tr.value) != (last.s >= tr.value) )
+            	{
+            	    if( tr.cmd == SAMPLE_CHANGE ||
+            	        ( tr.cmd == SAMPLE_HIGH && now.value.s >= tr.value ) ||
+            	        ( tr.cmd == SAMPLE_LOW && now.value.s < tr.value ))
+            	        tr.cmd = SAMPLE_RUN;
+            	}
+	        break;
+            
+            case HAL_U32:
+            	if ( (now.value.u >= tr.value) != (last.u >= tr.value) )
+            	{
+            	    if( tr.cmd == SAMPLE_CHANGE ||
+            	        ( tr.cmd == SAMPLE_HIGH && now.value.u >= tr.value ) ||
+            	        ( tr.cmd == SAMPLE_LOW && now.value.u < tr.value ))
+            	        tr.cmd = SAMPLE_RUN;
+            	}
+	        break;
+            
+            default:
+	            /* Shouldn't get here, but just in case... */
+            break;
+        }
+    }
 }
 
-static char *data_value(int type, void *valptr)
+void set_data_value(int type, void *valptr, data_t *structptr)
+{
+    structptr->type = type;
+    switch (type) 
+    {
+        case HAL_BIT:
+        	if (*((char *) valptr) == 0)
+	            structptr->value.b = 0;
+        	else
+	            structptr->value.b = 1;
+    	break;
+    
+        case HAL_FLOAT:
+	        structptr->value.f = (double)*((hal_float_t *) valptr);
+	    break;
+        
+        case HAL_S32:
+	        structptr->value.s = (long)*((hal_s32_t *) valptr);
+	    break;
+        
+        case HAL_U32:
+	        structptr->value.u = (unsigned long)*((hal_u32_t *) valptr);
+	    break;
+        
+        default:
+	        /* Shouldn't get here, but just in case... */
+        break;
+    }
+}
+
+static char *get_data_value(int type, void *valptr)
 {
     char *value_str;
     static char buf[25];
@@ -325,7 +549,7 @@ static char *data_value(int type, void *valptr)
     return value_str;
 }
 
-int needQuit(pthread_mutex_t *mtx)
+int need_quit(pthread_mutex_t *mtx)
 {
     switch(pthread_mutex_trylock(mtx)) 
     {

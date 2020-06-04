@@ -32,6 +32,8 @@ from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
 import subprocess
+import socket
+import struct
 
 class HalCompleter(QCompleter):
     def __init__(self, parent=None):
@@ -96,20 +98,23 @@ class HalEditor(QWidget):
         completer.setWidget(self.halTextEdit)
         
         try:
-            data_pin = subprocess.check_output(["halcmd", "show", "pin"])
-            data_pin = data_pin.split('\n')[2:]
-            data_param = subprocess.check_output(["halcmd", "show", "param"])
-            data_param = data_param.split('\n')[2:]
+            #Get (Hal list, Hal pin, 0)
+            data_pin = self.send_packet(1,0,0)
+            data_pin = data_pin.split('\n')
+                
+            #Get (Hal list, Hal param, 0) 
+            data_param = self.send_packet(1,2,0)
+            data_param = data_param.split('\n')
 
             data = data_pin + data_param
+        
             words = []
             for d in data:
                 p_list = [c for c in d.split(' ') if len(c)>0]
-                if len(p_list) != 5:
+                if len(p_list) != 4:
                     continue
-                words.append(p_list[4])            
+                words.append(p_list[3])            
             completer.modelFromList(words)
-            print(words)
         except Exception as e:
             printInfo(_("Failed to get hal pin list: {}",e))
         
@@ -132,6 +137,28 @@ class HalEditor(QWidget):
         self.setPath()
         self.halCombo.setCurrentIndex(-1)
         self.halCombo.currentIndexChanged.connect(self.selectionChanged)
+        
+    def send_packet(self,cmd,stype,value):
+        answer = ""
+        HOST = '127.0.0.1'  # The server's hostname or IP address
+        PORT = 5000     # The port used by the server
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.connect((HOST, PORT))
+            packet = struct.pack("BBl",cmd,stype,value)
+            s.sendall(packet)
+            while True:
+                data = s.recv(1024)
+                answer += data
+                if not data:
+                    break
+                    
+        except Exception as e:
+            printInfo(_("Failed to send packet: {}",e))
+        finally:
+            s.close()
+
+        return answer
         
     def setPath(self):
         self.halCombo.clear()

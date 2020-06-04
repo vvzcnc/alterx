@@ -1,3 +1,26 @@
+/*
+# -*- coding: utf-8 -*-
+#
+# AlterX GUI - ascope - linuxcnc rt component for oscilloscope
+#
+# Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+*/
+
 #define RTAPI
 
 #include <rtapi.h>		/* RTAPI realtime OS API */
@@ -18,7 +41,7 @@
                        
 #define PORT 5000
 #define NUM_CHANNELS 4
-#define NUM_SAMPLES 100
+#define NUM_SAMPLES 20000
                        
 typedef union {
     hal_bit_t b;
@@ -98,20 +121,23 @@ typedef struct {
 } hal_param_t;
 
 enum CMD {
-    STOP,
-    LIST,
-    STATE,
-    CHANNEL,
-    TRIG,
-    RUN,
-    CHECK,
-    GET
+    OSC_STOP,
+    OSC_LIST,
+    OSC_STATE,
+    OSC_CHANNEL,
+    OSC_TRIG,
+    OSC_RUN,
+    OSC_CHECK,
+    OSC_GET
 };
 
 enum TRIG {
     SAMPLE_IDLE,
     SAMPLE_RUN,
-    SAMPLE_COMPLETE
+    SAMPLE_COMPLETE,
+    SAMPLE_HIGH,
+    SAMPLE_LOW,
+    SAMPLE_CHANGE
 };
 
 enum STYPE {
@@ -127,24 +153,37 @@ typedef struct {
 } socket_req_t;
 
 typedef struct {
+    int type;
+    int offset;
+} channels_t;
+
+typedef struct {
     int cmd;
     int type;
     int pin;
+    float value;
+    hal_data_u last;
 } trigger_t;
+
+typedef struct {
+    unsigned int channel:8;
+    unsigned int type:8;
+    hal_data_u value;
+} data_t;
 
 typedef struct {
     pthread_mutex_t* mutex;
     socket_req_t* request;
-    int* channels;
+    channels_t* channels;
     trigger_t* trigger;
-    float* array;
+    data_t* array;
     int* pointer;
 } thread_arg_t;
 
 extern char *hal_shmem_base;
 
 void connection_handler(void *arg);
-static void communicate(void *arg, long period);
 static void sample(void *arg, long period);
-static char *data_value(int type, void *valptr);
-int needQuit(pthread_mutex_t *mtx);
+void set_data_value(int type, void *valptr, data_t *structptr);
+static char *get_data_value(int type, void *valptr);
+int need_quit(pthread_mutex_t *mtx);
