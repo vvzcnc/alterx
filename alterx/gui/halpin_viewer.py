@@ -28,12 +28,10 @@ from alterx.common.compat import *
 from alterx.common import *
 
 from alterx.gui.util import *
-from alterx.core.linuxcnc import *
+from alterx.core.ascope import AScope as osc
 
 import subprocess
 import pyqtgraph
-import socket
-import struct
 
 class HSeparator(QFrame):
     def __init__(self, parent=None):
@@ -58,8 +56,10 @@ class HalPinWidget(QWidget):
 
         self.tree = QTreeWidget()
         self.tree.setObjectName("tree_halpin_widget")
-        self.tree.setHeaderLabels([_("Name"),_("Type"),_("Dir."),_("Addr.")])
+        self.tree.setHeaderLabels( [ _("Name"), _("Type"), _("Dir."), 
+                                    _("Addr."), _("HAL type") ] )
         self.tree.hideColumn(3)
+        self.tree.hideColumn(4)
         self.tree.itemDoubleClicked.connect(self.on_tree_doubleclick)
         header = self.tree.header()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
@@ -72,10 +72,12 @@ class HalPinWidget(QWidget):
         self.cmd_history_index = 0
         self.watched_list = QTableWidget()
         self.watched_list.setObjectName("table_halpin_widget")
-        self.watched_list.setColumnCount(6)
-        self.watched_list.setHorizontalHeaderLabels([_("Osc."),_("Pin"),_("Type"),_("Value"),_("Addr."),_("Dir.")])
+        self.watched_list.setColumnCount(7)
+        self.watched_list.setHorizontalHeaderLabels( [ _("Osc."), _("Pin"), 
+                _("Type"), _("Value"), _("Addr."), _("Dir."), _("HAL type") ] )
         self.watched_list.hideColumn(4)
         self.watched_list.hideColumn(5)
+        self.watched_list.hideColumn(6)
         self.watched_list.setSelectionMode(QTableView.SingleSelection)
         self.watched_list.setSelectionBehavior(QTableView.SelectRows)
         self.watched_list.cellChanged.connect(self.on_table_changed)
@@ -127,7 +129,23 @@ class HalPinWidget(QWidget):
         self.updateViews()
         plot.vb.sigResized.connect(self.updateViews)
         plot.getAxis('left').setStyle(tickLength=0, showValues=False)
+        
         self.graphWidget.showGrid(x=True, y=True)
+        self.vLine = pyqtgraph.InfiniteLine( angle=90, movable=False ) 
+        self.hLine = pyqtgraph.InfiniteLine( angle=0, movable=False ) 
+        self.tLine = pyqtgraph.InfiniteLine( angle=0, movable=False,
+                                                pen={'color':'r'} ) 
+                            
+        plot.vb.addItem(self.vLine)
+        self.graphWidget.setMouseTracking(True)
+        self.graphWidget.viewport().installEventFilter(self)  
+
+        self.axis_x = self.graphWidget.getAxis('bottom')
+        font=QFont()
+        font.setPixelSize(16)
+        self.axis_x.tickFont = font
+        self.axis_x.setStyle(tickTextOffset = 10)
+
         oscilloscope = QWidget()
         oscilloscope.setLayout(osclay)
         
@@ -137,15 +155,18 @@ class HalPinWidget(QWidget):
         osc_run = QPushButton()
         osc_run.setText(_("Run"))
         osc_run.clicked.connect(self.on_oscrun_clicked)
-        rslay.addWidget(osc_run)
+        rslay.addWidget(osc_run,1)
         osc_stop = QPushButton()
         osc_stop.setText(_("Stop"))
         osc_stop.clicked.connect(self.on_oscstop_clicked)
-        rslay.addWidget(osc_stop)
+        rslay.addWidget(osc_stop,1)
+        self.osc_status = QLabel()
+        rslay.addWidget(self.osc_status,1)
         controllay.addLayout(rslay)
         
         controllay.addWidget(HSeparator())
         
+        self.shot_mode = 0
         oswidget = QWidget()
         oslay = QHBoxLayout()
         osc_auto = QRadioButton()
@@ -164,27 +185,28 @@ class HalPinWidget(QWidget):
         
         controllay.addWidget(HSeparator())
         
+        self.trigger_mode = osc.SAMPLE_RUN
         trigwidget = QWidget()
         triglay = QVBoxLayout()
         trig_none = QRadioButton()
-        trig_none.trig = 1
+        trig_none.trig = osc.SAMPLE_RUN
         trig_none.setText(_("None"))
         trig_none.setChecked(True)
         trig_none.toggled.connect(self.osc_trig_changed)
         triglay.addWidget(trig_none)
         trig_change = QRadioButton()
-        trig_change.trig = 5
+        trig_change.trig = osc.SAMPLE_CHANGE
         trig_change.setText(_("Change"))
         trig_change.toggled.connect(self.osc_trig_changed)
         triglay.addWidget(trig_change)
         trig_high = QRadioButton()
-        trig_high.trig = 3
+        trig_high.trig = osc.SAMPLE_HIGH
         trig_high.setText(_("High"))
         trig_high.toggled.connect(self.osc_trig_changed)
         triglay.addWidget(trig_high)
         trig_low = QRadioButton()
         trig_low.setText(_("Low"))
-        trig_low.trig = 4
+        trig_low.trig = osc.SAMPLE_LOW
         trig_low.toggled.connect(self.osc_trig_changed)
         triglay.addWidget(trig_low)
         trigwidget.setLayout(triglay)
@@ -204,13 +226,21 @@ class HalPinWidget(QWidget):
         self.trig_edit = QLineEdit()
         controllay.addWidget(self.trig_edit)
 
+        controllay.addWidget(HSeparator())
+
+        self.info_label = QLabel()
+        controllay.addWidget(self.info_label)
+
+        controllay.addWidget(HSeparator())
+        
+        self.value_label = QLabel()
+        self.value_label.setWordWrap(True)
+        controllay.addWidget(self.value_label)
+
         controllay.addStretch()
-        osclay.addLayout(controllay,1)
+        osclay.addLayout(controllay,2)
         tabs.addTab(oscilloscope,_("Oscilloscope"))
-        
-        self.trigger_mode = 1
-        self.shot_mode = 0
-        
+       
         self.clear_plot()
         self.load_data()
         
@@ -228,21 +258,20 @@ class HalPinWidget(QWidget):
             stype = self.trig_combo.itemData(i, role=Qt.UserRole + 1)
             addr = self.trig_combo.itemData(i, role=Qt.UserRole + 2)
             
-            self.send_packet(4,stype,addr)
+            osc.send_packet(osc.OSC_TRIG,stype,addr)
+            if len(self.plots) > i+1 and i>=0:
+                self.plots[i+1].addItem(self.hLine)
+                self.plots[i+1].addItem(self.tLine)
 
     def on_oscrun_clicked(self):
         try:
             t = self.trig_edit.text()
-            if t:
-                t = float(t)
-            else:
-                t = 0
-            self.send_packet(5,self.trigger_mode,t)
+            osc.send_packet(osc.OSC_RUN,self.trigger_mode, float(t) if t else 0 )
         except Exception as e:
             printInfo(_("Failed to send run cmd: {}",e))
         
     def on_oscstop_clicked(self):
-        self.send_packet(0,0,0)
+        osc.send_packet(osc.OSC_STOP,0,0)
 
     def osc_trig_changed(self):
         rb = self.sender()
@@ -255,8 +284,16 @@ class HalPinWidget(QWidget):
             self.shot_mode = rb.mode
 
     def eventFilter(self, source, event):
-        if (event.type() == QEvent.KeyPress and
-            source is self.item_value):
+        try:
+           
+            return QtGui.QWidget.eventFilter(self, source, event)
+        except Exception as e:
+            err = sys.exc_info()[1]
+            print(str(err),e)
+
+    def eventFilter(self, source, event):
+        if ( event.type() == QEvent.KeyPress and
+            source is self.item_value ):
 
             if event.key() == Qt.Key_Up and self.cmd_history:
                 if self.cmd_history_index > 0:
@@ -268,19 +305,69 @@ class HalPinWidget(QWidget):
                 self.item_value.setText(self.cmd_history[self.cmd_history_index])
             elif event.key() == Qt.Key_Return:
                 self.on_change_clicked()
+
+        elif ( event.type() == QEvent.MouseMove and
+            source is self.graphWidget.viewport() ):
+            pos = event.pos()
+            text = ""
+            if self.graphWidget.sceneBoundingRect().contains(pos):
+                mousePoint = self.plots[0].vb.mapSceneToView(pos)
+                
+                trigger = self.trig_combo.currentIndex()
+                    
+                for i,key in enumerate(self.data):
+                    if trigger >= 0 and len(self.plots) > trigger+1 and i == trigger:
+                        mousePointY = self.plots[trigger+1].mapSceneToView(pos)
+                        rangeX = (0,len(self.data[key][1]))
+                        rangeY = self.plots[trigger+1].viewRange()[1]
+                        if ( mousePointY.y() > rangeY[0]+rangeY[0]*0.1 and 
+                            mousePointY.y() < rangeY[1]-rangeY[0]*0.1 and
+                            mousePointY.x() > rangeX[0] and 
+                            mousePointY.x() < rangeX[1] ):
+                            self.hLine.setPos(mousePointY.y())
+                        else:
+                            self.hLine.setPos(min(self.data[key][1]))    
+                    
+                    num = int(mousePoint.x())
+                    if num > 0 and num < len(self.data[key][1]) and i==0:
+                        text += "%d:%.1f\n"%(i,self.data[key][1][num])
+                        self.vLine.setPos(mousePoint.x())
+                if text != "":
+                    self.value_label.setText(text)     
+                    
+        elif ( event.type() == QEvent.MouseButtonDblClick and 
+            source is self.graphWidget.viewport() ):
+            self.trig_edit.setText(str(self.hLine.value()))
+            self.tLine.setPos(self.hLine.value())
+
         return QWidget.eventFilter(self, source, event)
 
     def plot_update_data(self):
         if not self.trig_edit.visibleRegion().isEmpty():
             #Check (Check,0,0)
-            data = self.send_packet(6,0,0)
-            if data[:-1] in "2":
-                #Get (Get,0,0)
-                data = self.send_packet(7,0,0)
+            data = osc.send_packet(osc.OSC_CHECK,0,0)
+            
+            if not data:
+                return
+            
+            answer = int(data[:-1])
+            
+            if answer  == osc.SAMPLE_COMPLETE:
+                self.osc_status.setText(_("Complete"))
+                data = osc.send_packet(osc.OSC_GET,0,0)
                 if self.shot_mode:
                     self.on_oscstop_clicked()
                 else:
                     self.on_oscrun_clicked()
+            elif answer  == osc.SAMPLE_RUN:
+                self.osc_status.setText(_("Reading"))
+                return
+            elif answer  == osc.SAMPLE_IDLE:
+                self.osc_status.setText(_("Idle"))
+                return
+            elif answer in (osc.SAMPLE_CHANGE,osc.SAMPLE_HIGH,osc.SAMPLE_LOW):
+                self.osc_status.setText(_("Waiting"))
+                return
             else:
                 return
                 
@@ -301,17 +388,38 @@ class HalPinWidget(QWidget):
                     watchedlist.append(name)
                     self.data[name]=[[],[]]
 
-            if "overrun" in data:
-                data = data[8:]
             data = data.split('\n')
+            samples = 0
+            thread = 0
+
+            if "Samples" in data[0]:
+                s = data[0].split(' ')
+                samples = int(s[1])
+                thread = int(s[3])
+
+            data = data[1:]
+            
             for i,d in enumerate(data):
                 s = d.split(' ')
                 if len(s) == 2:
                     channel = s[0]
                     value = s[1]
+                else:
+                    continue
+                l = len(self.data[watchedlist[int(channel)]][0])
+                self.data[watchedlist[int(channel)]][0].append( l )
+                self.data[watchedlist[int(channel)]][1].append( float( value ) ) 
                 
-                self.data[watchedlist[int(channel)]][0].append(int(i))
-                self.data[watchedlist[int(channel)]][1].append(float(value))               
+            self.info_label.setText("S:{} T:{:.2f}ms".format(samples,   
+                                                            thread/1000000 ) )                  
+            index_x = []
+            label_x = []
+            for i,l in enumerate( self.data[ watchedlist[0] ][0] ):
+                index_x.append(i)
+                label_x.append(l*thread/1000000 )
+            label = list( zip( index_x, label_x ) )
+            ticks = [ label[::100], label ]
+            self.axis_x.setTicks(ticks)
 
             for i,key in enumerate(self.data):
                 axis = pyqtgraph.AxisItem('right')
@@ -327,7 +435,12 @@ class HalPinWidget(QWidget):
                 pen = pyqtgraph.mkPen(QColor(color[i]), width=2, 
                                         style=lineStyle[i])
                 curve = pyqtgraph.PlotCurveItem(self.data[key][1], pen=pen)
-                view.addItem(curve)
+                view.addItem(curve)        
+                
+                trigger = self.trig_combo.currentIndex()
+                if trigger >= 0 and trigger == i:
+                    self.plots[i+1].addItem(self.hLine)
+                    self.plots[i+1].addItem(self.tLine)
                 
             self.updateViews()
 
@@ -355,9 +468,10 @@ class HalPinWidget(QWidget):
         watchlist = []
         for r in range(self.watched_list.rowCount()):
             if self.watched_list.item(r,0).checkState():
-                watchlist.append([self.watched_list.item(r,4).text(),
+                watchlist.append( [ self.watched_list.item(r,4).text(),
                     self.watched_list.item(r,5).text(),
-                    self.watched_list.item(r,1).text()])
+                    self.watched_list.item(r,1).text(),
+                    self.watched_list.item(r,6).text() ] )
 
         if not watchlist:
             return 
@@ -367,22 +481,16 @@ class HalPinWidget(QWidget):
         
         for i,key in enumerate(watchlist):
             #Set (Channel, NChannel*10+ChannelType, Pin offset)
-            if key[1] in ("RO","RW"):
-                stype = 2
-            elif key[1] in ("In","Out","IO"):
-                stype = 0
-            else:
-                continue
-            self.send_packet(3,i*10+stype,int(key[0],16))
+            osc.send_packet(osc.OSC_CHANNEL,i*10+int(key[3]),int(key[0],16))
             item = QStandardItem(key[2])
-            item.setData(stype, role=Qt.UserRole + 1)
+            item.setData(int(key[3]), role=Qt.UserRole + 1)
             item.setData(int(key[0],16), role=Qt.UserRole + 2)
             model.appendRow(item)
 
         self.trig_combo.setCurrentIndex(-1)
         
         #Clear data old data
-        self.send_packet(3,(i+1)*10,0)
+        osc.send_packet(osc.OSC_CHANNEL,(i+1)*10,0)
            
         self.plot_update_data()
 
@@ -411,25 +519,17 @@ class HalPinWidget(QWidget):
     def on_table_click(self,row,col):
         self.item_label.setText(_("Name: {}",self.watched_list.item(row,1).text()))
         self.item_value.setText("setp "+self.watched_list.item(row,1).text()+
-                                        ' '+self.watched_list.item(row,3).text())
+                                    ' '+self.watched_list.item(row,3).text())
 
     def update_watched_list(self):
         if not self.watched_list.visibleRegion().isEmpty():
             for r in range(self.watched_list.rowCount()):
                 addr = self.watched_list.item(r,4)
                 pdir = self.watched_list.item(r,5)
-                if addr and addr.text() and pdir and pdir.text():
-                    try:
-                        if pdir.text() in ("RO","RW"):
-                            stype = 2
-                        elif pdir.text() in ("In","Out","IO"):
-                            stype = 0
-                        else:
-                            continue
-                        data = self.send_packet(2,stype,int(addr.text(),16))
-                    except:
-                        continue
-
+                htype = self.watched_list.item(r,6)
+                if addr and pdir and htype:
+                    data = osc.send_packet(osc.OSC_STATE,int(htype.text()),
+                                            int(addr.text(),16))
                     if data:
                         data = data[:-1].replace(' ','')
                         value = self.watched_list.item(r,3)
@@ -444,6 +544,7 @@ class HalPinWidget(QWidget):
             pin_type = item.text(1)
             pin_dir = item.text(2)
             pin_addr = item.text(3)
+            hal_type = item.text(4)
             while item.parent():
                 item = item.parent()
                 pin = item.text(0)+'.'+pin
@@ -457,46 +558,21 @@ class HalPinWidget(QWidget):
             self.watched_list.setItem(0,3,QTableWidgetItem("..."))
             self.watched_list.setItem(0,4,QTableWidgetItem(pin_addr))
             self.watched_list.setItem(0,5,QTableWidgetItem(pin_dir))
-
-    def send_packet(self,cmd,stype,value):
-        answer = ""
-        HOST = '127.0.0.1'  # The server's hostname or IP address
-        PORT = 5000     # The port used by the server
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #print("> ",cmd,stype,value)
-        try:
-            s.connect((HOST, PORT))
-            packet = struct.pack("BBd" if type(value) == float else "BBl",
-                                    cmd,stype,value)
-            s.sendall(packet)
-            while True:
-                data = s.recv(1024)
-                answer += data
-                if not data:
-                    break
-                    
-        except Exception as e:
-            printInfo(_("Failed to send packet: {}",e))
-        finally:
-            s.close()
-        #print("< ",answer)
-        return answer
+            self.watched_list.setItem(0,6,QTableWidgetItem(hal_type))
 
     def load_data(self):
         self.tree.clear()
         
         try:
-            #Get (Hal list, Hal pin, 0)
-            data_pin = self.send_packet(1,0,0)
+            data_pin = osc.send_packet(osc.OSC_LIST,osc.HAL_PIN,0)
             data_pin = data_pin.split('\n')
-            data_pin = filter(lambda a: len(a)==4,
-                [[c for c in s.split(' ') if len(c)>0] for s in data_pin])
+            data_pin = filter(lambda a: len(a)==5,
+                [[c for c in s.split(' ')+[str(osc.HAL_PIN)] if len(c)>0] for s in data_pin])
                 
-            #Get (Hal list, Hal param, 0) 
-            data_param = self.send_packet(1,2,0)
+            data_param = osc.send_packet(osc.OSC_LIST,osc.HAL_PARAMETER,0)
             data_param = data_param.split('\n')
-            data_param = filter(lambda a: len(a)==4,
-                [[c for c in s.split(' ') if len(c)>0] for s in data_param])
+            data_param = filter(lambda a: len(a)==5,
+                [[c for c in s.split(' ')+[str(osc.HAL_PARAMETER)] if len(c)>0] for s in data_param])
 
             data = data_pin + data_param
         except Exception as e:
@@ -504,20 +580,6 @@ class HalPinWidget(QWidget):
             return
         
         self.get_tree(data,self.tree)
-
-    def get_type_text(self,stype):
-        t={'-1':'NULL','1':'BIT','2':'FLOAT','3':'S32','4':'U32','5':'PORT'}
-        if stype in t:
-            return t[stype]   
-        else:
-            return stype
- 
-    def get_dir_text(self,sdir):
-        t={'-1':'None','16':'In','32':'Out','48':'IO','64':'RO','192':'RW'}
-        if sdir in t:
-            return t[sdir] 
-        else:
-            return sdir
 
     def get_tree(self,pins,parent):
         cat_list = []
@@ -529,12 +591,13 @@ class HalPinWidget(QWidget):
                 cat_list.append(cat)
                 child = QTreeWidgetItem(parent)
                 child.setText(0,"{}".format(cat))
-                self.get_tree(map(lambda s: s[:3]+[s[3][len(cat)+1:]],
+                self.get_tree(map(lambda s: s[:3]+[s[3][len(cat)+1:]]+s[4:],
                               filter(lambda s: s[3].startswith(cat+".") and
                                 '.' in s[3],pins)),child)
             else:
                 child = QTreeWidgetItem(parent)
                 child.setText(0,pin[3])
-                child.setText(1,self.get_type_text(pin[1]))
-                child.setText(2,self.get_dir_text(pin[2]))
+                child.setText(1,osc.get_type_text(pin[1]))
+                child.setText(2,osc.get_dir_text(pin[2]))
                 child.setText(3,pin[0])
+                child.setText(4,pin[4])

@@ -30,10 +30,9 @@ from alterx.common import *
 from alterx.gui.util import *
 
 from alterx.core.linuxcnc import *
+from alterx.core.ascope import AScope as osc
 
 import subprocess
-import socket
-import struct
 
 class HalCompleter(QCompleter):
     def __init__(self, parent=None):
@@ -98,12 +97,10 @@ class HalEditor(QWidget):
         completer.setWidget(self.halTextEdit)
         
         try:
-            #Get (Hal list, Hal pin, 0)
-            data_pin = self.send_packet(1,0,0)
+            data_pin = osc.send_packet(osc.OSC_LIST,osc.HAL_PIN,0)
             data_pin = data_pin.split('\n')
                 
-            #Get (Hal list, Hal param, 0) 
-            data_param = self.send_packet(1,2,0)
+            data_param = osc.send_packet(osc.OSC_LIST,osc.HAL_PARAMETER,0)
             data_param = data_param.split('\n')
 
             data = data_pin + data_param
@@ -137,28 +134,6 @@ class HalEditor(QWidget):
         self.setPath()
         self.halCombo.setCurrentIndex(-1)
         self.halCombo.currentIndexChanged.connect(self.selectionChanged)
-        
-    def send_packet(self,cmd,stype,value):
-        answer = ""
-        HOST = '127.0.0.1'  # The server's hostname or IP address
-        PORT = 5000     # The port used by the server
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            s.connect((HOST, PORT))
-            packet = struct.pack("BBl",cmd,stype,value)
-            s.sendall(packet)
-            while True:
-                data = s.recv(1024)
-                answer += data
-                if not data:
-                    break
-                    
-        except Exception as e:
-            printInfo(_("Failed to send packet: {}",e))
-        finally:
-            s.close()
-
-        return answer
         
     def setPath(self):
         self.halCombo.clear()

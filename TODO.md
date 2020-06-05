@@ -4,6 +4,7 @@ Features:
 	Settings
 	    PID calibrate widget
 	    Include awlsim
+	    include awlsim default project and hal
 	    Lock settings
 	    Make page buttons bigger in config editor
 	    Add tranlation support for ini-wizard

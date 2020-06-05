@@ -39,10 +39,6 @@
 #define SHMPTR(offset)  ( (void *)( hal_shmem_base + (offset) ) )
 #define SHMOFF(ptr)     ( ((char *)(ptr)) - hal_shmem_base )
                        
-#define PORT 5000
-#define NUM_CHANNELS 4
-#define NUM_SAMPLES 20000
-                       
 typedef union {
     hal_bit_t b;
     hal_s32_t s;
@@ -140,7 +136,7 @@ enum TRIG {
     SAMPLE_CHANGE
 };
 
-enum STYPE {
+enum HAL_TYPE {
     HAL_PIN,
     HAL_SIG,
     HAL_PARAMETER

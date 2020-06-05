@@ -1,0 +1,104 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# AlterX GUI - standalone ascope app
+#
+# Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+
+from __future__ import division, absolute_import, print_function, unicode_literals
+
+from alterx.common.compat import *
+from alterx.common.util import *
+from alterx.common.locale import _
+
+from alterx.gui.util import *
+
+from alterx.core.ascope import AScope as osc
+
+def main():
+    qapp = QApplication(sys.argv)
+    icon = QIcon(os.path.join(IMAGE_DIR,"Logo.png"))
+    qapp.setWindowIcon(icon)
+
+    from alterx.gui.halpin_viewer import HalPinWidget
+    
+    QApplication.setOrganizationName("alterx")
+    QApplication.setOrganizationDomain(ALTERX_HOME_DOMAIN)
+    QApplication.setApplicationName("AScope")
+    QApplication.setApplicationVersion("1.0.0")
+    
+    mainwnd = QWidget()
+    layout = QVBoxLayout()
+    hlay = QHBoxLayout()
+    ip_label = QLabel("IP:")
+    ip = QLineEdit()
+    port_label = QLabel("Port:")
+    port = QLineEdit()
+    set_button = QPushButton()
+    set_button.setText("Connect")
+    viewer = HalPinWidget()
+
+    def connect():
+        osc.PORT = int(port.text())
+        osc.IP = ip.text()
+        viewer.on_update_clicked()
+    
+    set_button.clicked.connect(connect)
+    
+    hlay.addWidget(ip_label)
+    hlay.addWidget(ip)
+    hlay.addWidget(port_label)
+    hlay.addWidget(port)
+    hlay.addWidget(set_button)
+    
+    layout.addLayout(hlay)
+    layout.addWidget(viewer)
+    
+    mainwnd.setLayout(layout)
+    mainwnd.show()
+
+    mainwnd.setWindowState(Qt.WindowMaximized)
+    
+    __orig_excepthook = sys.excepthook
+    sys.excepthook = __unhandledExceptionHook
+
+    # Run the main loop.
+    res = qapp.exec_()
+    sys.exit(res)
+    
+
+# Install a handler for unhandled exceptions.
+def __unhandledExceptionHook(etype, value, tb):
+    text = _("AScope: ABORTING due to unhandled exception:")
+    print(text, file=sys.stderr)
+    __orig_excepthook(etype, value, tb)
+    # Try to show an error message box.
+    with suppressAllExc:
+        import traceback
+        QMessageBox.critical(
+            None,
+            _("AScope: Unhandled exception"),
+            text + "\n\n\n" +
+            "".join(traceback.format_exception(etype, value, tb)),
+            QMessageBox.Ok,
+            QMessageBox.Ok)
+    # Call QCoreApplication.exit() so that we return from exec_()
+    qapp.exit(ExitCodes.EXIT_ERR_OTHER)
+
+if __name__ == "__main__":
+    main()

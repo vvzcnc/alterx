@@ -28,6 +28,8 @@ MODULE_AUTHOR("uncle-yura (uncle-yura@tuta.io)");
 MODULE_DESCRIPTION("Oscilloscope for Alterx GUI");
 MODULE_LICENSE("GPL");
 
+static int port=27267,channels=4,samples=-1;
+static long int thread=1000000;
 static int comp_id;
 hal_data_t *hal_data;
 int listenfd = 0;
@@ -35,11 +37,15 @@ char sendBuff[1024];
 pthread_t thread_id;
 socket_req_t request;
 pthread_mutex_t mxq;
-channels_t ch[NUM_CHANNELS];
+channels_t *ch;
 trigger_t tr;
-data_t data[NUM_SAMPLES];
+data_t *data;
 int sample_pointer;
         
+RTAPI_MP_INT(port, "socket port");
+RTAPI_MP_INT(channels, "number of channels");
+RTAPI_MP_INT(samples, "number of samples");
+RTAPI_MP_INT(thread, "sample thread");
 int rtapi_app_main(void) 
 {
     int retval;
@@ -66,6 +72,16 @@ int rtapi_app_main(void)
 	    hal_exit(comp_id);
 	    return -1;
     }
+
+    int yes=1;
+    //char yes='1';
+    setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(yes));
+
+    if( samples == -1 )
+        samples = 1000000000/thread;
+
+    data = malloc(sizeof(data_t)*samples);
+    ch = malloc(sizeof(channels_t)*channels);
     
     struct sockaddr_in serv_addr;
 
@@ -74,7 +90,7 @@ int rtapi_app_main(void)
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin_port = htons(port);
  
     if(bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr))<0)
     {
@@ -239,7 +255,7 @@ void connection_handler(void *arg)
             }
             else if( ta->request->cmd == OSC_CHANNEL )
             {
-                if( ta->request->type/10 < NUM_CHANNELS )
+                if( ta->request->type/10 < channels )
                 {
                     ta->channels[ta->request->type/10].offset = ta->request->value.u;
                     ta->channels[ta->request->type/10].type = ta->request->type%10;
@@ -291,6 +307,10 @@ void connection_handler(void *arg)
             }
             else if( ta->request->cmd == OSC_GET )
             {
+            	snprintf(sendBuff, sizeof(sendBuff), "Samples %d thread %d\n",
+                	    *(ta->pointer), thread);
+                write(connfd, sendBuff, strlen(sendBuff));
+                
                 for(int i=0; i<*(ta->pointer);i++)
                 {
                     switch (ta->array[i].type) 
@@ -343,9 +363,9 @@ void rtapi_app_exit(void)
 
 static void sample(void *arg, long period)
 {
-    if( sample_pointer < NUM_SAMPLES && tr.cmd == SAMPLE_RUN )
+    if( sample_pointer < samples && tr.cmd == SAMPLE_RUN )
     {
-        for( int i=0; i < NUM_CHANNELS; i++ )
+        for( int i=0; i < channels; i++ )
         {
             if( ch[i].offset!=0 )
             {
@@ -381,7 +401,7 @@ static void sample(void *arg, long period)
                 data[sample_pointer].channel = i;
 
                 sample_pointer++;
-                if( sample_pointer == NUM_SAMPLES )
+                if( sample_pointer == samples )
                     break;
             }
         }
