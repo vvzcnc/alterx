@@ -224,6 +224,7 @@ class HalPinWidget(QWidget):
         
         controllay.addWidget(QLabel(_("Trigger value:")))
         self.trig_edit = QLineEdit()
+        self.trig_edit.editingFinished.connect(self.trigger_value_changed)
         controllay.addWidget(self.trig_edit)
 
         controllay.addWidget(HSeparator())
@@ -251,6 +252,12 @@ class HalPinWidget(QWidget):
         timer_osc = QTimer(self)
         timer_osc.timeout.connect(self.plot_update_data)
         timer_osc.start(1000)
+
+    def trigger_value_changed(self):
+        try:
+            self.tLine.setPos(float(self.trig_edit.text()))
+        except:
+            pass
 
     def trigger_changed(self,i):
         name = self.trig_combo.itemData(i, role=Qt.DisplayRole)
@@ -329,7 +336,7 @@ class HalPinWidget(QWidget):
                             self.hLine.setPos(min(self.data[key][1]))    
                     
                     num = int(mousePoint.x())
-                    if num > 0 and num < len(self.data[key][1]) and i==0:
+                    if num >= 0 and num < len(self.data[key][1]) and i==0:
                         text += "%d:%.1f\n"%(i,self.data[key][1][num])
                         self.vLine.setPos(mousePoint.x())
                 if text != "":

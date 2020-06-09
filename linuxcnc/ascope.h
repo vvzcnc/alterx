@@ -154,18 +154,18 @@ typedef struct {
 } channels_t;
 
 typedef struct {
-    int cmd;
-    int type;
-    int pin;
-    float value;
-    hal_data_u last;
-} trigger_t;
-
-typedef struct {
     unsigned int channel:8;
     unsigned int type:8;
     hal_data_u value;
 } data_t;
+
+typedef struct {
+    int cmd;
+    int type;
+    int pin;
+    float value;
+    data_t last;
+} trigger_t;
 
 typedef struct {
     pthread_mutex_t* mutex;

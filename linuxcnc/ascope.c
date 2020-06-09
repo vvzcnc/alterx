@@ -297,7 +297,7 @@ void connection_handler(void *arg)
                     set_data_value(source->type, SHMPTR(source->data_ptr),&l);
                 }
                 
-                ta->trigger->last.u = l.value.u;
+                ta->trigger->last.value.u = l.value.u;
                 ta->trigger->cmd = ta->request->type;
             }
             else if( ta->request->cmd == OSC_CHECK )
@@ -415,8 +415,10 @@ static void sample(void *arg, long period)
             || tr.cmd == SAMPLE_LOW )
     {
         data_t now;
-        hal_data_u last = tr.last;
+        data_t last;
         int type;
+
+        memcpy(&last,&tr.last,sizeof(data_t));
 
         if( tr.type == HAL_PIN )
         {
@@ -456,7 +458,7 @@ static void sample(void *arg, long period)
         switch(type)
         {
             case HAL_BIT:
-            	if ( (now.value.b >= tr.value) != (last.b >= tr.value) )
+            	if ( (now.value.b >= tr.value) != (last.value.b >= tr.value) )
             	{
             	    if( tr.cmd == SAMPLE_CHANGE ||
             	        ( tr.cmd == SAMPLE_HIGH && now.value.b >= tr.value ) ||
@@ -466,7 +468,7 @@ static void sample(void *arg, long period)
         	break;
         
             case HAL_FLOAT:
-            	if ( (now.value.f >= tr.value) != (last.f >= tr.value) )
+            	if ( (now.value.f >= tr.value) != (last.value.f >= tr.value) )
             	{
             	    if( tr.cmd == SAMPLE_CHANGE ||
             	        ( tr.cmd == SAMPLE_HIGH && now.value.f >= tr.value ) ||
@@ -476,7 +478,7 @@ static void sample(void *arg, long period)
 	        break;
             
             case HAL_S32:
-            	if ( (now.value.s >= tr.value) != (last.s >= tr.value) )
+            	if ( (now.value.s >= tr.value) != (last.value.s >= tr.value) )
             	{
             	    if( tr.cmd == SAMPLE_CHANGE ||
             	        ( tr.cmd == SAMPLE_HIGH && now.value.s >= tr.value ) ||
@@ -486,7 +488,7 @@ static void sample(void *arg, long period)
 	        break;
             
             case HAL_U32:
-            	if ( (now.value.u >= tr.value) != (last.u >= tr.value) )
+            	if ( (now.value.u >= tr.value) != (last.value.u >= tr.value) )
             	{
             	    if( tr.cmd == SAMPLE_CHANGE ||
             	        ( tr.cmd == SAMPLE_HIGH && now.value.u >= tr.value ) ||

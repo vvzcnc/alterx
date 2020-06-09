@@ -35,6 +35,7 @@ from alterx.gui.hal_editor import *
 from alterx.gui.halpin_viewer import *
 from alterx.gui.style_editor import *
 from alterx.gui.status_viewer import *
+from alterx.gui.awlsim_widget import *
 
 class SettingsWidget(QStackedWidget):
     def __init__(self, parent=None):
@@ -45,6 +46,7 @@ class SettingsWidget(QStackedWidget):
         self.addWidget(ConfigEditor())
         self.addWidget(HalEditor())
         self.addWidget(StyleSheetEditor(self))
+        self.addWidget(AwlsimWidget())
         
         UPDATER.add("settings_page_next")
         UPDATER.add("settings_page_prev")
