@@ -79,6 +79,18 @@ def handleFatalException(parentWidget=None):
     sys.exit(1)
 
 
+class HSeparator(QFrame):
+    def __init__(self, parent=None):
+        QFrame.__init__(self, parent)
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Sunken)
+
+class VSeparator(QFrame):
+    def __init__(self, parent=None):
+        QFrame.__init__(self, parent)
+        self.setFrameShape(QFrame.VLine)
+        self.setFrameShadow(QFrame.Sunken)
+        
 class MessageBox(QDialog):
     def __init__(self,
                  parent,

@@ -33,12 +33,6 @@ from alterx.core.ascope import AScope as osc
 import subprocess
 import pyqtgraph
 
-class HSeparator(QFrame):
-    def __init__(self, parent=None):
-        QFrame.__init__(self, parent)
-        self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Sunken)
-
 class HalPinWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)

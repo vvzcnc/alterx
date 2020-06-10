@@ -2,7 +2,6 @@
 
 ## Settings
     * PID calibrate widget
-    * Lock settings
     * Add tranlation support for ini-wizard
     * Status tooltable in status widget
     * Halcmd sending command over network

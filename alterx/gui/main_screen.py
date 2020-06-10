@@ -50,7 +50,6 @@ class BottomButton(QPushButton):
             timer.timeout.connect(menu.update)
             timer.start(1000)
 
-
 class BottomWidget(QWidget):
     def __init__(self, layout_name):
         QWidget.__init__(self)
@@ -94,7 +93,6 @@ class BottomWidget(QWidget):
             btn = BottomButton("btn_%s_%d" % (layout_name, btn_number))
             btn.setText("")
             layout.addWidget(btn)
-
 
 class SideButton(QPushButton):
     def __init__(self, label, checkDisable, checkToggle, parent=None,):
@@ -141,21 +139,6 @@ class SideButton(QPushButton):
             self.setEnabled(True)
         else:
             self.setEnabled(False)
-
-
-class HSeparator(QFrame):
-    def __init__(self, parent=None):
-        QFrame.__init__(self, parent)
-        self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Sunken)
-
-
-class VSeparator(QFrame):
-    def __init__(self, parent=None):
-        QFrame.__init__(self, parent)
-        self.setFrameShape(QFrame.VLine)
-        self.setFrameShadow(QFrame.Sunken)
-
 
 class ToolWidget(QGroupBox):
     def __init__(self, parent=None):
@@ -236,7 +219,6 @@ class GCodeWidget(QGroupBox):
 
         self.g_codes.setText(active)
 
-
 class SpindleWidget(QGroupBox):
     def __init__(self, parent=None):
         QGroupBox.__init__(self, parent)
@@ -263,7 +245,6 @@ class SpindleWidget(QGroupBox):
 
     def on_spindlerate_changed(self, speed):
         self.spindle_override.setText(_("SO: {}%", speed*100))
-
 
 class FeedWidget(QGroupBox):
     def __init__(self, parent=None):
@@ -306,7 +287,6 @@ class FeedWidget(QGroupBox):
 
     def on_rapidrate_changed(self, rapid):
         self.rapid_override.setText(_("RO: {}%", rapid*100))
-
 
 class JOGWidget(QGroupBox):
     def __init__(self, parent=None):
@@ -396,7 +376,6 @@ class JOGWidget(QGroupBox):
         else:
             self.setVisible(False)
 
-
 class AxisWidget(QGroupBox):
     def __init__(self, parent=None):
         QGroupBox.__init__(self, parent)
@@ -447,7 +426,6 @@ class AxisWidget(QGroupBox):
             self.setVisible(False)
         else:
             self.setVisible(True)
-
 
 class MainLayout(QVBoxLayout):
     def __init__(self, parent=None):

@@ -36,11 +36,14 @@ from alterx.gui.halpin_viewer import *
 from alterx.gui.style_editor import *
 from alterx.gui.status_viewer import *
 from alterx.gui.awlsim_widget import *
+from alterx.gui.unlock_widget import *
 
 class SettingsWidget(QStackedWidget):
     def __init__(self, parent=None):
         QStackedWidget.__init__(self, parent)
-
+        self.blocked = False
+        
+        self.addWidget(UnlockWidget(self))
         self.addWidget(StatusWidget())
         self.addWidget(HalPinWidget())
         self.addWidget(ConfigEditor())
@@ -55,6 +58,9 @@ class SettingsWidget(QStackedWidget):
         UPDATER.connect("settings_page_prev",self.prev_page)
         
     def next_page(self,state=None):
+        if self.blocked:
+            return
+            
         if self.currentIndex() < 0 :
             self.setCurrentIndex(0)
         elif self.currentIndex() == self.count()-1:
@@ -63,6 +69,9 @@ class SettingsWidget(QStackedWidget):
             self.setCurrentIndex(self.currentIndex()+1)
 
     def prev_page(self,state=None):
+        if self.blocked:
+            return
+        
         if self.currentIndex() < 0 :
             self.setCurrentIndex(0)
         elif self.currentIndex() < 1:
