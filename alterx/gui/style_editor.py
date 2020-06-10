@@ -226,12 +226,7 @@ class StyleSheetEditor(QWidget):
         try:
             with open(fileName,'r') as file:
                 styleSheet = file.read()
-                try:
-                    # Python v2.
-                    styleSheet = unicode(stylesheet, encoding='utf8')
-                except NameError:
-                    # Python v3.
-                    styleSheet = str(stylesheet, encoding='utf8')
+                styleSheet = toUnicode(styleSheet)
         except Exception as e:
             printWarning(_("Failed to load stylesheet {}",e))
            

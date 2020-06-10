@@ -18,6 +18,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
+
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 __all__ = [
@@ -60,6 +61,7 @@ class QueueHandler(logging.Handler):
         except:
             self.handleError(record)
 
+
 def singleton(class_):
     class class_w(class_):
         _instance = None
@@ -78,6 +80,7 @@ def singleton(class_):
             self._sealed = True
             class_w.__name__ = class_.__name__
     return class_w
+
 
 @singleton
 class logListener(object):
@@ -114,7 +117,9 @@ class logListener(object):
             except (KeyboardInterrupt, SystemExit):
                 raise
             except Exception as e:
-                printError('Log listener thread error: %s' % str(e).decode('utf-8'))
+                logging.getLogger("alterx").error(
+                    u"Log listener thread error: " + 
+                    toUnicode(e.strerror))
 
     def getVerbose(self):
         return self.verbose
@@ -132,35 +137,38 @@ class logListener(object):
             handler.setFormatter(formatter)
             root.addHandler(handler)
         except Exception as e:
-            printError("Log file handler creating failed: {}".format(str(e).decode('utf-8')))
-
+            logging.getLogger("alterx").error(
+                u"Log file handler creating failed: " + 
+                toUnicode(e.strerror))
+            
     def setLoglevel(self, level):
         if level in (0, 1, 2, 3, 4, 5):
             self.loglevel = level*10
             logging.getLogger("alterx").setLevel(self.loglevel)
             logging.getLogger().setLevel(self.loglevel)
         else:
-            printError("Invalid log level")
+            logging.getLogger("alterx").error("Invalid log level")
 
     def getLoglevel(self):
         return self.loglevel
 
 
 def printDebug(text):
-    logging.getLogger("alterx").debug(text)
+    logging.getLogger("alterx").debug(toUnicode(text))
+
 
 def printVerbose(text):
     if logListener().getVerbose():
-        logging.getLogger("alterx").debug(text)
+        logging.getLogger("alterx").debug(toUnicode(text))
 
 
 def printInfo(text):
-    logging.getLogger("alterx").info(text)
+    logging.getLogger("alterx").info(toUnicode(text))
 
 
 def printWarning(text):
-    logging.getLogger("alterx").warning(text)
+    logging.getLogger("alterx").warning(toUnicode(text))
 
 
 def printError(text):
-    logging.getLogger("alterx").error(text)
+    logging.getLogger("alterx").error(toUnicode(text))

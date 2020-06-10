@@ -31,8 +31,6 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
-import base64
-
 class UnlockWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
@@ -81,8 +79,7 @@ class UnlockWidget(QWidget):
         hlay.addStretch()
         self.setLayout(hlay)
         try:
-            self.password = base64.b64decode(PREF.getpref("unlock",
-                                         base64.b64encode("alterx"), str))
+            self.password = PREF.getpref("unlock","alterx", str)
         except Exception as e:
             self.password = "alterx"
             
@@ -90,17 +87,7 @@ class UnlockWidget(QWidget):
         PREF.putpref("blocked", block)
         
     def change_clicked(self):
-        try:
-            new = base64.b64encode(self.new_pw.text())
-        except Exception as e:
-            QMessageBox.information(None,
-            _("Unlock"),
-            _("Password changed Failed\n{}",e),
-            QMessageBox.Ok,
-            QMessageBox.Ok)
-            return
-            
-        PREF.putpref("unlock", new)
+        PREF.putpref("unlock", self.new_pw.text())
         self.password = self.new_pw.text()
         QMessageBox.information(None,
             _("Unlock"),

@@ -28,6 +28,7 @@ from alterx.gui.util import *
 
 MESSAGES = []
 
+
 def close_messages(msgs):
     for w in reversed(msgs):
         try:
@@ -39,6 +40,7 @@ def close_messages(msgs):
             MESSAGES.remove(w)
     return 0
 
+
 def count_messages():
     count = 0
     for w in reversed(MESSAGES):
@@ -49,12 +51,14 @@ def count_messages():
             MESSAGES.remove(w)
     return count
     
+    
 def get_pos(widget):
     count_messages()
     for i,w in enumerate(MESSAGES):
         if widget == w:
             return i   
     return 0
+    
     
 class Notify(QLabel):
     def __init__(self,msg,delay=None,parent=None):
@@ -102,21 +106,24 @@ class Notify(QLabel):
         count = count_messages()
         if count > 9:
             close_messages([MESSAGES[0]])
-        MESSAGES.append(Notify(" <span style='color:white;'>[i]:</span> "+str(msg),5000))
+        MESSAGES.append(Notify(u" <span style='color:white;'>[i]:</span> "+
+                                toUnicode(msg),5000))
         
     @classmethod    
     def Warning(cls,msg):
         count = count_messages()
         if count > 9:
             close_messages([MESSAGES[0]])
-        MESSAGES.append(Notify(" <span style='color:yellow;'>[w]:</span> "+str(msg),10000))
+        MESSAGES.append(Notify(u" <span style='color:yellow;'>[w]:</span> "+
+                                toUnicode(msg),10000))
         
     @classmethod    
     def Error(cls,msg):
         count = count_messages()
         if count > 9:
             close_messages([MESSAGES[0]])
-        MESSAGES.append(Notify(" <span style='color:red;'>[e]:</span> "+str(msg)))
+        MESSAGES.append(Notify(u" <span style='color:red;'>[e]:</span> "+
+                                toUnicode(msg)))
 
     @classmethod    
     def closeAll(cls):

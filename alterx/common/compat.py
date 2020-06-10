@@ -33,6 +33,7 @@ __all__ = [
     "osIsPosix",
     "osIsLinux",
     "ConfigParser",
+    "toUnicode",
 ]
 
 # Convenient operating system identifiers
@@ -90,3 +91,11 @@ if isPy2Compat:
     import ConfigParser
 else:
     import configparser as ConfigParser
+
+
+def toUnicode(string):
+    try:
+        string = unicode(string, encoding='utf-8')
+    except:
+        string = str(string)
+    return string    

@@ -100,7 +100,7 @@ class GcodeLexer(QsciLexerCustom):
                 editor.SendScintilla(
                     editor.SCI_GETTEXTRANGE, start, end, source)
             else:
-                source = unicode(editor.text()).encode('utf-8')[start:end]
+                source = toUnicode(editor.text()[start:end])
         if not source:
             return
 

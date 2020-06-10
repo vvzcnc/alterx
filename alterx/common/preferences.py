@@ -28,6 +28,10 @@ from alterx.common import *
 
 from alterx.core.linuxcnc import *
 
+import base64
+import io
+import codecs
+
 class Preferences(ConfigParser.ConfigParser):
     def __init__(self):
         ConfigParser.ConfigParser.__init__(self)
@@ -43,7 +47,12 @@ class Preferences(ConfigParser.ConfigParser):
 
         self.fn = os.path.expanduser(path)
         if os.path.exists(self.fn):
-            self.read(self.fn)
+            decoded_file = io.BytesIO()
+            with open(self.fn,'r') as encoded_file:
+                for line in encoded_file:
+                    decoded_file.write(base64.b64decode(line))
+            decoded_file.seek(0)
+            self.readfp(decoded_file)
         else:
             printDebug(_("Preferences file is not exist."))
 
@@ -64,7 +73,7 @@ class Preferences(ConfigParser.ConfigParser):
 
     def putpref(self, option, value):
         self.set("DEFAULT", option, str(value))
-        with open(self.fn, "w") as config_file:
+        with codecs.open(self.fn, "w", "base64") as config_file:
             self.write(config_file)
 
 PREF = Preferences()

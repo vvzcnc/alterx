@@ -29,6 +29,7 @@ import locale
 import gettext
 import pkg_resources
 
+
 class translate():
     def __init__(self):
         self._locale, _encoding = locale.getdefaultlocale()
@@ -40,12 +41,7 @@ class translate():
             for a in args:
                 if type(a) not in (int,float) and a:
                     a = str(a)
-                    try:
-                        # Python v2.
-                        a = unicode(a, encoding='utf-8')
-                    except NameError:
-                        # Python v3.
-                        pass
+                    a = toUnicode(a)
                 args_decoded.append(a)
 
             try:
@@ -79,9 +75,8 @@ class translate():
             self._ = self.get_text
             printVerbose("Setup locale: {}".format(val))
         except Exception as e:
-            printError(
-                "Unsupported locale ({}) setting or translation error ({})".format(val, e))
+            printWarning("Unsupported locale ({}) or translation error ({})\
+            ".format(val, e))
             self._ = lambda s: s
-
 
 _ = translate()

@@ -1,6 +1,7 @@
 # TODO list
 
 ## Settings
+    * Script to save and load configuration
     * PID calibrate widget
     * Add tranlation support for ini-wizard
     * Status tooltable in status widget
@@ -9,7 +10,6 @@
     * Include awlsim
     * Include awlsim default project and hal
     * Make page scroll bigger in config editor(QT bug increasing ::scroller width)
-    * Script to save and load configuration
         
 ## Config wizard:
     * lpt config
@@ -22,9 +22,9 @@
     
 ## Other:
     * Installation scripts
+    * Jog
     * Keyboard serial listener
     * Startup open ngc file
-    * Jog
     * Change icons size
     * Change fonts
     * Notify transparent

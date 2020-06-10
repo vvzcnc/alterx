@@ -30,6 +30,7 @@ from alterx.gui.qt_bindings import *
 
 import time
 
+
 class fake_linuxcnc():
     axis = []
     joints = []
@@ -48,6 +49,7 @@ class fake_linuxcnc():
     def find(self,section,option):
         return ""
         
+        
 class fake_position_logger():
     def __getattr__(self,name):
         return 0
@@ -58,9 +60,11 @@ class fake_position_logger():
     def start(self, *args):
         return 0
         
+        
 class fake_command():
     def __getattr__(self,name):
         return lambda *args: None
+
 
 try:
     import linuxcnc as LINUXCNC
@@ -90,6 +94,7 @@ except Exception as e:
             _("AlterX interface launched in recovery mode!"),
             QMessageBox.Ok,
             QMessageBox.Ok)
+
 
 class linuxcnc_info():
     def __init__(self):
@@ -141,6 +146,7 @@ class linuxcnc_info():
         pass
 
 INFO = linuxcnc_info()
+
 
 class linuxcnc_poll(QTimer):
     # 'One to many' item check

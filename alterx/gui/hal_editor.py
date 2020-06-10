@@ -159,12 +159,7 @@ class HalEditor(QWidget):
         try:
             with open(halName,'r') as file:
                 hal = file.read()
-                try:
-                    # Python v2.
-                    hal = unicode(hal, encoding='utf8')
-                except NameError:
-                    # Python v3.
-                    hal = str(hal, encoding='utf8')
+                hal = toUnicode(hal)
         except Exception as e:
             printWarning(_("Failed to load hal-file {}",e))
 

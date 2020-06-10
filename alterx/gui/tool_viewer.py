@@ -303,6 +303,7 @@ class ToolOffsetView(QTableView):
             self.toolinfo = None
             toolinfo_flag = False
             for line_index,rawline in enumerate(tool_file):
+                rawline = toUnicode(rawline)
                 # strip the comments from line and add directly to array
                 # if index = -1 the delimiter ; is missing - clear comments
                 index = rawline.find(";")

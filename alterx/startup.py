@@ -31,6 +31,9 @@ import getopt
 
 logger = logListener()
 
+_.setup(None)
+
+
 def usage():
     print(_("AlterX version {}", VERSION_STRING))
     print("")

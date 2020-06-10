@@ -82,12 +82,7 @@ class MainWindow(QWidget):
         try:
             with open(ss_name,'r') as file:
                 stylesheet = file.read()
-                try:
-                    # Python v2.
-                    stylesheet = unicode(stylesheet, encoding='utf-8')
-                except NameError:
-                    # Python v3.
-                    stylesheet = str(stylesheet)
+                stylesheet = toUnicode(stylesheet)
                 self.setStyleSheet(stylesheet)
         except Exception as e:
             printWarning(_("Failed to load stylesheet: {}",e))
