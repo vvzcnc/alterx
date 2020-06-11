@@ -40,7 +40,6 @@ class translate():
             args_decoded = []
             for a in args:
                 if type(a) not in (int,float) and a:
-                    a = str(a)
                     a = toUnicode(a)
                 args_decoded.append(a)
 

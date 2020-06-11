@@ -145,3 +145,4 @@ position.txt
 *.halscope
 *.hal
 macros/
+*.ngc

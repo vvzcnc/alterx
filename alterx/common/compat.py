@@ -96,6 +96,11 @@ else:
 def toUnicode(string):
     try:
         string = unicode(string, encoding='utf-8')
-    except:
+    except NameError:
         string = str(string)
+    except TypeError:
+        pass
+    except Exception as e:
+        #print(e)
+        pass
     return string    

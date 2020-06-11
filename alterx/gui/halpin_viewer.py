@@ -285,14 +285,6 @@ class HalPinWidget(QWidget):
             self.shot_mode = rb.mode
 
     def eventFilter(self, source, event):
-        try:
-           
-            return QtGui.QWidget.eventFilter(self, source, event)
-        except Exception as e:
-            err = sys.exc_info()[1]
-            print(str(err),e)
-
-    def eventFilter(self, source, event):
         if ( event.type() == QEvent.KeyPress and
             source is self.item_value ):
 

@@ -36,8 +36,6 @@ IMAGE_DIR = pkg_resources.resource_filename("alterx", "images")
 STYLESHEET_DIR = pkg_resources.resource_filename("alterx", "stylesheets")
 
 # Convert an integer to a dual-string
-
-
 def intToDualString(value, bitWidth):
     string = []
     for bitnr in range(bitWidth - 1, -1, -1):
@@ -47,8 +45,6 @@ def intToDualString(value, bitWidth):
     return ''.join(string)
 
 # Get the default fixed font
-
-
 def getDefaultFixedFont(pointSize=11, bold=False):
     font = QFont()
     font.setStyleHint(QFont.Courier)
@@ -59,8 +55,6 @@ def getDefaultFixedFont(pointSize=11, bold=False):
     return font
 
 # Color used for errors
-
-
 def getErrorColor():
     return QColor("#FFC0C0")
 
@@ -85,11 +79,13 @@ class HSeparator(QFrame):
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(QFrame.Sunken)
 
+
 class VSeparator(QFrame):
     def __init__(self, parent=None):
         QFrame.__init__(self, parent)
         self.setFrameShape(QFrame.VLine)
         self.setFrameShadow(QFrame.Sunken)
+
         
 class MessageBox(QDialog):
     def __init__(self,

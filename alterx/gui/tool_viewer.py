@@ -31,6 +31,7 @@ from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
 import operator
+import codecs
 
 KEYWORDS = ['T', 'P', 'X', 'Y', 'Z', 'A', 'B',
             'C', 'U', 'V', 'W', 'D', 'I', 'J', 'Q', ';']
@@ -371,32 +372,32 @@ class ToolOffsetView(QTableView):
     def save_tool_file(self, new_model, delete=()):
         if self.toolfile == None:
             return True
-        with open(self.toolfile, "w") as file:
+        with codecs.open(self.toolfile, "w",encoding="utf-8") as file:
             for row in new_model:
                 if self.metric_display != INFO.machine_is_metric:
                     row[2:12] = self.convert_units_to_file(row[2:12])
             
                 values = [value for value in row]
-                line = ""
+                line = u""
                 skip = False
+                print(values)
                 for num, i in enumerate(values):
                     # print KEYWORDS[num], i, #type(i), int(i)
                     if num == 0 and i in delete:
                         printDebug(_("Delete tool: {}", i))
                         skip = True
                     if num in (0, 1, 14):  # tool# pocket# orientation
-                        line = line + "%s%d " % (KEYWORDS[num], i)
+                        line = line + u"{}{} ".format(KEYWORDS[num], i)
                     elif num == 15:  # comments
-                        test = i.strip()
-                        line = line + "%s%s " % (KEYWORDS[num], test)
+                        text = i.strip()
+                        line = line + u"{}{} ".format(KEYWORDS[num], text)
                     else:
-                        test = str(i).lstrip()  # floats
-                        line = line + "%s%s " % (KEYWORDS[num], test)
-
+                        text = str(i).lstrip()  # floats
+                        line = line + u"{}{} ".format(KEYWORDS[num], text)
                 if not skip:
                     file.write(line + os.linesep)
-                    printDebug(_("Save line: {}", line))
-    
+                    printDebug(_("Save line: {}", line)) 
+
         # tell linuxcnc we changed the tool table entries
         try:
             COMMAND.load_tool_table()
@@ -486,7 +487,8 @@ class ToolOffsetView(QTableView):
                 elif cnum == 18:
                     new_line[cnum-4] = int(i)
                 elif cnum == 19:
-                    new_line[cnum-4] = str(i)
+                    new_line[cnum-4] = toUnicode(i)
+
             if wear_flag:
                 new_wear_line[0] = int(values[1]+10000)
                 new_wear_line[15] = 'Wear Offset Tool %d' % values[1]

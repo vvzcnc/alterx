@@ -1,6 +1,8 @@
 *{
     color: #000;
     font-size: 20px;
+    min-width: 10px;
+    min-height: 10px;
 }
 
 #MainWindow {background: #eeeeec; }
@@ -67,7 +69,6 @@ QPushButton{
     border-radius: 11px;
     padding: 5px;
     background: #cccccc;
-    min-width: 40px;
     }
 
 QPushButton[active=true]{

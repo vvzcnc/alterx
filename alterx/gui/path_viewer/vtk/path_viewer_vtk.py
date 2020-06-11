@@ -378,8 +378,10 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.interactor.AddObserver("RightButtonReleaseEvent", self.button_event)
         self.interactor.AddObserver("MouseMoveEvent", self.mouse_move)
         self.interactor.AddObserver("KeyPressEvent", self.keypress)
-        self.interactor.AddObserver("MouseWheelForwardEvent", self.mouse_scroll_forward)
-        self.interactor.AddObserver("MouseWheelBackwardEvent", self.mouse_scroll_backward)
+        self.interactor.AddObserver("MouseWheelForwardEvent", 
+            self.mouse_scroll_forward)
+        self.interactor.AddObserver("MouseWheelBackwardEvent", 
+            self.mouse_scroll_backward)
 
         self.interactor.Initialize()
         self.renderer_window.Render()
@@ -391,7 +393,8 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         UPDATER.connect("g5x_offset", self.update_g5x_offset)
         UPDATER.connect("g92_offset", self.update_g92_offset)
         UPDATER.connect("rotation_xy", self.update_rotation_xy)
-        UPDATER.connect("reload_offsets", lambda s: self.on_offset_table_changed(INFO.get_offset_table()))
+        UPDATER.connect("reload_offsets", lambda s: self.on_offset_table_changed(
+            INFO.get_offset_table()))
         UPDATER.connect("tool_offset", self.update_tool)
         UPDATER.connect("tool_table", self.update_tool)
 
@@ -648,7 +651,8 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.tool_actor.SetUserTransform(tool_transform)
 
         tlo = self.status.tool_offset
-        self.tooltip_position = [pos - tlo for pos, tlo in zip(self.spindle_position, tlo[:3])]
+        self.tooltip_position = [pos - tlo for pos, tlo in zip(
+            self.spindle_position, tlo[:3])]
 
         # self.spindle_actor.SetPosition(self.spindle_position)
         # self.tool_actor.SetPosition(self.spindle_position)
@@ -666,7 +670,8 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.axes_actor.SetUserTransform(transform)
 
         for origin, actor in self.path_actors.items():
-            # path_offset = [n - o for n, o in zip(position[:3], self.original_g5x_offset[:3])]
+            # path_offset = [n - o for n, o in zip(position[:3], 
+            #    self.original_g5x_offset[:3])]
 
             path_index = self.origin_map[origin]
 
@@ -717,17 +722,20 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.update_render()
 
     def update_g92_offset(self, g92_offset):
-        if str(self.status.task_mode) == "MDI" or str(self.status.task_mode) == "Auto":
+        if str(self.status.task_mode) == "MDI"\
+            or str(self.status.task_mode) == "Auto":
 
             self.g92_offset = g92_offset
 
-            path_offset = list(map(add, self.g92_offset, self.original_g92_offset))
+            path_offset = list(map(add, 
+                self.g92_offset, self.original_g92_offset))
 
             for origin, actor in self.path_actors.items():
                 # determine change in g92 offset since path was drawn
                 index = self.origin_map[origin] - 1
 
-                new_path_position = list(map(add, self.path_position_table[index][:9], path_offset))
+                new_path_position = list(map(add, 
+                    self.path_position_table[index][:9], path_offset))
 
                 axes = actor.get_axes()
 
@@ -1243,8 +1251,8 @@ class Machine:
         axes_minmax = []
         for i in range(3):
             if i < len(axis):
-                axes_minmax.append(axis[i]["max_position_limit"])
                 axes_minmax.append(axis[i]["min_position_limit"])
+                axes_minmax.append(axis[i]["max_position_limit"])
             else:
                 axes_minmax.append(0)
                 axes_minmax.append(0)

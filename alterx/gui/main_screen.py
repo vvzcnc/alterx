@@ -40,7 +40,8 @@ class BottomButton(QPushButton):
         QPushButton.__init__(self, label)
         self.setObjectName(label)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
+        self.resizeEvent = self.resize_icon
+        
     def setup(self, menu):
         if hasattr(menu, "execute"):
             self.clicked.connect(partial(menu.execute))
@@ -49,6 +50,12 @@ class BottomButton(QPushButton):
             timer = QTimer(self)
             timer.timeout.connect(menu.update)
             timer.start(1000)
+
+    def resize_icon(self,event):
+        QWidget.resizeEvent(self, event)
+        w = event.size().width()
+        h = event.size().height()
+        self.setIconSize(QSize(w*0.8, h*0.8))
 
 class BottomWidget(QWidget):
     def __init__(self, layout_name):
@@ -106,31 +113,48 @@ class SideButton(QPushButton):
         self.setObjectName("btn_%s" % (label))
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
+        self.resizeEvent = self.resize_icon
         self.clicked.connect(partial(MAIN.side_button_callback, self))
 
         checkList = ["task_state", "homed", "task_mode", "secondary_mode"]
         self.checkState = [True, True, True]
         for index, check in enumerate(checkDisable):
             if check:
-                UPDATER.connect(checkList[index], lambda s, c=check, i=index: self.set_disable(
-                                                            True if s == c else False, i))
+                UPDATER.connect(checkList[index], 
+                            lambda s, c=check, i=index: self.set_disable(
+                                            True if s == c else False, i))
 
         for index, check in enumerate(checkToggle):
             if check:
-                UPDATER.connect(checkList[index], lambda s, c=check: self.set_active(
-                                                            True if s == c else False))
+                UPDATER.connect(checkList[index], 
+                            lambda s, c=check: self.set_active(
+                                            True if s == c else False))
 
+    def resize_icon(self,event):
+        QPushButton.resizeEvent(self, event)
+        w = event.size().width()
+        h = event.size().height()
+        self.setIconSize(QSize(w*0.8, h*0.8))
+                
     def set_active(self, state):
         self.active = state
         self.setProperty("active", QVariant(self.active))
         self.setStyleSheet(self.styleSheet())
 
-        icon = os.path.join(IMAGE_DIR, "mainmenu", "{}{}.png".format(
-            self.label, "_on" if state == True else ""))
-        if os.path.isfile(icon):
-            self.setIcon(QIcon(icon))
-            self.setIconSize(QSize(90, 90))
-            self.setText("")
+        icon = None
+        for fn in os.listdir(os.path.join(IMAGE_DIR, "mainmenu")):
+            if "{}{}.".format(self.label, "_on" if state == True else "") in fn:
+                icon = os.path.join(IMAGE_DIR, "mainmenu", fn)
+
+        if icon:
+            with open(icon,'r') as i:
+            	img = QImage()
+            	img.loadFromData(i.read())
+            	pixmap = QPixmap()
+            	pixmap.convertFromImage(img)
+                self.setIcon(QIcon(pixmap))
+                #self.setIconSize(QSize(90, 90))
+                self.setText("")
 
     def set_disable(self, state, index):
         self.checkState[index] = state

@@ -55,7 +55,7 @@ class BaseBackPlot(object):
 
         if filename is None or not os.path.isfile(filename):
             self.canon = None
-            printDebug(_("3D plot", "Can't load backplot, invalid file: {}",filename))
+            printDebug(_("3D plot, Can't load backplot, invalid file: {}",filename))
             # raise ValueError("Can't load backplot, invalid file: {}".format(filename))
 
         self.last_filename = filename
@@ -82,7 +82,7 @@ class BaseBackPlot(object):
         if result > GCODE.MIN_ERROR:
             msg = GCODE.strerror(result)
             fname = os.path.basename(filename)
-            printDebug(_("3D plot", "Error in {} line {}\n{}",fname, seq - 1, msg))
+            printDebug(_("3D plot, Error in {} line {}\n{}",fname, seq - 1, msg))
             # raise SyntaxError("Error in %s line %i: %s" % (fname, seq - 1, msg))
 
         # clean up temp var file and the backup

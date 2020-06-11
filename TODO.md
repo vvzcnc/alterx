@@ -25,7 +25,6 @@
     * Jog
     * Keyboard serial listener
     * Startup open ngc file
-    * Change icons size
     * Change fonts
     * Notify transparent
     * Add locales
