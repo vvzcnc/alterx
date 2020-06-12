@@ -31,6 +31,9 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
+import zipfile
+from datetime import datetime
+
 class UnlockWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
@@ -44,6 +47,7 @@ class UnlockWidget(QWidget):
         vlay.addWidget(HSeparator())
         vlay.addWidget(QLabel(_("Enter password:")))
         self.pw = QLineEdit()
+        self.pw.setEchoMode(QLineEdit.Password)
         vlay.addWidget(self.pw)
         
         unlock_button = QPushButton()
@@ -66,12 +70,26 @@ class UnlockWidget(QWidget):
         
         change_layout.addWidget(QLabel(_("New password:")))
         self.new_pw = QLineEdit()
+        self.new_pw.setEchoMode(QLineEdit.Password)
         change_layout.addWidget(self.new_pw)
         
         change_pw_button = QPushButton()
         change_pw_button.setText(_("Change"))
         change_pw_button.clicked.connect(self.change_clicked)
         change_layout.addWidget(change_pw_button)
+        
+        change_layout.addWidget(HSeparator())
+        
+        load_cfg_button = QPushButton()
+        load_cfg_button.setText(_("Load configuration"))
+        load_cfg_button.clicked.connect(self.load_cfg_clicked)
+        change_layout.addWidget(load_cfg_button)
+        
+        save_cfg_button = QPushButton()
+        save_cfg_button.setText(_("Save configuration"))
+        save_cfg_button.clicked.connect(self.save_cfg_clicked)
+        change_layout.addWidget(save_cfg_button)
+        
         
         vlay.addWidget(self.change_pw_widget)
         vlay.addStretch()
@@ -83,6 +101,40 @@ class UnlockWidget(QWidget):
         except Exception as e:
             self.password = "alterx"
             
+    def load_cfg_clicked(self):
+        dialog = QFileDialog(self)
+        dialog.setDirectory(INFO.working_dir)
+        dialog.setNameFilters(["ZIP (*.zip)"])
+        dialog.setAcceptMode(QFileDialog.AcceptOpen)
+        if dialog.exec_() == QDialog.Accepted:
+            fileName = dialog.selectedFiles()[0]
+            with zipfile.ZipFile(fileName, 'r', zipfile.ZIP_DEFLATED) as zipf:
+                for file in zipf.namelist():
+                    zipf.extract(file,INFO.working_dir)
+        
+    def save_cfg_clicked(self):
+        dialog = QFileDialog()
+        dialog.setDirectory(INFO.working_dir)
+        dialog.setFilter(dialog.filter()|QDir.Hidden)
+        dialog.setDefaultSuffix("zip")
+        date = datetime.now()
+        dialog.selectFile(os.path.basename(INFO.working_dir).replace(".","_") + 
+                            date.strftime("_%Y%m%d_%H%M%S"))
+        dialog.setAcceptMode(QFileDialog.AcceptSave)
+        dialog.setNameFilters(["ZIP (*.zip)"])
+
+        if dialog.exec_() == QDialog.Accepted:
+            fileName = dialog.selectedFiles()[0]
+            with zipfile.ZipFile(fileName, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for root, dirs, files in os.walk(INFO.working_dir):
+                    for file in files:
+                        if not os.path.samefile(os.path.join(root,file),
+                                                 fileName):
+                            filepath   = os.path.join(root, file)
+                            parentpath = os.path.relpath(filepath,
+                                                         INFO.working_dir)
+                            zipf.write(os.path.join(root, file),parentpath)
+
     def block_changed(self,block):
         PREF.putpref("blocked", block)
         

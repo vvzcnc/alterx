@@ -1,7 +1,6 @@
 # TODO list
 
 ## Settings
-    * Script to save and load configuration
     * PID calibrate widget
     * Add tranlation support for ini-wizard
     * Status tooltable in status widget
