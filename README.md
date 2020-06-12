@@ -21,7 +21,7 @@ cd alterx
 The AlterX Git repository contain lots of files and directories. Here is an overview of the main files and directories and their purpose:
 
 ### Main executables
-User interface executables. The main user executable is `awlsim-gui`.
+User interface executables. The main user executable is `alterx-gui`.
 <pre>
 .  alterx-gui                : Graphical user interface. This is the main user frontend.
 .  ascope-gui                : Standalone ascope component.

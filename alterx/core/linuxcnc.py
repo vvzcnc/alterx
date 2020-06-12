@@ -111,6 +111,11 @@ class linuxcnc_info():
 
         self.get_metric = lambda: False if STAT.program_units == 1 else True
         
+        if (INI.find("DISPLAY", "POSITION_FEEDBACK") or "ACTUAL").lower() == "actual":
+            self.feedback_actual = True
+        else:
+            self.feedback_actual = False
+        
         self.tool_file = INI.find('EMCIO', 'TOOL_TABLE') or 'tools.var'
         self.parameter_file = INI.find("RS274NGC", "PARAMETER_FILE") or 'parameters.var'
         self.preferences_file = INI.find("DISPLAY", "PREFERENCE_FILE_PATH") or 'preferences.var'

@@ -363,10 +363,18 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
             self.renderer.AddActor(extents_actor)
             self.renderer.AddActor(actor)
 
+        self.corner_annotation = vtk.vtkCornerAnnotation()
+        self.corner_annotation.SetLinearFontScaleFactor(2)
+        self.corner_annotation.SetNonlinearFontScaleFactor(1)
+        self.corner_annotation.SetMaximumFontSize(24)
+        self.corner_annotation.SetText(2,"")
+        self.corner_annotation.GetTextProperty().SetColor(1,1,1)
+
         self.renderer.AddActor(self.tool_actor)
         self.renderer.AddActor(self.machine_actor)
         self.renderer.AddActor(self.axes_actor)
         self.renderer.AddActor(self.path_cache_actor)
+        self.renderer.AddViewProp(self.corner_annotation)
 
         self.renderer.ResetCamera()
 
@@ -387,6 +395,8 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.renderer_window.Render()
         self.interactor.Start()
 
+        self.update_dro(getattr(STAT,INFO.axes_list))
+
         UPDATER.connect("file", self.load_program)
         UPDATER.connect("position", self.update_position)
         UPDATER.connect("g5x_index", self.update_g5x_index)
@@ -398,6 +408,9 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         UPDATER.connect("tool_offset", self.update_tool)
         UPDATER.connect("tool_table", self.update_tool)
         UPDATER.connect("program_units", self.program_units)
+        UPDATER.connect(INFO.axes_list, lambda axis: self.update_dro(axis))
+        UPDATER.connect("update_feed_labels", 
+            lambda stat: self.update_dro(getattr(STAT,INFO.axes_list)))
         
         UPDATER.add("display_clear")
         UPDATER.add("display_view")
@@ -419,6 +432,33 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.zooming = 0
 
         self.pan_mode = False
+
+    def update_dro(self, stat):
+        text = ""
+        for i, axis in enumerate(INFO.coordinates):
+
+            if INFO.feedback_actual:
+                position = stat[i]['input']
+            else:
+                position = stat[i]['output']
+                
+            position -= STAT.g5x_offset[i] + STAT.tool_offset[i] + \
+                STAT.g92_offset[i]
+
+            position *= INFO.units_factor
+
+            if axis == 'X' and INFO.machine_is_lathe:
+                text += '{}{}:'.format(axis, 
+                    ['', 'R', 'D'][UPDATER.diameter_multiplier]) + \
+                    INFO.dro_format.format(
+                        position*UPDATER.diameter_multiplier)+'  '
+            else:
+                text += '{}:'.format(axis) + \
+                    INFO.dro_format.format(position)+'  '
+                    
+            text+='\n'
+
+        self.corner_annotation.SetText(2,text)
 
     def program_units(self,stat):   
         self.machine_actor.SetXAxisRange(
@@ -845,11 +885,11 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         return getattr(self, 'setView%s' % view.upper())()
 
     def setViewP(self):
-        self.camera.SetPosition(1, -1, 1)
+        self.camera.SetPosition(0.8, -1, 0.5)
         self.camera.SetViewUp(0, 0, 1)
         self.camera.SetFocalPoint(0, 0, 0)
         self.renderer.ResetCamera()
-        self.camera.Zoom(1.1)
+        self.camera.Zoom(1.0)
         self.interactor.ReInitialize()
 
     def setViewX(self):

@@ -404,16 +404,11 @@ class AxisWidget(QGroupBox):
     def __init__(self, parent=None):
         QGroupBox.__init__(self, parent)
         self.setTitle(_("Axis"))
-        self.coordinates = INI.find('TRAJ', 'COORDINATES') or ""
         h1 = QHBoxLayout()
-        self.drolabel = QLabel(self.coordinates)
+        self.drolabel = QLabel(" ".join(INFO.coordinates))
         self.drolabel.setObjectName("lbl_main_screen_dro_all")
         h1.addWidget(self.drolabel)
         self.setLayout(h1)
-        if (INI.find("DISPLAY", "POSITION_FEEDBACK") or "ACTUAL").lower() == "actual":
-            self.feedback_actual = True
-        else:
-            self.feedback_actual = False
         
         UPDATER.connect(INFO.axes_list, lambda axis: self.update_position(axis))
         UPDATER.connect("task_mode", self.task_mode_handler)
@@ -426,10 +421,10 @@ class AxisWidget(QGroupBox):
 
     def update_position(self, stat):
         text = ""
-        for i, axis in enumerate(self.coordinates.split(' ')):
+        for i, axis in enumerate(INFO.coordinates):
             #position=stat[i]['input'] is absolute
 
-            if self.feedback_actual:
+            if INFO.feedback_actual:
                 position = stat[i]['input']
             else:
                 position = stat[i]['output']

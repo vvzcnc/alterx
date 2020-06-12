@@ -28,8 +28,6 @@
 * Notify transparent
 * Add locales
 * Add notes inside widgets    
-* VTK path viewer P-view change angle
-* Add DRO to VTK Path Viewer 
 * Start script and/or desktop launch
 * Make QUICK-START
 
