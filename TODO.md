@@ -3,7 +3,6 @@
 ## Settings
     * PID calibrate widget
     * Add tranlation support for ini-wizard
-    * Status tooltable in status widget
     * Halcmd sending command over network
     * Ascope memory address validation
     * Include awlsim

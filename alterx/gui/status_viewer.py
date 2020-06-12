@@ -160,11 +160,15 @@ class StatusWidget(QWidget):
             
         for i,item in enumerate(list_items):
             child = parent.child(i)
-            val = item if type(values) in (list,tuple) else values[item]
+
+            if type(values).__name__ in ("list","tuple","tool_result"):
+                val = item 
+            else:
+                val = values[item]
  
             if isinstance(val,float):
                 v = "{:.3f}".format(val)
-            elif type(val) not in (list,tuple,dict):
+            elif type(val).__name__ not in ("list","tuple","dict","tool_result"):
                 v = "{}".format(val)
             else:
                 v = ""
@@ -176,6 +180,12 @@ class StatusWidget(QWidget):
             
             if type(val) in (list,tuple,dict):
                 self.get_children(val,child)
+            elif type(val).__name__ in ("tool_result"):
+                vals = {}
+                for v in dir(val):
+                    if not v.startswith('_') and not v.startswith('n_'):
+                        vals[v]=getattr(val,v)
+                self.get_children(vals,child)
             else:
                 if v != child.text(1):
                     child.setText(1,v)
