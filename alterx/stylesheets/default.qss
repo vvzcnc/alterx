@@ -1,8 +1,6 @@
 *{
     color: #000;
     font-size: 20px;
-    min-width: 10px;
-    min-height: 10px;
 }
 
 #MainWindow {background: #eeeeec; }

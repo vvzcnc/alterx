@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# AlterX GUI - widgets
+# AlterX GUI - config editor
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
@@ -148,6 +148,7 @@ class ConfigEditor(QWidget):
         vlay.addWidget(label)
         
         hlay = QHBoxLayout()
+        hlay2 = QHBoxLayout()
         save = QPushButton()
         save.setText(_("Save"))
         save.clicked.connect(self.save_clicked)
@@ -169,8 +170,19 @@ class ConfigEditor(QWidget):
         hlay.addWidget(save)
         hlay.addWidget(save_as)
         vlay.addLayout(hlay)
+        prev_page = QPushButton()
+        prev_page.setSizePolicy(QSizePolicy.Maximum,QSizePolicy.Minimum)
+        prev_page.setText("<")
+        prev_page.clicked.connect(self.prev_page_clicked)
+        hlay2.addWidget(prev_page)
         self.page = QTabWidget()
-        vlay.addWidget(self.page)
+        hlay2.addWidget(self.page)
+        next_page = QPushButton()
+        next_page.setText(">")
+        next_page.clicked.connect(self.next_page_clicked)
+        next_page.setSizePolicy(QSizePolicy.Maximum,QSizePolicy.Minimum)
+        hlay2.addWidget(next_page)
+        vlay.addLayout(hlay2)
         self.setLayout(vlay)
         self.config_dir = pkg_resources.resource_filename("alterx", "configs")
         self.config = ConfigParser.ConfigParser(
@@ -178,6 +190,16 @@ class ConfigEditor(QWidget):
         self.config.optionxform = str
         self.load_clicked()
         self.wizard = False
+
+    def prev_page_clicked(self):
+        current = self.page.currentIndex()
+        if current > 0:
+            self.page.setCurrentIndex(current-1)
+    
+    def next_page_clicked(self):
+        current = self.page.currentIndex()
+        if current < self.page.count()-1:
+            self.page.setCurrentIndex(current+1)
 
     def add_default_axes(self):
         num_axes = self.config.get("KINS","JOINTS")

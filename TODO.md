@@ -6,7 +6,6 @@
 * Add tranlation support for ini-wizard
 * Halcmd sending command over network
 * Ascope memory address validation
-* Make page scroll bigger in config editor(QT bug increasing ::scroller width)
     
 ## Config wizard:
 
