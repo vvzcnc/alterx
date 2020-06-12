@@ -397,7 +397,8 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
             INFO.get_offset_table()))
         UPDATER.connect("tool_offset", self.update_tool)
         UPDATER.connect("tool_table", self.update_tool)
-
+        UPDATER.connect("program_units", self.program_units)
+        
         UPDATER.add("display_clear")
         UPDATER.add("display_view")
         UPDATER.add("display_zoomin")
@@ -418,6 +419,21 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.zooming = 0
 
         self.pan_mode = False
+
+    def program_units(self,stat):   
+        self.machine_actor.SetXAxisRange(
+                        self.axis[0]["min_position_limit"]*INFO.units_factor,
+                        self.axis[0]["max_position_limit"]*INFO.units_factor)
+        self.machine_actor.SetYAxisRange(
+                       self.axis[1]["min_position_limit"]*INFO.units_factor,
+                       self.axis[1]["max_position_limit"]*INFO.units_factor)
+        self.machine_actor.SetZAxisRange(
+                        self.axis[2]["min_position_limit"]*INFO.units_factor,
+                        self.axis[2]["max_position_limit"]*INFO.units_factor)
+        
+        self.machine_actor.SetXUnits(INFO.linear_units)
+        self.machine_actor.SetYUnits(INFO.linear_units)
+        self.machine_actor.SetZUnits(INFO.linear_units)
 
     # Handle the mouse button events.
     def button_event(self, obj, event):
@@ -1246,73 +1262,71 @@ class Machine:
     def __init__(self, axis):
         self.status = STAT
 
-        cube_axes_actor = vtk.vtkCubeAxesActor()
+        self.actor = vtk.vtkCubeAxesActor()
 
         axes_minmax = []
         for i in range(3):
+            axis_min = 0
+            axis_max = 0
             if i < len(axis):
-                axes_minmax.append(axis[i]["min_position_limit"])
-                axes_minmax.append(axis[i]["max_position_limit"])
-            else:
-                axes_minmax.append(0)
-                axes_minmax.append(0)
+                axis_min = axis[i]["min_position_limit"]
+                axis_max = axis[i]["max_position_limit"]
+
+            axes_minmax.append(axis_min)
+            axes_minmax.append(axis_max)
                 
-        cube_axes_actor.SetBounds(*axes_minmax)
+        self.actor.SetBounds(*axes_minmax)
 
-        cube_axes_actor.SetXLabelFormat("%6.3f")
-        cube_axes_actor.SetYLabelFormat("%6.3f")
-        cube_axes_actor.SetZLabelFormat("%6.3f")
+        self.actor.SetXLabelFormat("%6.3f")
+        self.actor.SetYLabelFormat("%6.3f")
+        self.actor.SetZLabelFormat("%6.3f")
 
-        cube_axes_actor.SetFlyModeToStaticEdges()
+        self.actor.SetFlyModeToStaticEdges()
 
-        cube_axes_actor.GetTitleTextProperty(0).SetColor(1.0, 0.0, 0.0)
-        cube_axes_actor.GetLabelTextProperty(0).SetColor(1.0, 0.0, 0.0)
+        self.actor.GetTitleTextProperty(0).SetColor(1.0, 0.0, 0.0)
+        self.actor.GetLabelTextProperty(0).SetColor(1.0, 0.0, 0.0)
 
-        cube_axes_actor.GetTitleTextProperty(1).SetColor(0.0, 1.0, 0.0)
-        cube_axes_actor.GetLabelTextProperty(1).SetColor(0.0, 1.0, 0.0)
+        self.actor.GetTitleTextProperty(1).SetColor(0.0, 1.0, 0.0)
+        self.actor.GetLabelTextProperty(1).SetColor(0.0, 1.0, 0.0)
 
-        cube_axes_actor.GetTitleTextProperty(2).SetColor(0.0, 0.0, 1.0)
-        cube_axes_actor.GetLabelTextProperty(2).SetColor(0.0, 0.0, 1.0)
+        self.actor.GetTitleTextProperty(2).SetColor(0.0, 0.0, 1.0)
+        self.actor.GetLabelTextProperty(2).SetColor(0.0, 0.0, 1.0)
 
         machineBoundry = INI.find("VTK", "MACHINE_BOUNDRY") or ""
         if machineBoundry.lower() in ['false', 'off', 'no', '0']:
-            cube_axes_actor.XAxisVisibilityOff()
-            cube_axes_actor.YAxisVisibilityOff()
-            cube_axes_actor.ZAxisVisibilityOff()
+            self.actor.XAxisVisibilityOff()
+            self.actor.YAxisVisibilityOff()
+            self.actor.ZAxisVisibilityOff()
         machineTicks = INI.find("VTK", "MACHINE_TICKS") or ""
         if machineTicks.lower() in ['false', 'off', 'no', '0']:
-            cube_axes_actor.XAxisTickVisibilityOff()
-            cube_axes_actor.YAxisTickVisibilityOff()
-            cube_axes_actor.ZAxisTickVisibilityOff()
+            self.actor.XAxisTickVisibilityOff()
+            self.actor.YAxisTickVisibilityOff()
+            self.actor.ZAxisTickVisibilityOff()
         machineLabels = INI.find("VTK", "MACHINE_LABELS") or ""
         if machineLabels.lower() in ['false', 'off', 'no', '0']:
-            cube_axes_actor.XAxisLabelVisibilityOff()
-            cube_axes_actor.YAxisLabelVisibilityOff()
-            cube_axes_actor.ZAxisLabelVisibilityOff()
+            self.actor.XAxisLabelVisibilityOff()
+            self.actor.YAxisLabelVisibilityOff()
+            self.actor.ZAxisLabelVisibilityOff()
 
-        units = str(self.status.program_units)
+        self.actor.SetXUnits(INFO.linear_units)
+        self.actor.SetYUnits(INFO.linear_units)
+        self.actor.SetZUnits(INFO.linear_units)
 
-        cube_axes_actor.SetXUnits(units)
-        cube_axes_actor.SetYUnits(units)
-        cube_axes_actor.SetZUnits(units)
-
-        cube_axes_actor.DrawXGridlinesOn()
-        cube_axes_actor.DrawYGridlinesOn()
-        cube_axes_actor.DrawZGridlinesOn()
+        self.actor.DrawXGridlinesOn()
+        self.actor.DrawYGridlinesOn()
+        self.actor.DrawZGridlinesOn()
 
         showGrid = INI.find("VTK", "GRID_LINES") or ""
         if showGrid.lower() in ['false', 'off', 'no', '0']:
-            cube_axes_actor.DrawXGridlinesOff()
-            cube_axes_actor.DrawYGridlinesOff()
-            cube_axes_actor.DrawZGridlinesOff()
+            self.actor.DrawXGridlinesOff()
+            self.actor.DrawYGridlinesOff()
+            self.actor.DrawZGridlinesOff()
 
-        cube_axes_actor.SetGridLineLocation(cube_axes_actor.VTK_GRID_LINES_FURTHEST)
+        self.actor.SetGridLineLocation(self.actor.VTK_GRID_LINES_FURTHEST)
 
-        cube_axes_actor.GetXAxesGridlinesProperty().SetColor(0.0, 0.0, 0.0)
-        cube_axes_actor.GetYAxesGridlinesProperty().SetColor(0.0, 0.0, 0.0)
-        cube_axes_actor.GetZAxesGridlinesProperty().SetColor(0.0, 0.0, 0.0)
-
-        self.actor = cube_axes_actor
+        self.actor.GetXAxesGridlinesProperty().SetColor(0.0, 0.0, 0.0)
+        self.actor.GetYAxesGridlinesProperty().SetColor(0.0, 0.0, 0.0)
+        self.actor.GetZAxesGridlinesProperty().SetColor(0.0, 0.0, 0.0)
 
     def get_actor(self):
         return self.actor

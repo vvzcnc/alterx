@@ -66,6 +66,9 @@ class DROLayout(QHBoxLayout):
         if name == 'X' and INFO.machine_is_lathe:
             UPDATER.connect("diameter_multiplier",
                             lambda m: self.diameter_mode(m, num, name))
+                            
+        UPDATER.connect("update_feed_labels", 
+            lambda stat: self.update_position(getattr(STAT,INFO.axes_list)[num]))
 
     def diameter_mode(self, data):
         self.update_position(getattr(STAT,INFO.axes_list)[self.num])
@@ -84,6 +87,8 @@ class DROLayout(QHBoxLayout):
             position = stat['output']
         position -= STAT.g5x_offset[self.num] + STAT.tool_offset[self.num] + \
             STAT.g92_offset[self.num]
+
+        position *= INFO.units_factor
 
         if self.name == 'X' and INFO.machine_is_lathe:
             self.drolabel_act.setText(INFO.dro_format.format(

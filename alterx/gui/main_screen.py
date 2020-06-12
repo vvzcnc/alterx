@@ -418,6 +418,8 @@ class AxisWidget(QGroupBox):
         UPDATER.connect(INFO.axes_list, lambda axis: self.update_position(axis))
         UPDATER.connect("task_mode", self.task_mode_handler)
         UPDATER.connect("diameter_multiplier", self.diameter_mode)
+        UPDATER.connect("update_feed_labels", 
+            lambda stat: self.update_position(getattr(STAT,INFO.axes_list)))
 
     def diameter_mode(self, data):
         self.update_position(getattr(STAT,INFO.axes_list))
@@ -435,8 +437,11 @@ class AxisWidget(QGroupBox):
             position -= STAT.g5x_offset[i] + STAT.tool_offset[i] + \
                 STAT.g92_offset[i]
 
+            position *= INFO.units_factor
+
             if axis == 'X' and INFO.machine_is_lathe:
-                text += '{}{}:'.format(axis, ['', 'R', 'D'][UPDATER.diameter_multiplier]) + \
+                text += '{}{}:'.format(axis, 
+                    ['', 'R', 'D'][UPDATER.diameter_multiplier]) + \
                     INFO.dro_format.format(
                         position*UPDATER.diameter_multiplier)+'  '
             else:

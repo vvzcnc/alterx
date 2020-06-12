@@ -120,6 +120,15 @@ class Main():
         elif data == 3:
             INFO.linear_units = _("cm")
 
+        axis_mul = 1
+        if INFO.machine_is_metric != INFO.get_metric():
+            if INFO.machine_is_metric:
+                axis_mul /= 25.4
+            else:
+                axis_mul *= 25.4
+
+        INFO.units_factor = axis_mul
+
         UPDATER.emit('update_feed_labels')
         printInfo(_('Units: {}', INFO.linear_units))
 

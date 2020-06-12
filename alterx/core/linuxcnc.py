@@ -103,6 +103,8 @@ class linuxcnc_info():
         else:
             self.machine_is_metric = False
 
+        self.units_factor = 1
+
         self.coordinates = (INI.find('TRAJ', 'COORDINATES') or ' ').split(' ')
 
         self.machine_is_lathe = True if INI.find('DISPLAY', 'LATHE') else False
