@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# AlterX GUI - ascope - linuxcnc rt component for oscilloscope
+# AlterX GUI - remote control
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
@@ -20,74 +20,68 @@
 #
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-__all__  =  ["AScope"]
+__all__  =  ["RemoteControl"]
 
 from alterx.common.locale import _
 from alterx.common.compat import *
 from alterx.common.util import *
+from alterx.gui.qt_bindings import *
 
 import socket
-import struct
+import subprocess
 
-class AScope():
+class RemoteControl(QObject):
     HOST = '127.0.0.1'  # The server's hostname or IP address
-    PORT = 27267     # The port used by the server
-
-    OSC_STOP = 0
-    OSC_LIST = 1
-    OSC_STATE = 2
-    OSC_CHANNEL = 3
-    OSC_TRIG = 4
-    OSC_RUN = 5
-    OSC_CHECK = 6
-    OSC_GET = 7
-
-    SAMPLE_IDLE = 0
-    SAMPLE_RUN = 1
-    SAMPLE_COMPLETE = 2
-    SAMPLE_HIGH = 3
-    SAMPLE_LOW = 4
-    SAMPLE_CHANGE = 5
-
-    HAL_PIN = 0
-    HAL_SIG = 1
-    HAL_PARAMETER = 2
+    PORT = 17366         # The port used by the server
     
+    def __init__(self):
+        QObject.__init__(self, parent=None)
+        
+        self.sock = QTcpServer()
+        self.sock.newConnection.connect(self.on_new_connection)
+        self.sock.listen(QHostAddress.LocalHost, type(self).PORT)
+        
+    def on_ready_read(self):
+        msg = u""
+        while True:
+            data = self.client.readAll()
+            msg += toUnicode(data)
+            if not data:
+                break
+        
+        data = u"No answer\n"
+        if "halcmd" in msg:
+            try:
+                data = subprocess.check_output(msg.split(' '),
+                                                stderr=subprocess.STDOUT)
+            except Exception as e:
+                printInfo(_("Failed to execute cmd: {}",e))
+                data = e.output
+                
+        self.client.write(data)
+        self.client.close()
+
+    def on_new_connection(self):
+        while self.sock.hasPendingConnections():
+            self.client = self.sock.nextPendingConnection()
+            self.client.readyRead.connect(self.on_ready_read)
+            
     @classmethod
-    def send_packet(cls,cmd,stype,value):
-        answer = u""
+    def send_packet(cls,msg):
+        answer = ""
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             s.connect((cls.HOST, cls.PORT))
-            packet = struct.pack( "BBd" if type(value) == float else "BBl",
-                cmd, stype, value )
-            s.sendall(packet)
+            s.sendall(msg.encode())
             while True:
                 data = s.recv(1024)
                 answer += data.decode('utf-8')
                 if not data:
                     break
-                    
         except Exception as e:
             printInfo(_("Failed to send packet: {}",e))
         finally:
             s.close()
 
         return answer
-
-    @classmethod
-    def get_type_text(cls,stype):
-        t={'-1':'NULL','1':'BIT','2':'FLOAT','3':'S32','4':'U32','5':'PORT'}
-        if stype in t:
-            return t[stype]   
-        else:
-            return stype
-
-    @classmethod 
-    def get_dir_text(cls,sdir):
-        t={'-1':'None','16':'In','32':'Out','48':'IO','64':'RO','192':'RW'}
-        if sdir in t:
-            return t[sdir] 
-        else:
-            return sdir

@@ -94,13 +94,22 @@ else:
 
 
 def toUnicode(string):
+    #catch error string
+    try:
+        if type(string).__name__ not in ("str", "unicode"):
+            string = str(string)
+        elif type(string).__name__ in "unicode":
+            return string
+    except:
+        pass
+        
+    #catch py2/py3 unicode error
     try:
         string = unicode(string, encoding='utf-8')
-    except NameError:
+    except NameError as e:
         string = str(string)
-    except TypeError:
+    except TypeError as e:
         pass
     except Exception as e:
-        #print(e)
         pass
     return string    

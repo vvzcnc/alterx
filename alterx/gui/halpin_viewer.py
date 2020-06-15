@@ -29,9 +29,26 @@ from alterx.common import *
 
 from alterx.gui.util import *
 from alterx.core.ascope import AScope as osc
+from alterx.core.remote import RemoteControl as remote
 
-import subprocess
 import pyqtgraph
+
+
+class ReceiveThread(QThread):
+    message = pyqtSignal(str)
+    
+    def __init__(self,parent):
+        QThread.__init__(self, parent=None)
+        self.parent = parent
+        
+    def run(self):
+        try:
+            data = remote.send_packet("halcmd "+self.parent.item_value.text())
+        except Exception as e:
+            data = u"#:"
+
+        self.message.emit(data)
+
 
 class HalPinWidget(QWidget):
     def __init__(self, parent=None):
@@ -490,14 +507,16 @@ class HalPinWidget(QWidget):
     def on_update_clicked(self):
         self.load_data()
 
+    @pyqtSlot(str)
+    def item_answer_set_text(self,data):
+        self.item_answer.setText("#:"+data[:-1])
+
     def on_change_clicked(self):
         self.item_answer.setText("#:")
-        try:
-            data = subprocess.check_output(("halcmd "+self.item_value.text()
-                                        ).split(' '),stderr=subprocess.STDOUT)
-        except Exception as e:
-            data = e.output
-        self.item_answer.setText("#:"+data[:-1])
+        self.thread = ReceiveThread(self)
+        self.thread.message.connect(self.item_answer_set_text)
+        self.thread.start()
+        
         self.cmd_history.append(self.item_value.text())
         self.cmd_history_index = len(self.cmd_history)-1
 
@@ -560,14 +579,16 @@ class HalPinWidget(QWidget):
             data_pin = osc.send_packet(osc.OSC_LIST,osc.HAL_PIN,0)
             data_pin = data_pin.split('\n')
             data_pin = filter(lambda a: len(a)==5,
-                [[c for c in s.split(' ')+[str(osc.HAL_PIN)] if len(c)>0] for s in data_pin])
+                [[c for c in s.split(' ')+[str(osc.HAL_PIN)] if len(c)>0
+                    ] for s in data_pin])
                 
             data_param = osc.send_packet(osc.OSC_LIST,osc.HAL_PARAMETER,0)
             data_param = data_param.split('\n')
             data_param = filter(lambda a: len(a)==5,
-                [[c for c in s.split(' ')+[str(osc.HAL_PARAMETER)] if len(c)>0] for s in data_param])
+                [[c for c in s.split(' ')+[str(osc.HAL_PARAMETER)] if len(c)>0
+                    ] for s in data_param])
 
-            data = data_pin + data_param
+            data = list(data_pin) + list(data_param)
         except Exception as e:
             printInfo(_("Failed to get hal pin list: {}",e))
             return

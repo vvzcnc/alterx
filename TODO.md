@@ -3,7 +3,6 @@
 ## Settings widget:
 
 * PID calibrate widget
-* Halcmd sending command over network
 * Ascope memory address validation
     
 ## Config wizard:

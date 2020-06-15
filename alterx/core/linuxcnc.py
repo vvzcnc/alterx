@@ -29,7 +29,7 @@ from alterx.common import *
 from alterx.gui.qt_bindings import *
 
 import time
-
+import socket
 
 class fake_linuxcnc():
     axis = []
@@ -78,6 +78,14 @@ try:
     
     STAT.poll()
     ERROR.poll()
+
+    from alterx.core.remote import RemoteControl
+    
+    port = INI.find("DISPLAY", "REMOTE_PORT") or RemoteControl.PORT
+    if port:
+        RemoteControl.PORT = port
+        REMOTE = RemoteControl()
+        
 except Exception as e:
     printError(_("Failed to import LinuxCNC module: '{}'", e))
     

@@ -29,6 +29,7 @@ from alterx.common.locale import _
 from alterx.gui.util import *
 
 from alterx.core.ascope import AScope as osc
+from alterx.core.remote import RemoteControl as remote
 
 def main():
     qapp = QApplication(sys.argv)
@@ -47,8 +48,13 @@ def main():
     hlay = QHBoxLayout()
     ip_label = QLabel("IP:")
     ip = QLineEdit()
+    ip.setText(osc.HOST)
     port_label = QLabel("Port:")
     port = QLineEdit()
+    port.setText(str(osc.PORT))
+    gui_port_label = QLabel("GUI port:")
+    gui_port = QLineEdit()
+    gui_port.setText(str(remote.PORT))
     set_button = QPushButton()
     set_button.setText("Connect")
     viewer = HalPinWidget()
@@ -56,6 +62,8 @@ def main():
     def connect():
         osc.PORT = int(port.text())
         osc.IP = ip.text()
+        remote.PORT = int(gui_port.text())
+        remote.IP = ip.text()
         viewer.on_update_clicked()
     
     set_button.clicked.connect(connect)
@@ -64,6 +72,8 @@ def main():
     hlay.addWidget(ip)
     hlay.addWidget(port_label)
     hlay.addWidget(port)
+    hlay.addWidget(gui_port_label)
+    hlay.addWidget(gui_port)
     hlay.addWidget(set_button)
     
     layout.addLayout(hlay)
@@ -73,6 +83,24 @@ def main():
     mainwnd.show()
 
     mainwnd.setWindowState(Qt.WindowMaximized)
+
+    # Install a handler for unhandled exceptions.
+    def __unhandledExceptionHook(etype, value, tb):
+        text = _("AScope: ABORTING due to unhandled exception:")
+        print(text, file=sys.stderr)
+        __orig_excepthook(etype, value, tb)
+        # Try to show an error message box.
+        with suppressAllExc:
+            import traceback
+            QMessageBox.critical(
+                None,
+                _("AScope: Unhandled exception"),
+                text + "\n\n\n" +
+                "".join(traceback.format_exception(etype, value, tb)),
+                QMessageBox.Ok,
+                QMessageBox.Ok)
+        # Call QCoreApplication.exit() so that we return from exec_()
+        qapp.exit(ExitCodes.EXIT_ERR_OTHER)
     
     __orig_excepthook = sys.excepthook
     sys.excepthook = __unhandledExceptionHook
@@ -80,25 +108,6 @@ def main():
     # Run the main loop.
     res = qapp.exec_()
     sys.exit(res)
-    
-
-# Install a handler for unhandled exceptions.
-def __unhandledExceptionHook(etype, value, tb):
-    text = _("AScope: ABORTING due to unhandled exception:")
-    print(text, file=sys.stderr)
-    __orig_excepthook(etype, value, tb)
-    # Try to show an error message box.
-    with suppressAllExc:
-        import traceback
-        QMessageBox.critical(
-            None,
-            _("AScope: Unhandled exception"),
-            text + "\n\n\n" +
-            "".join(traceback.format_exception(etype, value, tb)),
-            QMessageBox.Ok,
-            QMessageBox.Ok)
-    # Call QCoreApplication.exit() so that we return from exec_()
-    qapp.exit(ExitCodes.EXIT_ERR_OTHER)
 
 if __name__ == "__main__":
     main()
