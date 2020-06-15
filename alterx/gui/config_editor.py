@@ -294,7 +294,7 @@ class ConfigEditor(QWidget):
 
         with open(default_wizard, "r") as fp:
             for line in fp:
-                if line.startswith('#') or not line:
+                if line.startswith('#') or len(line) < 8 or not line:
                     continue
                 for i,axis in enumerate(coordinates.split(' ')):
                     try:
@@ -307,8 +307,23 @@ class ConfigEditor(QWidget):
                         num = {'X':0,'Y':1,'Z':2,'A':3,'B':4,'C':5,'U':6,'V':7,'W':8}[axis]
                     else:
                         num = i
-                    p = (c.format(num,axis),t.format(num,axis),e,nYes,nNo,aYes,aNo)
-                    self.page.addTab(WizardWidget(self,p),c.format(num,axis))
+                    
+                    c = c.replace("_('",'')
+                    c = c.replace("')",'')
+                    t = t.replace("_('",'')
+                    t = t.replace("')",'')
+
+                    caption = c
+                    text = t
+                    try:
+                        caption = _(c).format(num,axis)
+                        text = _(t).format(num,axis)
+                    except:
+                        caption = c.format(num,axis)
+                        text = t.format(num,axis)
+                        
+                    p = (caption,text,e,nYes,nNo,aYes,aNo)
+                    self.page.addTab(WizardWidget(self,p),caption)
 
     def run_wizard_clicked(self):
         if self.page.count() > 0:
@@ -329,15 +344,28 @@ class ConfigEditor(QWidget):
                         
             with open(default_wizard, "r") as fp:
                 for line in fp:
-                    if line.startswith('#') or not line:
+                    if line.startswith('#') or len(line) < 8 or not line:
                         continue
                     try:
                         c,t,e,nYes,nNo,aYes,aNo = line.split(';')[:-1]
                     except Exception as e:
                         printDebug(_("Broken wizard line: {}\n{}",e,line))
                         continue
-                    p = (c,t,e,nYes,nNo,aYes,aNo)
-                    self.page.addTab(WizardWidget(self,p),c)
+                        
+                    c = c.replace("_('",'')
+                    c = c.replace("')",'')
+                    t = t.replace("_('",'')
+                    t = t.replace("')",'')
+                        
+                    caption = c
+                    text = t
+                    try:
+                        caption = _(c)
+                        text = _(t)
+                    except:
+                        pass
+                    p = (caption,text,e,nYes,nNo,aYes,aNo)
+                    self.page.addTab(WizardWidget(self,p),caption)
 
     def new_section(self,section):
         scroll = QScrollArea()

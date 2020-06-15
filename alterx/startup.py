@@ -112,6 +112,7 @@ else:
 
 printVerbose(_("Loglevel: {}", logger.loglevel))
 printVerbose(_("Logfile: {}", logger.logfile))
+printVerbose(_("Locale: {}", _._locale))
 
 from alterx.gui.main_window import *
 from alterx.common.keyboard_listener import *

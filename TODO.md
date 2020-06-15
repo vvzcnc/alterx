@@ -3,7 +3,6 @@
 ## Settings widget:
 
 * PID calibrate widget
-* Add tranlation support for ini-wizard
 * Halcmd sending command over network
 * Ascope memory address validation
     
@@ -21,14 +20,14 @@
 ## Other:
 
 * Installation scripts
+* Start script and/or desktop launch
+* Make QUICK-START
 * Jog
 * Keyboard serial listener
 * Startup open ngc file
 * Notify transparent
 * Add locales
 * Add notes inside widgets    
-* Start script and/or desktop launch
-* Make QUICK-START
 
 ## Need more time:
 

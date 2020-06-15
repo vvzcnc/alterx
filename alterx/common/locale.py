@@ -65,14 +65,12 @@ class translate():
         locale_dir = pkg_resources.resource_filename("alterx", "locales")
 
         if not val:
-            printVerbose("Using default locale: {}".format(self._locale))
             val = self._locale
 
         try:
             self.lang = gettext.translation("base", locale_dir, [val])
             self.lang.install()
             self._ = self.get_text
-            printVerbose("Setup locale: {}".format(val))
         except Exception as e:
             printWarning("Unsupported locale ({}) or translation error ({})\
             ".format(val, e))
