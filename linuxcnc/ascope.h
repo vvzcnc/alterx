@@ -143,6 +143,7 @@ enum HAL_TYPE {
 };
 
 typedef struct {
+    hal_data_u control;
     unsigned int cmd:8;
     unsigned int type:8;
     hal_data_u value;

@@ -54,15 +54,17 @@ class AScope():
     HAL_PARAMETER = 2
     
     @classmethod
-    def send_packet(cls,cmd,stype,value):
+    def send_packet(cls,control,cmd,stype,value):
         answer = u""
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             s.connect((cls.HOST, cls.PORT))
-            packet = struct.pack( "BBd" if type(value) == float else "BBl",
-                cmd, stype, value )
+            packet = struct.pack( "lBBd" if type(value) == float else "lBBl",
+                control, cmd, stype, value )
+ 
             s.sendall(packet)
+            s.settimeout(1.0)
             while True:
                 data = s.recv(1024)
                 answer += data.decode('utf-8')

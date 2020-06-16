@@ -91,19 +91,28 @@ class HalEditor(QWidget):
 
         self.halCombo = QComboBox()
         layout.addWidget(self.halCombo)
-
+        self.control = 0
         self.halTextEdit = QTextEdit()
         completer = HalCompleter(self.halTextEdit)
         completer.setWidget(self.halTextEdit)
         
         try:
-            data_pin = osc.send_packet(osc.OSC_LIST,osc.HAL_PIN,0)
+            data_pin = osc.send_packet(self.control,osc.OSC_LIST,osc.HAL_PIN,0)
             data_pin = data_pin.split('\n')
-                
-            data_param = osc.send_packet(osc.OSC_LIST,osc.HAL_PARAMETER,0)
+            
+            if "CONTROL" in data_pin[0]:
+                self.control = int(data_pin[0].split(' ')[1],16)
+                data_pin = data_pin[1:]
+            
+            data_param = osc.send_packet(self.control,
+                                        osc.OSC_LIST,osc.HAL_PARAMETER,0)
             data_param = data_param.split('\n')
 
-            data = data_pin + data_param
+            if "CONTROL" in data_param[0]:
+                self.control = int(data_param[0].split(' ')[1],16)
+                data_param = data_param[1:]
+
+            data = list(data_pin) + list(data_param)
         
             words = []
             for d in data:

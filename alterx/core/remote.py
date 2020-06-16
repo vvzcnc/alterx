@@ -74,6 +74,7 @@ class RemoteControl(QObject):
         try:
             s.connect((cls.HOST, cls.PORT))
             s.sendall(msg.encode())
+            s.settimeout(1.0)
             while True:
                 data = s.recv(1024)
                 answer += data.decode('utf-8')

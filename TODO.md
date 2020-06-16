@@ -3,7 +3,6 @@
 ## Settings widget:
 
 * PID calibrate widget
-* Ascope memory address validation
     
 ## Config wizard:
 

@@ -153,17 +153,27 @@ void connection_handler(void *arg)
             if( read_size != sizeof(socket_req_t))
             {
                 rtapi_print_msg(RTAPI_MSG_ERR,
-                    "ASCOPE: ERROR: wrong packet size\n",
+                    "ASCOPE: ERROR: wrong packet size %d\n",
                     read_size,sizeof(socket_req_t));
                 continue;
             }
             /*
-            rtapi_print_msg(RTAPI_MSG_ERR,"ASCOPE: DEBUG packet %X %X %X\n",
+            rtapi_print_msg(RTAPI_MSG_ERR,"ASCOPE: DEBUG packet %X %X %X %X\n",
+                ta->request->control,
                 ta->request->cmd,
                 ta->request->type,
                 ta->request->value);
                 */
                 
+            if( ta->request->cmd != OSC_LIST && 
+                (int)ta->request->control.u != (int)hal_data)
+            {
+                rtapi_print_msg(RTAPI_MSG_ERR,
+                    "ASCOPE: ERROR: wrong control word %X!=%X\n",
+                    (int)ta->request->control.u, (int)hal_data);
+                continue;
+            }
+        
             if( ta->request->cmd == OSC_STOP )
             {
                 ta->trigger->cmd = SAMPLE_IDLE;
@@ -171,6 +181,9 @@ void connection_handler(void *arg)
             }
             else if( ta->request->cmd == OSC_LIST )
             {
+                snprintf(sendBuff, sizeof(sendBuff), "CONTROL %X\n", hal_data);
+                write(connfd, sendBuff, strlen(sendBuff));
+                
                 if( ta->request->type == HAL_PIN )
                 {
                     int next = hal_data->pin_list_ptr;  

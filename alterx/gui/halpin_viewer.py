@@ -62,7 +62,7 @@ class HalPinWidget(QWidget):
         tabs = QTabWidget()
         layout.addWidget(tabs)
         self.setLayout(layout)
-        
+        self.control = 0
         hlay = QHBoxLayout()
 
         self.tree = QTreeWidget()
@@ -276,7 +276,7 @@ class HalPinWidget(QWidget):
             stype = self.trig_combo.itemData(i, role=Qt.UserRole + 1)
             addr = self.trig_combo.itemData(i, role=Qt.UserRole + 2)
             
-            osc.send_packet(osc.OSC_TRIG,stype,addr)
+            osc.send_packet(self.control,osc.OSC_TRIG,stype,addr)
             if len(self.plots) > i+1 and i>=0:
                 self.plots[i+1].addItem(self.hLine)
                 self.plots[i+1].addItem(self.tLine)
@@ -284,12 +284,12 @@ class HalPinWidget(QWidget):
     def on_oscrun_clicked(self):
         try:
             t = self.trig_edit.text()
-            osc.send_packet(osc.OSC_RUN,self.trigger_mode, float(t) if t else 0 )
+            osc.send_packet(self.control,osc.OSC_RUN,self.trigger_mode, float(t) if t else 0 )
         except Exception as e:
             printInfo(_("Failed to send run cmd: {}",e))
         
     def on_oscstop_clicked(self):
-        osc.send_packet(osc.OSC_STOP,0,0)
+        osc.send_packet(self.control,osc.OSC_STOP,0,0)
 
     def osc_trig_changed(self):
         rb = self.sender()
@@ -355,7 +355,7 @@ class HalPinWidget(QWidget):
     def plot_update_data(self):
         if not self.trig_edit.visibleRegion().isEmpty():
             #Check (Check,0,0)
-            data = osc.send_packet(osc.OSC_CHECK,0,0)
+            data = osc.send_packet(self.control,osc.OSC_CHECK,0,0)
             
             if not data:
                 return
@@ -364,7 +364,7 @@ class HalPinWidget(QWidget):
             
             if answer  == osc.SAMPLE_COMPLETE:
                 self.osc_status.setText(_("Complete"))
-                data = osc.send_packet(osc.OSC_GET,0,0)
+                data = osc.send_packet(self.control,osc.OSC_GET,0,0)
                 if self.shot_mode:
                     self.on_oscstop_clicked()
                 else:
@@ -491,7 +491,7 @@ class HalPinWidget(QWidget):
         
         for i,key in enumerate(watchlist):
             #Set (Channel, NChannel*10+ChannelType, Pin offset)
-            osc.send_packet(osc.OSC_CHANNEL,i*10+int(key[3]),int(key[0],16))
+            osc.send_packet(self.control,osc.OSC_CHANNEL,i*10+int(key[3]),int(key[0],16))
             item = QStandardItem(key[2])
             item.setData(int(key[3]), role=Qt.UserRole + 1)
             item.setData(int(key[0],16), role=Qt.UserRole + 2)
@@ -500,7 +500,7 @@ class HalPinWidget(QWidget):
         self.trig_combo.setCurrentIndex(-1)
         
         #Clear data old data
-        osc.send_packet(osc.OSC_CHANNEL,(i+1)*10,0)
+        osc.send_packet(self.control,osc.OSC_CHANNEL,(i+1)*10,0)
            
         self.plot_update_data()
 
@@ -540,7 +540,7 @@ class HalPinWidget(QWidget):
                 pdir = self.watched_list.item(r,5)
                 htype = self.watched_list.item(r,6)
                 if addr and pdir and htype:
-                    data = osc.send_packet(osc.OSC_STATE,int(htype.text()),
+                    data = osc.send_packet(self.control,osc.OSC_STATE,int(htype.text()),
                                             int(addr.text(),16))
                     if data:
                         data = data[:-1].replace(' ','')
@@ -576,14 +576,25 @@ class HalPinWidget(QWidget):
         self.tree.clear()
         
         try:
-            data_pin = osc.send_packet(osc.OSC_LIST,osc.HAL_PIN,0)
+            data_pin = osc.send_packet(self.control,osc.OSC_LIST,osc.HAL_PIN,0)
             data_pin = data_pin.split('\n')
+            
+            if "CONTROL" in data_pin[0]:
+                self.control = int(data_pin[0].split(' ')[1],16)
+                data_pin = data_pin[1:]
+            
             data_pin = filter(lambda a: len(a)==5,
                 [[c for c in s.split(' ')+[str(osc.HAL_PIN)] if len(c)>0
                     ] for s in data_pin])
                 
-            data_param = osc.send_packet(osc.OSC_LIST,osc.HAL_PARAMETER,0)
+            data_param = osc.send_packet(self.control,
+                                        osc.OSC_LIST,osc.HAL_PARAMETER,0)
             data_param = data_param.split('\n')
+
+            if "CONTROL" in data_param[0]:
+                self.control = int(data_param[0].split(' ')[1],16)
+                data_param = data_param[1:]
+                
             data_param = filter(lambda a: len(a)==5,
                 [[c for c in s.split(' ')+[str(osc.HAL_PARAMETER)] if len(c)>0
                     ] for s in data_param])
