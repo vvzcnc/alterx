@@ -39,6 +39,8 @@
 #define SHMPTR(offset)  ( (void *)( hal_shmem_base + (offset) ) )
 #define SHMOFF(ptr)     ( ((char *)(ptr)) - hal_shmem_base )
                        
+#define SHMEM_KEY 0x27267382
+                       
 typedef union {
     hal_bit_t b;
     hal_s32_t s;
@@ -169,12 +171,16 @@ typedef struct {
 } trigger_t;
 
 typedef struct {
-    pthread_mutex_t* mutex;
-    socket_req_t* request;
-    channels_t* channels;
-    trigger_t* trigger;
-    data_t* array;
-    int* pointer;
+    int channels;
+    int samples;
+} thread_arg_size_t;
+
+typedef struct {
+    int init;
+    pthread_mutex_t mutex;
+    socket_req_t request;
+    trigger_t trigger;
+    int pointer;
 } thread_arg_t;
 
 extern char *hal_shmem_base;

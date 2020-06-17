@@ -22,7 +22,7 @@
 */
 
 #include "ascope.h"
-                       
+   
 /* module information */
 MODULE_AUTHOR("uncle-yura (uncle-yura@tuta.io)");
 MODULE_DESCRIPTION("Oscilloscope for Alterx GUI");
@@ -30,22 +30,21 @@ MODULE_LICENSE("GPL");
 
 static int port=27267,channels=4,samples=-1;
 static long int thread=1000000;
-static int comp_id;
-hal_data_t *hal_data;
-int listenfd = 0;
-char sendBuff[1024];
+static int comp_id, shm_id;
+
+int listenfd;
+
 pthread_t thread_id;
-socket_req_t request;
-pthread_mutex_t mxq;
-channels_t *ch;
-trigger_t tr;
+hal_data_t *hal_data;
+thread_arg_t *args;
+channels_t *channel;
 data_t *data;
-int sample_pointer;
-        
+
 RTAPI_MP_INT(port, "socket port");
 RTAPI_MP_INT(channels, "number of channels");
 RTAPI_MP_INT(samples, "number of samples");
 RTAPI_MP_INT(thread, "sample thread");
+
 int rtapi_app_main(void) 
 {
     int retval;
@@ -77,16 +76,8 @@ int rtapi_app_main(void)
     //char yes='1';
     setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(yes));
 
-    if( samples == -1 )
-        samples = 1000000000/thread;
-
-    data = malloc(sizeof(data_t)*samples);
-    ch = malloc(sizeof(channels_t)*channels);
-    
     struct sockaddr_in serv_addr;
-
     memset(&serv_addr, 0, sizeof(serv_addr));
-    memset(sendBuff, 0, sizeof(sendBuff));
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -102,12 +93,36 @@ int rtapi_app_main(void)
     
     listen(listenfd, 10);
 
-    pthread_mutex_init(&mxq, NULL);
-    pthread_mutex_lock(&mxq);
+    if( samples == -1 )samples = 1000000000/thread;
 
-    thread_arg_t arg = { &mxq, &request, ch, &tr, data, &sample_pointer };
+    void *rptr;
+
+    thread_arg_size_t size;
+    size.channels = channels;
+    size.samples = samples;
+
+    int struct_size = sizeof(thread_arg_t) + 
+                        sizeof(channels_t)*size.channels + 
+                        sizeof(data_t)*size.samples;
+                                        
+    shm_id = rtapi_shmem_new(SHMEM_KEY,comp_id,struct_size);
+        
+    if (shm_id < 0) return shm_id;
     
-    if( pthread_create( &thread_id, NULL, connection_handler, &arg ) < 0)
+    retval = rtapi_shmem_getptr(shm_id,&rptr);
+    if (retval < 0) return retval;
+    
+    args = rptr;
+
+    memset(args, 0, struct_size );
+
+    channel = rptr + sizeof(thread_arg_t);
+    data = channel + sizeof(channels_t) * size.channels;
+
+    pthread_mutex_init(&args->mutex, NULL);
+    pthread_mutex_lock(&args->mutex);
+    
+    if( pthread_create( &thread_id, NULL, connection_handler, &size) < 0)
     {
 	    rtapi_print_msg(RTAPI_MSG_ERR,
     	    "ASCOPE: ERROR: socket thread create failed\n");
@@ -119,23 +134,48 @@ int rtapi_app_main(void)
     return 0;
 }
 
-void connection_handler(void *arg)
+void connection_handler(void *args)
 {
-    thread_arg_t *ta = arg;
-    pthread_mutex_t *mtx = ta->mutex;
-    int retval;
+    thread_arg_size_t size, *sp;
+    channels_t *ch;
+    data_t *array;
+    thread_arg_t *ta;
+
+    sp = args;
+    
+    size.channels = sp->channels;
+    size.samples = sp->samples;
+    
+    char sendBuff[128];
+    memset(sendBuff, 0, sizeof(sendBuff));
+
+    socket_req_t *arg;
+    void *rptr;
+    
+    int shm_id = rtapi_shmem_new(SHMEM_KEY,0,sizeof(thread_arg_t) + 
+                                            sizeof(channels_t) * size.channels + 
+                                            sizeof(data_t) * size.samples);
+    if (shm_id < 0) return shm_id;
+    
+    int retval = rtapi_shmem_getptr(shm_id,&rptr);
+    if (retval < 0) return retval;
+    
+    ta = rptr;
+    ch = rptr + sizeof(thread_arg_t);
+    array = ch + sizeof(channels_t) * size.channels;
+        
     struct timeval tv;
     fd_set readfds;
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(listenfd, &fds);
-    while( !need_quit(mtx))
+    
+    while( !need_quit(&ta->mutex))
     {
         tv.tv_sec = 1;
         tv.tv_usec = 0;
         readfds = fds;
         retval=select(listenfd+1,&readfds, NULL, NULL,&tv);
-
         if(retval == -1) 
         {
             //Socket error
@@ -147,9 +187,8 @@ void connection_handler(void *arg)
             //Data avaliable
             int connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
             setsockopt(connfd,SOL_SOCKET,SO_RCVTIMEO,&tv,sizeof(tv));
-            
             //Read data
-            int read_size=recv(connfd,ta->request,sizeof(socket_req_t),NULL);
+            int read_size=recv(connfd,&(ta->request),sizeof(socket_req_t),NULL);
             if( read_size != sizeof(socket_req_t))
             {
                 rtapi_print_msg(RTAPI_MSG_ERR,
@@ -159,32 +198,32 @@ void connection_handler(void *arg)
             }
             /*
             rtapi_print_msg(RTAPI_MSG_ERR,"ASCOPE: DEBUG packet %X %X %X %X\n",
-                ta->request->control,
-                ta->request->cmd,
-                ta->request->type,
-                ta->request->value);
-                */
+                ta->request.control,
+                ta->request.cmd,
+                ta->request.type,
+                ta->request.value);
+            */
                 
-            if( ta->request->cmd != OSC_LIST && 
-                (int)ta->request->control.u != (int)hal_data)
+            if( ta->request.cmd != OSC_LIST && 
+                (int)ta->request.control.u != (int)hal_data)
             {
                 rtapi_print_msg(RTAPI_MSG_ERR,
                     "ASCOPE: ERROR: wrong control word %X!=%X\n",
-                    (int)ta->request->control.u, (int)hal_data);
+                    (int)ta->request.control.u, (int)hal_data);
                 continue;
             }
         
-            if( ta->request->cmd == OSC_STOP )
+            if( ta->request.cmd == OSC_STOP )
             {
-                ta->trigger->cmd = SAMPLE_IDLE;
-                *(ta->pointer) = 0;
+                ta->trigger.cmd = SAMPLE_IDLE;
+                ta->pointer = 0;
             }
-            else if( ta->request->cmd == OSC_LIST )
+            else if( ta->request.cmd == OSC_LIST )
             {
                 snprintf(sendBuff, sizeof(sendBuff), "CONTROL %X\n", hal_data);
                 write(connfd, sendBuff, strlen(sendBuff));
                 
-                if( ta->request->type == HAL_PIN )
+                if( ta->request.type == HAL_PIN )
                 {
                     int next = hal_data->pin_list_ptr;  
                     hal_pin_t *source;
@@ -197,7 +236,7 @@ void connection_handler(void *arg)
                         next = source->next_ptr; 
                     }
                 }
-                else if( ta->request->type == HAL_SIG )
+                else if( ta->request.type == HAL_SIG )
                 {
                     int next = hal_data->sig_list_ptr; 
                     hal_sig_t *source;
@@ -210,7 +249,7 @@ void connection_handler(void *arg)
                         next = source->next_ptr; 
                     }
                 }
-                else if( ta->request->type == HAL_PARAMETER )
+                else if( ta->request.type == HAL_PARAMETER )
                 {
                     int next = hal_data->param_list_ptr; 
                     hal_param_t *source;
@@ -230,12 +269,12 @@ void connection_handler(void *arg)
                     continue;
                 }   
             }
-            else if( ta->request->cmd == OSC_STATE )
+            else if( ta->request.cmd == OSC_STATE )
             {
                 char *value_str;
-                if( ta->request->type == HAL_PIN )
+                if( ta->request.type == HAL_PIN )
                 {
-                    hal_pin_t *source=SHMPTR(ta->request->value.u);
+                    hal_pin_t *source=SHMPTR(ta->request.value.u);
                     if (source->signal == 0) 
                         value_str = get_data_value(source->type, &(source->dummysig));
                     else 
@@ -246,15 +285,15 @@ void connection_handler(void *arg)
                     }
                     snprintf(sendBuff, sizeof(sendBuff), "%s\n",value_str);
                 }
-                else if( ta->request->type == HAL_SIG )
+                else if( ta->request.type == HAL_SIG )
                 {
-                    hal_sig_t *source=SHMPTR(ta->request->value.u);
+                    hal_sig_t *source=SHMPTR(ta->request.value.u);
                     value_str = get_data_value(source->type, SHMPTR(source->data_ptr));
                     snprintf(sendBuff, sizeof(sendBuff), "%s\n",value_str);
                 }
-                else if( ta->request->type == HAL_PARAMETER )
+                else if( ta->request.type == HAL_PARAMETER )
                 {
-                    hal_param_t *source = SHMPTR(ta->request->value.u);
+                    hal_param_t *source = SHMPTR(ta->request.value.u);
                     value_str = get_data_value(source->type, SHMPTR(source->data_ptr));
                     snprintf(sendBuff, sizeof(sendBuff), "%s\n",value_str);
                 }
@@ -266,30 +305,30 @@ void connection_handler(void *arg)
                 }   
                 write(connfd, sendBuff, strlen(sendBuff));
             }
-            else if( ta->request->cmd == OSC_CHANNEL )
+            else if( ta->request.cmd == OSC_CHANNEL )
             {
-                if( ta->request->type/10 < channels )
+                if( ta->request.type/10 < size.channels )
                 {
-                    ta->channels[ta->request->type/10].offset = ta->request->value.u;
-                    ta->channels[ta->request->type/10].type = ta->request->type%10;
+                    ch[ta->request.type/10].offset = ta->request.value.u;
+                    ch[ta->request.type/10].type = ta->request.type%10;
                 }
             }
-            else if( ta->request->cmd == OSC_TRIG )
+            else if( ta->request.cmd == OSC_TRIG )
             {
-                ta->trigger->cmd = SAMPLE_IDLE;
-                ta->trigger->type = ta->request->type;
-                ta->trigger->pin = ta->request->value.u;
+                ta->trigger.cmd = SAMPLE_IDLE;
+                ta->trigger.type = ta->request.type;
+                ta->trigger.pin = ta->request.value.u;
             }
-            else if( ta->request->cmd == OSC_RUN )
+            else if( ta->request.cmd == OSC_RUN )
             {
-                *(ta->pointer) = 0;
+                ta->pointer = 0;
                 
-                ta->trigger->value = ta->request->value.f;
+                ta->trigger.value = ta->request.value.f;
                 
                 data_t l;
-                if( ta->trigger->type == HAL_PIN )
+                if( ta->trigger.type == HAL_PIN )
                 {
-                    hal_pin_t *source=SHMPTR( ta->trigger->pin );
+                    hal_pin_t *source=SHMPTR( ta->trigger.pin );
                     if (source->signal == 0) 
                         set_data_value(source->type, &(source->dummysig),&l);
                     else 
@@ -299,53 +338,53 @@ void connection_handler(void *arg)
                         set_data_value(source->type, SHMPTR(sig->data_ptr),&l);
                     }
                 }
-                else if( ta->trigger->type == HAL_SIG )
+                else if( ta->trigger.type == HAL_SIG )
                 {
-                    hal_sig_t *source=SHMPTR( ta->trigger->pin );
+                    hal_sig_t *source=SHMPTR( ta->trigger.pin );
                     set_data_value(source->type, SHMPTR(source->data_ptr),&l);
                 }
-                else if( ta->trigger->type == HAL_PARAMETER )
+                else if( ta->trigger.type == HAL_PARAMETER )
                 {
-                    hal_param_t *source = SHMPTR( ta->trigger->pin );
+                    hal_param_t *source = SHMPTR( ta->trigger.pin );
                     set_data_value(source->type, SHMPTR(source->data_ptr),&l);
                 }
                 
-                ta->trigger->last.value.u = l.value.u;
-                ta->trigger->cmd = ta->request->type;
+                ta->trigger.last.value.u = l.value.u;
+                ta->trigger.cmd = ta->request.type;
             }
-            else if( ta->request->cmd == OSC_CHECK )
+            else if( ta->request.cmd == OSC_CHECK )
             {
-                snprintf(sendBuff, sizeof(sendBuff), "%d\n", ta->trigger->cmd);
+                snprintf(sendBuff, sizeof(sendBuff), "%d\n", ta->trigger.cmd);
                 write(connfd, sendBuff, strlen(sendBuff));
             }
-            else if( ta->request->cmd == OSC_GET )
+            else if( ta->request.cmd == OSC_GET )
             {
             	snprintf(sendBuff, sizeof(sendBuff), "Samples %d thread %d\n",
-                	    *(ta->pointer), thread);
+                	    ta->pointer, thread);
                 write(connfd, sendBuff, strlen(sendBuff));
                 
-                for(int i=0; i<*(ta->pointer);i++)
+                for(int i=0; i<ta->pointer;i++)
                 {
-                    switch (ta->array[i].type) 
+                    switch (array[i].type) 
                     {
                         case HAL_BIT:
                         	snprintf(sendBuff, sizeof(sendBuff), "%d %d\n",
-                        	    ta->array[i].channel, ta->array[i].value.b);
+                        	    array[i].channel, array[i].value.b);
 	                    break;
 
                         case HAL_FLOAT:
                         	snprintf(sendBuff, sizeof(sendBuff), "%d %f\n",
-                        	    ta->array[i].channel, ta->array[i].value.f);
+                        	    array[i].channel, array[i].value.f);
                         break;
                         
                         case HAL_S32:
                         	snprintf(sendBuff, sizeof(sendBuff), "%d %d\n",
-                        	    ta->array[i].channel, ta->array[i].value.s);
+                        	    array[i].channel, array[i].value.s);
                         break;
                         
                         case HAL_U32:
                         	snprintf(sendBuff, sizeof(sendBuff), "%d %d\n",
-                        	    ta->array[i].channel, ta->array[i].value.u);
+                        	    array[i].channel, array[i].value.u);
                         break;
                         
                         default:
@@ -354,7 +393,7 @@ void connection_handler(void *arg)
                     }
                     write(connfd, sendBuff, strlen(sendBuff));
                 }
-                *(ta->pointer) = 0;
+                ta->pointer = 0;
             }
             else
             {
@@ -369,77 +408,78 @@ void connection_handler(void *arg)
 
 void rtapi_app_exit(void) 
 {
-    pthread_mutex_unlock(&mxq); 
+    pthread_mutex_unlock(&args->mutex); 
     pthread_join(thread_id,NULL);
     hal_exit(comp_id);
 }
 
 static void sample(void *arg, long period)
 {
-    if( sample_pointer < samples && tr.cmd == SAMPLE_RUN )
+    if( args->pointer < samples && args->trigger.cmd == SAMPLE_RUN )
     {
         for( int i=0; i < channels; i++ )
         {
-            if( ch[i].offset!=0 )
+            if( channel[i].offset != 0 )
             {
-                if( ch[i].type == HAL_PIN )
+                if( channel[i].type == HAL_PIN )
                 {
-                    hal_pin_t *source=SHMPTR( ch[i].offset );
+                    hal_pin_t *source=SHMPTR( channel[i].offset );
                     if (source->signal == 0) 
                         set_data_value(source->type, &(source->dummysig),
-                            data+sample_pointer);
+                            data+args->pointer);
                     else 
                     {
                         hal_sig_t *sig;
                         sig = SHMPTR(source->signal);
                         set_data_value(source->type, SHMPTR(sig->data_ptr),
-                            data+sample_pointer);
+                            data+args->pointer);
                     }
                 }
-                else if( ch[i].type == HAL_SIG )
+                else if( channel[i].type == HAL_SIG )
                 {
-                    hal_sig_t *source=SHMPTR( ch[i].offset );
+                    hal_sig_t *source=SHMPTR( channel[i].offset );
                     set_data_value(source->type, SHMPTR(source->data_ptr),
-                        data+sample_pointer);
+                        data+args->pointer);
                 }
-                else if( ch[i].type == HAL_PARAMETER )
+                else if( channel[i].type == HAL_PARAMETER )
                 {
-                    hal_param_t *source = SHMPTR( ch[i].offset );
+                    hal_param_t *source = SHMPTR( channel[i].offset );
                     set_data_value(source->type, SHMPTR(source->data_ptr),
-                        data+sample_pointer);
+                        data+args->pointer);
                 }
                 else
                     continue;
                     
-                data[sample_pointer].channel = i;
+                data[args->pointer].channel = i;
 
-                sample_pointer++;
-                if( sample_pointer == samples )
+                args->pointer = args->pointer + 1;
+
+                if( args->pointer == samples )
                     break;
             }
         }
     }
-    else if( tr.cmd == SAMPLE_RUN )
+    else if( args->trigger.cmd == SAMPLE_RUN )
     {
-        tr.cmd = SAMPLE_COMPLETE;
+        args->trigger.cmd = SAMPLE_COMPLETE;
     }
-    else if( tr.cmd == SAMPLE_CHANGE 
-            || tr.cmd == SAMPLE_HIGH 
-            || tr.cmd == SAMPLE_LOW )
+    else if( args->trigger.cmd == SAMPLE_CHANGE 
+            || args->trigger.cmd == SAMPLE_HIGH 
+            || args->trigger.cmd == SAMPLE_LOW )
     {
         data_t now;
         data_t last;
         int type;
 
-        memcpy(&last,&tr.last,sizeof(data_t));
+        memcpy(&last,&args->trigger.last,sizeof(data_t));
 
-        if( tr.type == HAL_PIN )
+        if( args->trigger.type == HAL_PIN )
         {
-            hal_pin_t *source=SHMPTR( tr.pin );
+            hal_pin_t *source=SHMPTR( args->trigger.pin );
             if (source->signal == 0) 
             {
                 set_data_value(source->type, &(source->dummysig),&now);
-                set_data_value(source->type, &(source->dummysig),&tr.last);
+                set_data_value(source->type, &(source->dummysig),&args->trigger.last);
                 type = source->type;
             }
             else 
@@ -447,22 +487,22 @@ static void sample(void *arg, long period)
                 hal_sig_t *sig;
                 sig = SHMPTR(source->signal);
                 set_data_value(source->type, SHMPTR(sig->data_ptr),&now);
-                set_data_value(source->type, SHMPTR(sig->data_ptr),&tr.last);
+                set_data_value(source->type, SHMPTR(sig->data_ptr),&args->trigger.last);
                 type = source->type;
             }
         }
-        else if( tr.type == HAL_SIG )
+        else if( args->trigger.type == HAL_SIG )
         {
-            hal_sig_t *source=SHMPTR( tr.pin );
+            hal_sig_t *source=SHMPTR( args->trigger.pin );
             set_data_value(source->type, SHMPTR(source->data_ptr),&now);
-            set_data_value(source->type, SHMPTR(source->data_ptr),&tr.last);
+            set_data_value(source->type, SHMPTR(source->data_ptr),&args->trigger.last);
             type = source->type;
         }
-        else if( tr.type == HAL_PARAMETER )
+        else if( args->trigger.type == HAL_PARAMETER )
         {
-            hal_param_t *source = SHMPTR( tr.pin );
+            hal_param_t *source = SHMPTR( args->trigger.pin );
             set_data_value(source->type, SHMPTR(source->data_ptr),&now);
-            set_data_value(source->type, SHMPTR(source->data_ptr),&tr.last);
+            set_data_value(source->type, SHMPTR(source->data_ptr),&args->trigger.last);
             type = source->type;
         }          
         else
@@ -471,47 +511,59 @@ static void sample(void *arg, long period)
         switch(type)
         {
             case HAL_BIT:
-            	if ( (now.value.b >= tr.value) != (last.value.b >= tr.value) )
+            	if ( (now.value.b >= args->trigger.value) != 
+            	    (last.value.b >= args->trigger.value) )
             	{
-            	    if( tr.cmd == SAMPLE_CHANGE ||
-            	        ( tr.cmd == SAMPLE_HIGH && now.value.b >= tr.value ) ||
-            	        ( tr.cmd == SAMPLE_LOW && now.value.b < tr.value ))
-            	        tr.cmd = SAMPLE_RUN;
+            	    if( args->trigger.cmd == SAMPLE_CHANGE ||
+            	        ( args->trigger.cmd == SAMPLE_HIGH && 
+            	            now.value.b >= args->trigger.value ) ||
+            	        ( args->trigger.cmd == SAMPLE_LOW && 
+            	            now.value.b < args->trigger.value ))
+            	        args->trigger.cmd = SAMPLE_RUN;
             	}
         	break;
         
             case HAL_FLOAT:
-            	if ( (now.value.f >= tr.value) != (last.value.f >= tr.value) )
+            	if ( (now.value.f >= args->trigger.value) != 
+            	    (last.value.f >= args->trigger.value) )
             	{
-            	    if( tr.cmd == SAMPLE_CHANGE ||
-            	        ( tr.cmd == SAMPLE_HIGH && now.value.f >= tr.value ) ||
-            	        ( tr.cmd == SAMPLE_LOW && now.value.f < tr.value ))
-            	        tr.cmd = SAMPLE_RUN;
+            	    if( args->trigger.cmd == SAMPLE_CHANGE ||
+            	        ( args->trigger.cmd == SAMPLE_HIGH && 
+            	            now.value.f >= args->trigger.value ) ||
+            	        ( args->trigger.cmd == SAMPLE_LOW && 
+            	            now.value.f < args->trigger.value ))
+            	        args->trigger.cmd = SAMPLE_RUN;
             	}
 	        break;
             
             case HAL_S32:
-            	if ( (now.value.s >= tr.value) != (last.value.s >= tr.value) )
+            	if ( (now.value.s >= args->trigger.value) != 
+            	    (last.value.s >= args->trigger.value) )
             	{
-            	    if( tr.cmd == SAMPLE_CHANGE ||
-            	        ( tr.cmd == SAMPLE_HIGH && now.value.s >= tr.value ) ||
-            	        ( tr.cmd == SAMPLE_LOW && now.value.s < tr.value ))
-            	        tr.cmd = SAMPLE_RUN;
+            	    if( args->trigger.cmd == SAMPLE_CHANGE ||
+            	        ( args->trigger.cmd == SAMPLE_HIGH && 
+            	            now.value.s >= args->trigger.value ) ||
+            	        ( args->trigger.cmd == SAMPLE_LOW && 
+            	            now.value.s < args->trigger.value ))
+            	        args->trigger.cmd = SAMPLE_RUN;
             	}
 	        break;
             
             case HAL_U32:
-            	if ( (now.value.u >= tr.value) != (last.value.u >= tr.value) )
+            	if ( (now.value.u >= args->trigger.value) != 
+            	    (last.value.u >= args->trigger.value) )
             	{
-            	    if( tr.cmd == SAMPLE_CHANGE ||
-            	        ( tr.cmd == SAMPLE_HIGH && now.value.u >= tr.value ) ||
-            	        ( tr.cmd == SAMPLE_LOW && now.value.u < tr.value ))
-            	        tr.cmd = SAMPLE_RUN;
+            	    if( args->trigger.cmd == SAMPLE_CHANGE ||
+            	        ( args->trigger.cmd == SAMPLE_HIGH && 
+            	            now.value.u >= args->trigger.value ) ||
+            	        ( args->trigger.cmd == SAMPLE_LOW &&
+            	            now.value.u < args->trigger.value ))
+            	        args->trigger.cmd = SAMPLE_RUN;
             	}
 	        break;
             
             default:
-	            /* Shouldn't get here, but just in case... */
+	            // Shouldn't get here, but just in case... 
             break;
         }
     }
