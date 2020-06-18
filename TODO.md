@@ -17,6 +17,7 @@
 
 ## Other:
 
+* PySide Qscincilla
 * Installation scripts
 * Start script and/or desktop launch
 * Make QUICK-START

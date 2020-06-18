@@ -87,7 +87,7 @@ if __guiFramework == "pyside2":
         from PySide2.QtCore import *
         from PySide2.QtGui import *
         from PySide2.QtWidgets import *
-        from PySide2.Qsci import *
+        #from PySide2.Qsci import *
         from PySide2.QtNetwork import *
     except ImportError as e:
         __frameworkError(_("Failed to import PySide2 modules:\n {}", str(e)))

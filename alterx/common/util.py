@@ -40,6 +40,7 @@ import logging.handlers
 from threading import Thread
 from multiprocessing import Queue
 
+logging.basicConfig()
 QLOG = Queue(-1)
 
 

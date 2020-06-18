@@ -33,7 +33,7 @@ import socket
 
 class fake_linuxcnc():
     axis = []
-    joints = []
+    joint = []
     def __call__(self, source, *args):
         return 0
 

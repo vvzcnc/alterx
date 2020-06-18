@@ -32,6 +32,11 @@ from alterx.core.linuxcnc import *
 from operator import add
 from collections import OrderedDict
 
+# Fix GLSL 1.50 is not supported bug
+os.putenv('MESA_GL_VERSION_OVERRIDE','3.3')
+os.environ['MESA_GL_VERSION_OVERRIDE'] = '3.3'
+# Fix end
+
 import vtk
 
 # Fix poligons not drawing correctly on some GPU
@@ -436,7 +441,9 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
     def update_dro(self, stat):
         text = ""
         for i, axis in enumerate(INFO.coordinates):
-
+            if not axis:
+                continue
+                
             if INFO.feedback_actual:
                 position = stat[i]['input']
             else:
