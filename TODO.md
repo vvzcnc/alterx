@@ -24,7 +24,6 @@
 * Jog
 * Keyboard serial listener
 * Startup open ngc file
-* Notify transparent
 * Add locales
 * Add notes inside widgets    
 

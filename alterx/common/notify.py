@@ -69,11 +69,12 @@ class Notify(QLabel):
         self.setWindowFlags(Qt.ToolTip)
         #self.setAttribute(Qt.WA_NoSystemBackground,True)
         #self.setAttribute(Qt.WA_TranslucentBackground,True)
-        #self.setWindowOpacity(0.2)
+        self.setWindowOpacity(0.65)
         #self.setAutoFillBackground(False)
 
         self.resize(self.width, self.height)
-        self.setStyleSheet("background-color: gray;"
+        self.setStyleSheet("background: qlineargradient(x1:0 y1:0, x2:1 y2:0,"
+                "stop: 0 gray, stop:1 white);"
                 "font-size: 15pt;")
         self.setWordWrap(True)
         self.show()

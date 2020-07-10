@@ -148,11 +148,12 @@ class SideButton(QPushButton):
 
         if icon:
             with open(icon,'r') as i:
-            	img = QImage()
-            	img.loadFromData(i.read())
-            	pixmap = QPixmap()
-            	pixmap.convertFromImage(img)
-                self.setIcon(QIcon(pixmap))
+                #img = QImage()
+                #img.loadFromData(i.read())
+                #pixmap = QPixmap()
+                #pixmap.convertFromImage(img)
+                #self.setIcon(QIcon(pixmap))
+                self.setIcon(QIcon(icon))
                 #self.setIconSize(QSize(90, 90))
                 self.setText("")
 
@@ -495,16 +496,20 @@ class MainLayout(QVBoxLayout):
 
         infoWidget = QWidget()
         infoWidget.setLayout(infoLayout)
+
+        infoScroll = QScrollArea()
+        infoScroll.setWidget(infoWidget)
+        infoScroll.setWidgetResizable(True)
         
-        h2.addWidget(infoWidget, 2)
+        h2.addWidget(infoScroll, 2)
 
         def setFullscreen(state):
             if state:
                 h2.setStretch(1,0)
-                infoWidget.setVisible(False)
+                infoScroll.setVisible(False)
             else:
                 h2.setStretch(1,2)
-                infoWidget.setVisible(True)
+                infoScroll.setVisible(True)
                 
         UPDATER.add("mainscreen_full")
         UPDATER.connect("mainscreen_full",setFullscreen)
