@@ -15,6 +15,8 @@ call :install vtk
 if ERRORLEVEL 1 exit /B 1
 call :install pyqtgraph
 if ERRORLEVEL 1 exit /B 1
+call :install crcmod
+if ERRORLEVEL 1 exit /B 1
 call :install polib
 if ERRORLEVEL 1 exit /B 1
 

@@ -8,4 +8,5 @@
 	python-pyqt5.qtopengl )
 
 ( pip install \
-    vtk )
+    vtk \
+    crcmod )

@@ -3,7 +3,7 @@ Alterx - an interface for controlling milling, lathe, plasma, laser or etc. mach
 Alterx is written in Python and some componets for LinuxCNC in C.
 
 ## Quick start
-    pass
+See the [quick start tutorial](QUICK-START.md) for a simple example on how to use AlterX. In recovery mode AlterX can be run on any desktop PC. No special hardware is required.
     
 ## Example
     pass
