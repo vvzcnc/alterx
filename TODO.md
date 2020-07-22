@@ -17,9 +17,7 @@
 
 ## Other:
 
-* PySide Qscincilla
 * Jog
-* Keyboard serial listener
 * Startup open ngc file
 * Add locales
 * Add notes inside widgets    

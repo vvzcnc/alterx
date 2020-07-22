@@ -30,216 +30,94 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
+class CodeHighlighter(QSyntaxHighlighter):
+    def __init__(self, parent):
+        QSyntaxHighlighter.__init__(self, parent)
 
-class GcodeLexer(QsciLexerCustom):
-    def __init__(self, parent=None):
-        QsciLexerCustom.__init__(self, parent)
-        self._styles = {
-            0: 'Default',
-            1: 'Comment',
-            2: 'Key',
-            3: 'Assignment',
-            4: 'Value',
-        }
-        for key, value in self._styles.items():
-            setattr(self, value, key)
-        font = QFont()
-        font.setFamily('Courier')
-        font.setFixedPitch(True)
-        font.setPointSize(12)
-        font.setBold(True)
-        self.setFont(font, 2)
-
-    def language(self):
-        return"G code"
-
-    def description(self, style):
-        if style < len(self._styles):
-            description = _(
-                "Custom lexer for the G code programming languages")
-        else:
-            description = ""
-        return description
-
-    # Paper sets the background color of each style of text
-    def setPaperBackground(self, color, style=None):
-        if style is None:
-            for i in range(0, 5):
-                self.setPaper(color, i)
-        else:
-            self.setPaper(color, style)
-
-    def defaultColor(self, style):
-        if style == self.Default:
-            return QColor('#000000')  # black
-        elif style == self.Comment:
-            return QColor('#000000')  # black
-        elif style == self.Key:
-            return QColor('#0000CC')  # blue
-        elif style == self.Assignment:
-            return QColor('#CC0000')  # red
-        elif style == self.Value:
-            return QColor('#00CC00')  # green
-        return QsciLexerCustom.defaultColor(self, style)
-
-    def styleText(self, start, end):
-        editor = self.editor()
-        if editor is None:
-            return
-
-        # scintilla works with encoded bytes, not decoded characters.
-        # this matters if the source contains non-ascii characters and
-        # a multi-byte encoding is used (e.g. utf-8)
-        source = ''
-        if end > editor.length():
-            end = editor.length()
-        if end > start:
-            if sys.hexversion >= 0x02060000:
-                # faster when styling big files, but needs python 2.6
-                source = bytearray(end - start)
-                editor.SendScintilla(
-                    editor.SCI_GETTEXTRANGE, start, end, source)
-            else:
-                source = toUnicode(editor.text()[start:end])
-        if not source:
-            return
-
-        # the line index will also be needed to implement folding
-        index = editor.SendScintilla(editor.SCI_LINEFROMPOSITION, start)
-        if index > 0:
-            # the previous state may be needed for multi-line styling
-            pos = editor.SendScintilla(
-                editor.SCI_GETLINEENDPOSITION, index - 1)
-            state = editor.SendScintilla(editor.SCI_GETSTYLEAT, pos)
-        else:
-            state = self.Default
-
-        set_style = self.setStyling
-        self.startStyling(start, 0x1f)
-
-        # scintilla always asks to style whole lines
-        for line in source.splitlines(True):
-            length = len(line)
-            graymode = False
-            msg = (b'msg' in line.lower() or b'debug' in line.lower())
-            for char in str(line):
-                #print char
-                if char == ('('):
-                    graymode = True
-                    set_style(1, self.Comment)
-                    continue
-                elif char == (')'):
-                    graymode = False
-                    set_style(1, self.Comment)
-                    continue
-                elif graymode:
-                    if (msg and char.lower() in ('m', 's', 'g', ',', 'd', 'e', 'b', 'u')):
-                        set_style(1, self.Assignment)
-                        if char == ',':
-                            msg = False
-                    else:
-                        set_style(1, self.Comment)
-                    continue
-                elif char in ('%', '<', '>', '#', '='):
-                    state = self.Assignment
-                elif char in ('[', ']'):
-                    state = self.Value
-                elif char.isalpha():
-                    state = self.Key
-                elif char.isdigit():
-                    state = self.Default
-                else:
-                    state = self.Default
-                set_style(1, state)
-
-            # folding implementation goes here
-            index += 1
-
-
-class EditorBase(QsciScintilla):
-    ARROW_MARKER_NUM = 8
-
-    def __init__(self, parent=None):
-        QsciScintilla.__init__(self, parent)
-        # don't allow editing by default
-        self.setReadOnly(True)
-        # Set the default font
-        self.font = QFont()
-        self.font.setFamily('Courier')
-        self.font.setFixedPitch(True)
-        self.font.setPointSize(12)
-        self.setFont(self.font)
-        self.setMarginsFont(self.font)
-
-        # Margin 0 is used for line numbers
-        self.setMarginsFont(self.font)
-        self.set_margin_width(7)
-        self.setMarginLineNumbers(0, True)
-        self.setMarginsBackgroundColor(QColor("#cccccc"))
-
-        # Clickable margin 1 for showing markers
-        self.setMarginSensitivity(1, False)
-        # setting marker margin width to zero make the marker highlight line
-        self.setMarginWidth(1, 0)
-        # self.matginClicked.connect(self.on_margin_clicked)
-        self.markerDefine(QsciScintilla.Background, self.ARROW_MARKER_NUM)
-        self.setMarkerBackgroundColor(QColor("#ffe4e4"), self.ARROW_MARKER_NUM)
-
-        # Brace matching: enable for a brace immediately before or after
-        # the current position
-        #
-        self.setBraceMatching(QsciScintilla.SloppyBraceMatch)
-
-        # Current line visible with special background color
-        self.setCaretLineVisible(True)
-        self.setCaretLineBackgroundColor(QColor("#ffe4e4"))
-
-        # Set custom gcode lexer
         self.set_gcode_lexer()
 
-        # Don't want to see the horizontal scrollbar at all
-        # Use raw message to Scintilla here (all messages are documented
-        # here: http://www.scintilla.org/ScintillaDoc.html)
-        #self.SendScintilla(QsciScintilla.SCI_SETHSCROLLBAR, 0)
-        self.SendScintilla(QsciScintilla.SCI_SETSCROLLWIDTH, 700)
-        self.SendScintilla(QsciScintilla.SCI_SETSCROLLWIDTHTRACKING)
+    def set_gcode_lexer(self):               
+        self.regexp_by_format = dict()
 
-        # default gray background
-        self.set_background_color('#C0C0C0')
+        #Comment
+        char_format = QTextCharFormat()
+        char_format.setFontWeight(QFont.Normal)
+        char_format.setForeground(Qt.darkGray)
+        self.Comment = char_format
+                
+        #Text
+        char_format = QTextCharFormat()
+        char_format.setFontWeight(QFont.Normal)
+        char_format.setForeground(Qt.black)
+        self.Text = char_format
+        
+        #Error
+        char_format = QTextCharFormat()
+        char_format.setFontWeight(QFont.Normal)
+        char_format.setForeground(Qt.red)
+        self.Error = char_format
+        
+        #Info
+        char_format = QTextCharFormat()
+        char_format.setFontWeight(QFont.Bold)
+        char_format.setForeground(Qt.darkBlue)
+        self.Info = char_format
+        
+        #Words
+        char_format = QTextCharFormat()
+        char_format.setFontWeight(QFont.Bold)
+        char_format.setForeground(Qt.darkMagenta)
+        self.Words = char_format
+                
+        self.regexp_by_format[r'\((.*?)\)|^;.*'] = self.Comment
+        #self.regexp_by_format[r'\[(.*?)\]'] = self.Text
+        self.regexp_by_format[r'\<(.*?)\>'] = self.Info
+        self.regexp_by_format[r'#|msg|debug'] = self.Error
+        self.regexp_by_format[r'(?<!\()[a-zA-Z](?![^\(]*[\)])'] = self.Words
 
-        # not too small
-        self.setMinimumSize(200, 100)
+    def highlightBlock(self, text):
+        for regexp, char_format in self.regexp_by_format.items():
+            expression = QRegularExpression(regexp)
+            it = expression.globalMatch(text)
+            while it.hasNext():
+                match = it.next()
+                self.setFormat(match.capturedStart(), match.capturedLength(), char_format)
+        
+class EditorBase(QTextEdit):
+    def __init__(self, parent=None):
+        QTextEdit.__init__(self, parent)
+
+        self.setReadOnly(True)
         self.filepath = None
-
-    def set_margin_width(self, width):
-        fontmetrics = QFontMetrics(self.font)
-        self.setMarginsFont(self.font)
-        self.setMarginWidth(0, fontmetrics.width("0"*width) + 6)
-
-    # must set lexer paper background color _and_ editor background color it seems
-    def set_background_color(self, color):
-        self.SendScintilla(QsciScintilla.SCI_STYLESETBACK,
-                           QsciScintilla.STYLE_DEFAULT, QColor(color))
-        self.lexer.setPaperBackground(QColor(color))
-
-    def on_margin_clicked(self, nmargin, nline, modifiers):
-        # Toggle marker for the line the margin was clicked on
-        if self.markersAtLine(nline) != 0:
-            self.markerDelete(nline, self.ARROW_MARKER_NUM)
-        else:
-            self.markerAdd(nline, self.ARROW_MARKER_NUM)
-
-    def set_python_lexer(self):
-        self.lexer = QsciLexerPython()
-        self.lexer.setDefaultFont(self.font)
-        self.setLexer(self.lexer)
-        self.SendScintilla(QsciScintilla.SCI_STYLESETFONT, 1, 'Courier')
-
-    def set_gcode_lexer(self):
-        self.lexer = GcodeLexer(self)
-        self.lexer.setDefaultFont(self.font)
-        self.setLexer(self.lexer)
-        self.set_background_color('#C0C0C0')
+        self.highlighter = CodeHighlighter(self)
+        self.modified = False
+        
+        self.textChanged.connect(lambda: self.setModified(True))
+        
+    def setCursorPosition(self,line,pos):
+        block = self.document().findBlockByLineNumber(line-1)
+        cursor = self.textCursor()
+        cursor.setPosition(block.position())
+        self.setFocus()
+        self.setTextCursor(cursor)
+       
+    def markerAdd(self,line):
+        block = self.document().findBlockByLineNumber(line-1)
+        fmt = QTextBlockFormat()
+        fmt.setBackground(Qt.yellow)
+        QTextCursor(block).setBlockFormat(fmt)
+        
+    def markerDelete(self,line):
+        block = self.document().findBlockByLineNumber(line-1)
+        fmt = QTextBlockFormat()
+        fmt.setBackground(Qt.white)
+        QTextCursor(block).setBlockFormat(fmt)
+        
+    def setModified(self,mod):
+        self.modified = mod
+        
+    def lines(self):
+        return self.document().lineCount()
 
     def new_text(self):
         self.setText('')
@@ -254,12 +132,12 @@ class EditorBase(QsciScintilla):
             self.setText('')
             return
         self.ensureCursorVisible()
-        self.SendScintilla(QsciScintilla.SCI_VERTICALCENTRECARET)
         self.setModified(False)
-
+        
     def save_text(self):
         with open(self.filepath, "w") as text_file:
             text_file.write(self.text())
+        self.setModified(False)
 
     def replace_text(self, text):
         self.replace(text)
@@ -268,16 +146,12 @@ class EditorBase(QsciScintilla):
         self.findFirst(text, re, case, word, wrap, fwd)
 
     def search_next(self):
-        self.SendScintilla(QsciScintilla.SCI_SEARCHANCHOR)
         self.findNext()
 
 
 class GcodeDisplay(EditorBase):
-    ARROW_MARKER_NUM = 8
-
     def __init__(self, parent=None):
         EditorBase.__init__(self, parent)
-
         self.last_line = 0
 
         UPDATER.connect("file", self.load_program)
@@ -285,7 +159,6 @@ class GcodeDisplay(EditorBase):
 
     def load_program(self, filename=None):
         self.load_text(filename)
-        # self.zoomTo(6)
         self.setCursorPosition(0, 0)
         self.setModified(False)
 
@@ -295,7 +168,6 @@ class GcodeDisplay(EditorBase):
                 fp = os.path.expanduser(filename)
                 self.setText(open(fp).read())
                 self.ensureCursorVisible()
-                self.SendScintilla(QsciScintilla.SCI_VERTICALCENTRECARET)
                 self.emit_file(filename, self.lines())
                 return
             except:
@@ -303,15 +175,18 @@ class GcodeDisplay(EditorBase):
         self.setText('')
 
     def highlight_line(self, line):
-        if STAT.interp_state != LINUXCNC.INTERP_IDLE or STAT.interp_state != LINUXCNC.INTERP_PAUSED:
+        if ( STAT.interp_state != LINUXCNC.INTERP_IDLE or 
+            STAT.interp_state != LINUXCNC.INTERP_PAUSED ):
             self.emit_percent(line*100/self.lines())
 
-        self.markerAdd(line, self.ARROW_MARKER_NUM)
+        if STAT.interp_state != LINUXCNC.INTERP_IDLE:
+            self.markerAdd(line)
+            
         if self.last_line:
-            self.markerDelete(self.last_line, self.ARROW_MARKER_NUM)
+            self.markerDelete(self.last_line)
+            
         self.setCursorPosition(line, 0)
         self.ensureCursorVisible()
-        self.SendScintilla(QsciScintilla.SCI_VERTICALCENTRECARET)
         self.last_line = line
 
     def emit_percent(self, percent):
