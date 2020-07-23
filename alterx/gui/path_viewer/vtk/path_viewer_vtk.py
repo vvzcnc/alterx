@@ -402,19 +402,19 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
 
         self.update_dro(getattr(STAT,INFO.axes_list))
 
-        UPDATER.connect("file", self.load_program)
-        UPDATER.connect("position", self.update_position)
-        UPDATER.connect("g5x_index", self.update_g5x_index)
-        UPDATER.connect("g5x_offset", self.update_g5x_offset)
-        UPDATER.connect("g92_offset", self.update_g92_offset)
-        UPDATER.connect("rotation_xy", self.update_rotation_xy)
-        UPDATER.connect("reload_offsets", lambda s: self.on_offset_table_changed(
+        UPDATER.signal("file", self.load_program)
+        UPDATER.signal("position", self.update_position)
+        UPDATER.signal("g5x_index", self.update_g5x_index)
+        UPDATER.signal("g5x_offset", self.update_g5x_offset)
+        UPDATER.signal("g92_offset", self.update_g92_offset)
+        UPDATER.signal("rotation_xy", self.update_rotation_xy)
+        UPDATER.signal("reload_offsets", lambda s: self.on_offset_table_changed(
             INFO.get_offset_table()))
-        UPDATER.connect("tool_offset", self.update_tool)
-        UPDATER.connect("tool_table", self.update_tool)
-        UPDATER.connect("program_units", self.program_units)
-        UPDATER.connect(INFO.axes_list, lambda axis: self.update_dro(axis))
-        UPDATER.connect("update_feed_labels", 
+        UPDATER.signal("tool_offset", self.update_tool)
+        UPDATER.signal("tool_table", self.update_tool)
+        UPDATER.signal("program_units", self.program_units)
+        UPDATER.signal(INFO.axes_list, lambda axis: self.update_dro(axis))
+        UPDATER.signal("update_feed_labels", 
             lambda stat: self.update_dro(getattr(STAT,INFO.axes_list)))
         
         UPDATER.add("display_clear")
@@ -422,10 +422,10 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         UPDATER.add("display_zoomin")
         UPDATER.add("display_zoomout")
 
-        UPDATER.connect("display_clear", lambda s: self.clearLivePlot())
-        UPDATER.connect("display_view", lambda s: self.setCurrentView(s))
-        UPDATER.connect("display_zoomin", lambda s: self.zoomIn())
-        UPDATER.connect("display_zoomout", lambda s: self.zoomOut())
+        UPDATER.signal("display_clear", lambda s: self.clearLivePlot())
+        UPDATER.signal("display_view", lambda s: self.setCurrentView(s))
+        UPDATER.signal("display_zoomin", lambda s: self.zoomIn())
+        UPDATER.signal("display_zoomout", lambda s: self.zoomOut())
 
         self.line = None
         self._last_filename = str()

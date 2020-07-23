@@ -33,7 +33,7 @@ class func:
         self.button = button
         self.update_image(False)
 
-        UPDATER.connect("jog_activate", self.update_image)
+        UPDATER.signal("jog_activate", self.update_image)
 
     def update_image(self, state):
         dir_path = os.path.dirname(os.path.realpath(__file__))

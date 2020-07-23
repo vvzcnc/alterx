@@ -81,13 +81,13 @@ class FileManager(QWidget):
         UPDATER.add("fileman_home")
         UPDATER.add("fileman_jump")
 
-        UPDATER.connect("fileman_prev", lambda s: self.up())
-        UPDATER.connect("fileman_next", lambda s: self.down())
-        UPDATER.connect("fileman_select", lambda s: self.load())
-        UPDATER.connect("fileman_delete", lambda s: self.deleteSelected())
-        UPDATER.connect(
+        UPDATER.signal("fileman_prev", lambda s: self.up())
+        UPDATER.signal("fileman_next", lambda s: self.down())
+        UPDATER.signal("fileman_select", lambda s: self.load())
+        UPDATER.signal("fileman_delete", lambda s: self.deleteSelected())
+        UPDATER.signal(
             "fileman_home", lambda s: self.updateDirectoryView(self.default_path))
-        UPDATER.connect(
+        UPDATER.signal(
             "fileman_jump", lambda s: self.updateDirectoryView(self.user_path))
 
     def deleteSelected(self):

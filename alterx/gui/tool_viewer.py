@@ -83,16 +83,16 @@ class ToolOffsetView(QTableView):
         UPDATER.add("toolviewer_change")
         UPDATER.add("toolviewer_index")
         
-        UPDATER.connect("toolviewer_add", self.add_tool)
-        UPDATER.connect("toolviewer_del", self.delete_tool)
-        UPDATER.connect("toolviewer_next", self.selection_next)
-        UPDATER.connect("toolviewer_prev", self.selection_prev)
-        UPDATER.connect("toolviewer_left", self.selection_left)
-        UPDATER.connect("toolviewer_right", self.selection_right)
-        UPDATER.connect("toolviewer_edit", self.selection_edit) 
-        UPDATER.connect("reload_tools", self.reload_tools)
-        UPDATER.connect("program_units", self.metricMode)
-        UPDATER.connect("tool_in_spindle", self.currentTool)
+        UPDATER.signal("toolviewer_add", self.add_tool)
+        UPDATER.signal("toolviewer_del", self.delete_tool)
+        UPDATER.signal("toolviewer_next", self.selection_next)
+        UPDATER.signal("toolviewer_prev", self.selection_prev)
+        UPDATER.signal("toolviewer_left", self.selection_left)
+        UPDATER.signal("toolviewer_right", self.selection_right)
+        UPDATER.signal("toolviewer_edit", self.selection_edit) 
+        UPDATER.signal("reload_tools", self.reload_tools)
+        UPDATER.signal("program_units", self.metricMode)
+        UPDATER.signal("tool_in_spindle", self.currentTool)
 
         INFO.get_tool_info = self.get_tool_info
         INFO.get_selected_tool = self.get_selected_tool
@@ -579,7 +579,7 @@ class ToolModel(QAbstractTableModel):
                     return Qt.Checked
                 else:
                     return Qt.Unchecked
-        return QVariant()
+        return None
 
     # Returns the item flags for the given index.
     def flags(self, index):
@@ -626,10 +626,10 @@ class ToolModel(QAbstractTableModel):
 
     def headerData(self, col, orientation, role):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return QVariant(self.headerdata[col])
+            return self.headerdata[col]
         if orientation != Qt.Horizontal and role == Qt.DisplayRole:
-            return QVariant('')
-        return QVariant()
+            return ''
+        return None
 
     def sort(self, Ncol, order):
         self.layoutAboutToBeChanged.emit()

@@ -5,8 +5,11 @@ import time
 import os
 import sys
 
-from PyQt5 import QtCore, QtWidgets, QtGui, uic
-
+try:
+    from PyQt5 import QtCore, QtWidgets, QtGui, uic
+except:
+    from PySide2 import QtCore, QtWidgets, QtGui
+    from PySide2.QtUiTools import QUiLoader as uic
 
 class func(QtWidgets.QMainWindow):
 

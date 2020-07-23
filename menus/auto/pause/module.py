@@ -33,7 +33,7 @@ class func:
     def __init__(self, button):
         self.button = button
 
-        UPDATER.connect("interp_state", self.update_status)
+        UPDATER.signal("interp_state", self.update_status)
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 

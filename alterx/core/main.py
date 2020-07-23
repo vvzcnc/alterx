@@ -37,12 +37,12 @@ class Main():
         UPDATER.add('feed_mode')
         UPDATER.add('diameter_multiplier', 1)
 
-        UPDATER.connect("task_state", self.task_state_handler)
-        UPDATER.connect("task_mode", self.task_mode_handler)
-        UPDATER.connect("homed", self.homed_handler)
-        UPDATER.connect("file", self.load_program_handler)
-        UPDATER.connect("program_units", self.change_units_handler)
-        UPDATER.connect("gcodes", self.gcode_changed)
+        UPDATER.signal("task_state", self.task_state_handler)
+        UPDATER.signal("task_mode", self.task_mode_handler)
+        UPDATER.signal("homed", self.homed_handler)
+        UPDATER.signal("file", self.load_program_handler)
+        UPDATER.signal("program_units", self.change_units_handler)
+        UPDATER.signal("gcodes", self.gcode_changed)
 
 #------ Global handlers ------#
     def gcode_changed(self, data):

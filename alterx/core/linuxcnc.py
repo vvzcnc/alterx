@@ -164,6 +164,14 @@ INFO = linuxcnc_info()
 
 
 class linuxcnc_poll(QTimer):
+    def __init__(self):
+        QTimer.__init__(self)
+        self.timeout.connect(self.run)
+        self.stat_old = {}
+        self._observers = {}
+        self.custom_signals = {}
+        self.custom_signals_old = {}
+
     # 'One to many' item check
     def run(self):
         try:
@@ -195,7 +203,8 @@ class linuxcnc_poll(QTimer):
                                     _("Failed to execute '{}' handler {}: '{}'", s, h, e))
 
         for name in self.custom_signals:
-            if self.custom_signals[name] != self.custom_signals_old[name] and name in self._observers:
+            if ( self.custom_signals[name] != self.custom_signals_old[name] and 
+                name in self._observers ):
                 self.custom_signals_old[name] = self.custom_signals[name]
 
                 for h in self._observers[name]:
@@ -207,7 +216,8 @@ class linuxcnc_poll(QTimer):
 
     # 'Many to one' item check
     def check(self, name):
-        if name in self.custom_signals and self.custom_signals[name] != self.custom_signals_old[name]:
+        if ( name in self.custom_signals and 
+            self.custom_signals[name] != self.custom_signals_old[name] ):
             self.custom_signals_old[name] = self.custom_signals[name]
             return True
         return False
@@ -215,7 +225,8 @@ class linuxcnc_poll(QTimer):
     # Emit custom signal
     def emit(self, name, value=None):
         if name in self.custom_signals:
-            if value is None and self.custom_signals[name] == self.custom_signals_old[name]:
+            if ( value is None and 
+                self.custom_signals[name] == self.custom_signals_old[name] ):
                 value = not self.custom_signals[name]
 
             self.custom_signals[name] = value
@@ -231,7 +242,7 @@ class linuxcnc_poll(QTimer):
             printError(_("Failed to add signal. Signal '{}' already exist", name))
 
     # Add signal to 'one to many' database
-    def connect(self, name, handler):
+    def signal(self, name, handler):
         if name in self._observers:
             self._observers[name].append(handler)
         else:
@@ -243,14 +254,6 @@ class linuxcnc_poll(QTimer):
         except Exception as e:
             printError(_("Failed to get atribute {}: {}", name, e))
         return None
-
-    def __init__(self):
-        QTimer.__init__(self)
-        self.timeout.connect(self.run)
-        self.stat_old = {}
-        self._observers = {}
-        self.custom_signals = {}
-        self.custom_signals_old = {}
 
     #def __del__(self):
     #    self.wait()

@@ -9,4 +9,6 @@
 
 ( pip install \
     vtk \
-    crcmod )
+    crcmod \
+    pyudev \
+    serial )

@@ -39,7 +39,7 @@ class func:
         edit_layout = QVBoxLayout(self.button)
         edit_layout.addWidget(self.edit)
 
-        UPDATER.connect("interp_state", self.update_status)
+        UPDATER.signal("interp_state", self.update_status)
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 

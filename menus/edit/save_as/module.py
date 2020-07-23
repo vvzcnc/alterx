@@ -38,7 +38,7 @@ class func:
         edit_layout.addWidget(self.edit)
 
         self.path = UPDATER.fileman_current_path
-        UPDATER.connect("fileman_current_path", self.update_path)
+        UPDATER.signal("fileman_current_path", self.update_path)
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 

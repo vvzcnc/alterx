@@ -54,8 +54,8 @@ class SettingsWidget(QStackedWidget):
         UPDATER.add("settings_page_next")
         UPDATER.add("settings_page_prev")
         
-        UPDATER.connect("settings_page_next",self.next_page)
-        UPDATER.connect("settings_page_prev",self.prev_page)
+        UPDATER.signal("settings_page_next",self.next_page)
+        UPDATER.signal("settings_page_prev",self.prev_page)
         
     def next_page(self,state=None):
         if self.blocked:

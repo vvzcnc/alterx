@@ -1,7 +1,6 @@
-#!/usr/bin/env python
-# -*- coding:UTF-8 -*-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 #
-# AlterX GUI - program step
+# AlterX GUI - VTK path viewer
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
@@ -22,33 +21,14 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
+__all__ = ['PathViewer']
+
 from alterx.common.locale import _
 from alterx.common.compat import *
 from alterx.common import *
 from alterx.gui.util import *
-from alterx.core.linuxcnc import *
 
 
-class func:
-    def __init__(self, button):
-        self.button = button
-
-        UPDATER.signal("interp_state", self.update_status)
-
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-
-        if os.path.isfile("%s/icon.png" % dir_path):
-            self.button.setIcon(QIcon("%s/icon.png" % dir_path))
-            self.button.setIconSize(QSize(90, 90))
-            self.button.setText("")
-        else:
-            self.button.setStyleSheet("color:black")
-
-    def execute(self):
-        printVerbose(_("Button Step clicked"))
-
-        COMMAND.auto(LINUXCNC.AUTO_STEP)
-
-    def update_status(self, status):
-        self.button.setEnabled(
-            False if status == LINUXCNC.INTERP_READING or status == LINUXCNC.INTERP_WAITING else True)
+class PathViewer(QWidget):
+    def __init__(self, parent=None):
+       QWidget.__init__(self,parent)

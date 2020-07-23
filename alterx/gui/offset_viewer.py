@@ -67,24 +67,24 @@ class OriginOffsetView(QTableView):
         INFO.get_offset_table = self.get_offset_table
 
         UPDATER.add("reload_offsets")
-        UPDATER.connect("reload_offsets", self.reload_offsets)
-        UPDATER.connect("tool_offset", self.reload_offsets)
-        UPDATER.connect("g92_offset", self.reload_offsets)
-        #UPDATER.connect("g5x_offset", self.reload_offsets)
+        UPDATER.signal("reload_offsets", self.reload_offsets)
+        UPDATER.signal("tool_offset", self.reload_offsets)
+        UPDATER.signal("g92_offset", self.reload_offsets)
+        #UPDATER.signal("g5x_offset", self.reload_offsets)
         
-        UPDATER.connect("program_units", self.metricMode)
-        UPDATER.connect("g5x_index", self.currentSystem)
-        UPDATER.connect("tool_in_spindle", self.currentTool)
+        UPDATER.signal("program_units", self.metricMode)
+        UPDATER.signal("g5x_index", self.currentSystem)
+        UPDATER.signal("tool_in_spindle", self.currentTool)
 
         UPDATER.add("offsetviewer_next")
         UPDATER.add("offsetviewer_prev")
         UPDATER.add("offsetviewer_select")
         UPDATER.add("offsetviewer_edit")
 
-        UPDATER.connect("offsetviewer_next", self.selection_next)
-        UPDATER.connect("offsetviewer_prev", self.selection_prev)
-        UPDATER.connect("offsetviewer_select", self.selection_set)
-        UPDATER.connect("offsetviewer_edit", self.selection_edit)
+        UPDATER.signal("offsetviewer_next", self.selection_next)
+        UPDATER.signal("offsetviewer_prev", self.selection_prev)
+        UPDATER.signal("offsetviewer_select", self.selection_set)
+        UPDATER.signal("offsetviewer_edit", self.selection_edit)
 
     def get_offset_table(self):
         return self.tabledata
@@ -405,7 +405,7 @@ class OffsetModel(QAbstractTableModel):
                     return Qt.Checked
                 else:
                     return Qt.Unchecked
-        return QVariant()
+        return None
 
     def flags(self, index):
         if not index.isValid():
@@ -447,10 +447,10 @@ class OffsetModel(QAbstractTableModel):
 
     def headerData(self, col, orientation, role):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return QVariant(self.headerdata[col])
+            return self.headerdata[col]
         if orientation != Qt.Horizontal and role == Qt.DisplayRole:
-            return QVariant(self.Vheaderdata[col])
-        return QVariant()
+            return self.Vheaderdata[col]
+        return None
 
     def sort(self, Ncol, order):
         self.emit(SIGNAL("layoutAboutToBeChanged()"))

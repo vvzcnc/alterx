@@ -39,7 +39,7 @@ class func:
         else:
             COMMAND.set_block_delete(False)
 
-        UPDATER.connect("block_delete", self.update_image)
+        UPDATER.signal("block_delete", self.update_image)
 
         self.update_image(STAT.block_delete)
 

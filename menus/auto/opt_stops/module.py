@@ -39,7 +39,7 @@ class func:
         else:
             COMMAND.set_optional_stop(False)
 
-        UPDATER.connect("optional_stop", self.update_image)
+        UPDATER.signal("optional_stop", self.update_image)
 
         self.update_image(STAT.optional_stop)
 

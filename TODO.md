@@ -17,6 +17,7 @@
 
 ## Other:
 
+* Pyside dependencies install
 * Jog
 * Startup open ngc file
 * Add locales

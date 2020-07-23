@@ -120,13 +120,13 @@ class SideButton(QPushButton):
         self.checkState = [True, True, True]
         for index, check in enumerate(checkDisable):
             if check:
-                UPDATER.connect(checkList[index], 
+                UPDATER.signal(checkList[index], 
                             lambda s, c=check, i=index: self.set_disable(
                                             True if s == c else False, i))
 
         for index, check in enumerate(checkToggle):
             if check:
-                UPDATER.connect(checkList[index], 
+                UPDATER.signal(checkList[index], 
                             lambda s, c=check: self.set_active(
                                             True if s == c else False))
 
@@ -138,7 +138,7 @@ class SideButton(QPushButton):
                 
     def set_active(self, state):
         self.active = state
-        self.setProperty("active", QVariant(self.active))
+        self.setProperty("active", self.active)
         self.setStyleSheet(self.styleSheet())
 
         icon = None
@@ -179,7 +179,7 @@ class ToolWidget(QGroupBox):
         h1.addWidget(self.tool_number, 1)
         h1.addWidget(self.tool_comment, 7)
         self.setLayout(h1)
-        UPDATER.connect("tool_in_spindle", self.on_tool_changed)
+        UPDATER.signal("tool_in_spindle", self.on_tool_changed)
 
     def on_tool_changed(self, data):
         if data == 0:
@@ -216,9 +216,9 @@ class GCodeWidget(QGroupBox):
         self.m_codes.setObjectName("lbl_main_screen_mcode")
         v1.addWidget(self.m_codes)
         self.setLayout(v1)
-        UPDATER.connect("mcodes", self.on_mcode_changed)
-        UPDATER.connect("gcodes", self.on_gcode_changed)
-        UPDATER.connect("settings", self.on_settings_changed)
+        UPDATER.signal("mcodes", self.on_mcode_changed)
+        UPDATER.signal("gcodes", self.on_gcode_changed)
+        UPDATER.signal("settings", self.on_settings_changed)
 
     def on_settings_changed(self, data):
         self.feed.setText("F{}".format(data[1]))
@@ -257,9 +257,9 @@ class SpindleWidget(QGroupBox):
         v1.addWidget(self.actual_spindlerate)
         v1.addWidget(self.spindle_override)
         self.setLayout(v1)
-        UPDATER.connect("spindlerate", self.on_spindlerate_changed)
-        UPDATER.connect("spindle_speed", self.on_actualrate_changed)
-        UPDATER.connect("feed_mode", self.on_feedmode_changed)
+        UPDATER.signal("spindlerate", self.on_spindlerate_changed)
+        UPDATER.signal("spindle_speed", self.on_actualrate_changed)
+        UPDATER.signal("feed_mode", self.on_feedmode_changed)
 
     def on_feedmode_changed(self, mode):
         self.spindle_override.setVisible(False if mode == 'G96' else True)
@@ -286,11 +286,11 @@ class FeedWidget(QGroupBox):
         v1.addWidget(self.feed_override)
         v1.addWidget(self.rapid_override)
         self.setLayout(v1)
-        UPDATER.connect("feedrate", self.on_feedrate_changed)
-        UPDATER.connect("rapidrate", self.on_rapidrate_changed)
-        UPDATER.connect("current_vel", self.on_actualrate_changed)
-        UPDATER.connect("feed_mode", self.on_feedmode_changed)
-        UPDATER.connect("update_feed_labels", self.update_labels)
+        UPDATER.signal("feedrate", self.on_feedrate_changed)
+        UPDATER.signal("rapidrate", self.on_rapidrate_changed)
+        UPDATER.signal("current_vel", self.on_actualrate_changed)
+        UPDATER.signal("feed_mode", self.on_feedmode_changed)
+        UPDATER.signal("update_feed_labels", self.update_labels)
 
     def update_labels(self, data):
         self.on_actualrate_changed(STAT.current_vel)
@@ -317,7 +317,7 @@ class JOGWidget(QGroupBox):
     def __init__(self, parent=None):
         QGroupBox.__init__(self, parent)
 
-        UPDATER.connect("task_mode", self.task_mode_handler)
+        UPDATER.signal("task_mode", self.task_mode_handler)
 
         self.activate = [_("Disactivated"), _("Activated")]
         self.mode = [_("Increment"), _("Continuous")]
@@ -366,11 +366,11 @@ class JOGWidget(QGroupBox):
 
         self.setLayout(hlay)
 
-        UPDATER.connect("jog_activate", self.on_active_changed)
-        UPDATER.connect("jog_continuous", self.on_mode_changed)
-        UPDATER.connect("jog_encoder", self.on_device_changed)
-        UPDATER.connect("jog_increment", self.on_increment_changed)
-        UPDATER.connect("jog_speed", self.on_speed_changed)
+        UPDATER.signal("jog_activate", self.on_active_changed)
+        UPDATER.signal("jog_continuous", self.on_mode_changed)
+        UPDATER.signal("jog_encoder", self.on_device_changed)
+        UPDATER.signal("jog_increment", self.on_increment_changed)
+        UPDATER.signal("jog_speed", self.on_speed_changed)
 
     def on_speed_changed(self, s):
         self.jog_speed = s
@@ -411,10 +411,10 @@ class AxisWidget(QGroupBox):
         h1.addWidget(self.drolabel)
         self.setLayout(h1)
         
-        UPDATER.connect(INFO.axes_list, lambda axis: self.update_position(axis))
-        UPDATER.connect("task_mode", self.task_mode_handler)
-        UPDATER.connect("diameter_multiplier", self.diameter_mode)
-        UPDATER.connect("update_feed_labels", 
+        UPDATER.signal(INFO.axes_list, lambda axis: self.update_position(axis))
+        UPDATER.signal("task_mode", self.task_mode_handler)
+        UPDATER.signal("diameter_multiplier", self.diameter_mode)
+        UPDATER.signal("update_feed_labels", 
             lambda stat: self.update_position(getattr(STAT,INFO.axes_list)))
 
     def diameter_mode(self, data):
@@ -512,7 +512,7 @@ class MainLayout(QVBoxLayout):
                 infoScroll.setVisible(True)
                 
         UPDATER.add("mainscreen_full")
-        UPDATER.connect("mainscreen_full",setFullscreen)
+        UPDATER.signal("mainscreen_full",setFullscreen)
 
         h1.addLayout(self.leftLayout, 1)
         h1.addLayout(h2, 9)

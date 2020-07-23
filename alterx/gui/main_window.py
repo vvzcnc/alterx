@@ -150,7 +150,7 @@ class MainWindow(QWidget):
                 bottom_index = self.mainLayout.bottomWidgets.addWidget(buttons)
 
                 UPDATER.add("screen_{}".format(name))
-                UPDATER.connect("screen_{}".format(name), partial(
+                UPDATER.signal("screen_{}".format(name), partial(
                     self.activate_screen, (widget, buttons, infoWidget[i])))
 
             if sideWidget[i][0] is not None:

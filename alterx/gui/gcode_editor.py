@@ -154,8 +154,8 @@ class GcodeDisplay(EditorBase):
         EditorBase.__init__(self, parent)
         self.last_line = 0
 
-        UPDATER.connect("file", self.load_program)
-        UPDATER.connect("motion_line", self.highlight_line)
+        UPDATER.signal("file", self.load_program)
+        UPDATER.signal("motion_line", self.highlight_line)
 
     def load_program(self, filename=None):
         self.load_text(filename)
@@ -287,15 +287,15 @@ class GcodeEditor(QWidget):
         UPDATER.add("geditor_set_search")
         UPDATER.add("geditor_set_replace")
 
-        UPDATER.connect("geditor_save", self.save_file)
-        UPDATER.connect("geditor_new", lambda s: self.new_file())
-        UPDATER.connect("geditor_undo", lambda s: self.editor.undo())
-        UPDATER.connect("geditor_redo", lambda s: self.editor.redo())
-        UPDATER.connect("geditor_search", lambda s: self.editor.search_next())
-        UPDATER.connect("geditor_replace",
+        UPDATER.signal("geditor_save", self.save_file)
+        UPDATER.signal("geditor_new", lambda s: self.new_file())
+        UPDATER.signal("geditor_undo", lambda s: self.editor.undo())
+        UPDATER.signal("geditor_redo", lambda s: self.editor.redo())
+        UPDATER.signal("geditor_search", lambda s: self.editor.search_next())
+        UPDATER.signal("geditor_replace",
                         lambda s: self.editor.replace_text(self.replace))
-        UPDATER.connect("geditor_set_search", self.set_search)
-        UPDATER.connect("geditor_set_replace", self.set_replace)
+        UPDATER.signal("geditor_set_search", self.set_search)
+        UPDATER.signal("geditor_set_replace", self.set_replace)
 
     def save_file(self, path):
         if type(path) is not bool:
