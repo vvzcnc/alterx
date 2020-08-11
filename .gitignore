@@ -135,7 +135,7 @@ log/
 
 # Prefs
 *.prefs
-*.ini
+#*.ini
 position.txt
 *.var
 *.bak
@@ -143,6 +143,6 @@ position.txt
 
 #linuxcnc
 *.halscope
-*.hal
+#*.hal
 macros/
 *.ngc
