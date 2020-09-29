@@ -22,6 +22,7 @@
 */
 
 #define RTAPI
+#define LCNC_28
 
 #include <rtapi.h>		/* RTAPI realtime OS API */
 #include <rtapi_app.h>		/* RTAPI realtime module decls */
@@ -29,7 +30,11 @@
 #include <stdio.h>	
 #include <rtapi_string.h>
 #include <rtapi_stdint.h>
+
+#ifdef LCNC_27
 #include <rtapi_common.h>
+#endif
+
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -53,9 +58,17 @@ typedef struct {
     int prev;			/* previous element in list */
 } hal_list_t;
 
+typedef unsigned long rtapi_mutex_t;
+
+#ifdef LCNC_27
+typedef int rtapi_intptr_t;
+#else
+typedef long rtapi_intptr_t;
+#endif
+
 typedef struct {
     int version;		/* version code for structs, etc */
-    unsigned long mutex;	/* protection for linked lists, etc. */
+    rtapi_mutex_t mutex;	/* protection for linked lists, etc. */
     hal_s32_t shmem_avail;	/* amount of shmem left free */
     constructor pending_constructor;
 			/* pointer to the pending constructor function */
@@ -63,31 +76,31 @@ typedef struct {
 			        /* prefix of name for new instance */
     char constructor_arg[HAL_NAME_LEN+1];
 			        /* prefix of name for new instance */
-    int shmem_bot;		/* bottom of free shmem (first free byte) */
-    int shmem_top;		/* top of free shmem (1 past last free) */
-    int comp_list_ptr;		/* root of linked list of components */
-    int pin_list_ptr;		/* root of linked list of pins */
-    int sig_list_ptr;		/* root of linked list of signals */
-    int param_list_ptr;		/* root of linked list of parameters */
-    int funct_list_ptr;		/* root of linked list of functions */
-    int thread_list_ptr;	/* root of linked list of threads */
+    rtapi_intptr_t shmem_bot;		/* bottom of free shmem (first free byte) */
+    rtapi_intptr_t shmem_top;		/* top of free shmem (1 past last free) */
+    rtapi_intptr_t comp_list_ptr;		/* root of linked list of components */
+    rtapi_intptr_t pin_list_ptr;		/* root of linked list of pins */
+    rtapi_intptr_t sig_list_ptr;		/* root of linked list of signals */
+    rtapi_intptr_t param_list_ptr;		/* root of linked list of parameters */
+    rtapi_intptr_t funct_list_ptr;		/* root of linked list of functions */
+    rtapi_intptr_t thread_list_ptr;	/* root of linked list of threads */
     long base_period;		/* timer period for realtime tasks */
     int threads_running;	/* non-zero if threads are started */
-    int oldname_free_ptr;	/* list of free oldname structs */
-    int comp_free_ptr;		/* list of free component structs */
-    int pin_free_ptr;		/* list of free pin structs */
-    int sig_free_ptr;		/* list of free signal structs */
-    int param_free_ptr;		/* list of free parameter structs */
-    int funct_free_ptr;		/* list of free function structs */
+    rtapi_intptr_t oldname_free_ptr;	/* list of free oldname structs */
+    rtapi_intptr_t comp_free_ptr;		/* list of free component structs */
+    rtapi_intptr_t pin_free_ptr;		/* list of free pin structs */
+    rtapi_intptr_t sig_free_ptr;		/* list of free signal structs */
+    rtapi_intptr_t param_free_ptr;		/* list of free parameter structs */
+    rtapi_intptr_t funct_free_ptr;		/* list of free function structs */
     hal_list_t funct_entry_free;	/* list of free funct entry structs */
-    int thread_free_ptr;	/* list of free thread structs */
+    rtapi_intptr_t thread_free_ptr;	/* list of free thread structs */
     int exact_base_period;      /* if set, pretend that rtapi satisfied our
 				   period request exactly */
     unsigned char lock;         /* hal locking, can be one of the HAL_LOCK_* types */
 } hal_data_t;
 
 typedef struct {
-    int next_ptr;		/* next pin in linked list */
+    rtapi_intptr_t next_ptr;		/* next pin in linked list */
     int data_ptr_addr;		/* address of pin data pointer */
     int owner_ptr;		/* component that owns this pin */
     int signal;			/* signal to which pin is linked */
@@ -98,8 +111,11 @@ typedef struct {
     char name[HAL_NAME_LEN + 1];	/* pin name */
 } hal_pin_t;
 
+/** HAL 'signal' data structure.
+    This structure contains information about a 'signal' object.
+*/
 typedef struct {
-    int next_ptr;		/* next signal in linked list */
+    rtapi_intptr_t next_ptr;		/* next signal in linked list */
     int data_ptr;		/* offset of signal value */
     hal_type_t type;		/* data type */
     int readers;		/* number of input pins linked */
@@ -108,8 +124,11 @@ typedef struct {
     char name[HAL_NAME_LEN + 1];	/* signal name */
 } hal_sig_t;
 
+/** HAL 'parameter' data structure.
+    This structure contains information about a 'parameter' object.
+*/
 typedef struct {
-    int next_ptr;		/* next parameter in linked list */
+    rtapi_intptr_t next_ptr;		/* next parameter in linked list */
     int data_ptr;		/* offset of parameter value */
     int owner_ptr;		/* component that owns this signal */
     int oldname;		/* old name if aliased, else zero */

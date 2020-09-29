@@ -25,6 +25,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import logging
 from alterx.common.compat import *
 from alterx.common.util import *
+from alterx.core.linuxcnc import *
 
 __all__ = []
 
@@ -39,6 +40,7 @@ from threading import Thread
 
 QKEY = Queue(-1)
 QLED = Queue(-1)
+QOUTPUT = Queue(-1)
 
 def listener_process(log, key, led, board):
     if not board:
@@ -95,8 +97,9 @@ def listener_process(log, key, led, board):
                     keys["inputs"] = list_inputs[1:]
                     keys["button"] = button
             ser.close()
-
-        except  Exception,e:
+        except (KeyboardInterrupt, SystemExit):
+            return
+        except Exception,e:
             log.put_nowait({"name": __name__, "level": logging.INFO,
                             "msg": "Serial error: %s"%e, "path": __file__})
                             
@@ -107,7 +110,7 @@ class keyboardListener():
     def __init__(self):
         self.init_keybindings()
     
-        kt = Thread(target=self.listener_thread, args=(QLOG, QKEY, QLED))
+        kt = Thread(target=self.listener_thread, args=(QLOG, QKEY, QLED, QOUTPUT))
         kt.daemon = True
         kt.start()
 
@@ -116,27 +119,59 @@ class keyboardListener():
         kp.daemon = True
         kp.start()
 
+    def update_output_state(self, number, state):
+        self.keyboard_cmd_list[number] = state
+        QOUTPUT.put_nowait(self.keyboard_cmd_list)
+
     def init_keybindings( self ):
         context=pyudev.Context()
         self.keyboard=None
         self.keyboard_cmd_list= [False,False,False,False,False,False,False,False]
         self.keyboard_answer = {}
 
+        UPDATER.add("keyboard_set_output_state",[0,0])
+        UPDATER.signal("keyboard_set_output_state",lambda s: self.update_output_state(s[0],s[1]))
+
         for device in context.list_devices(subsystem='tty',ID_VENDOR_ID='0483',
                                     ID_MODEL_ID='5740',ID_MODEL='BK-A05K-D'):
             self.keyboard=device['DEVNAME']
 
-    def listener_thread(self, log, key, led):
+    def listener_thread(self, log, key, led, output):
+        last_key = {}
+        keyboard_cmd_list = [False,False,False,False,False,False,False,False]
+        
         while True:
+            time.sleep(0.01)
             try:
-                led.put_nowait(self.keyboard_cmd_list)
+                if not output.empty():
+                    keyboard_cmd_list = output.get()
+                    
+                led.put_nowait(keyboard_cmd_list)
             
-                k = key.get()
-                if k is None:
+                key_answer = key.get()
+                if key_answer is None:
                     break
                     
-                for key in k:
-                    printVerbose('Key [%s] received: %s' % (key, k[key]))
+                for k in key_answer:
+                    printVerbose('Key [%s] received: %s' % (k, key_answer[k]))
+                    if k in last_key and key_answer[k] != last_key[k]:
+                        if k == "button":
+                            UPDATER.emit('display_button_binding', key_answer[k])
+                        elif k == "spindlerate":
+                            COMMAND.spindleoverride(round((key_answer[k]/1.25))/100.0)
+                        elif k == "feedrate":
+                            speed = round((key_answer[k]/1.25))/100.0
+                            COMMAND.feedrate(speed)
+                            COMMAND.rapidrate(speed)
+                            UPDATER.emit('jog_speed', speed)
+                        elif k == "inputs":
+                            UPDATER.emit('display_inputs_binding', key_answer[k])
+                        elif k == "encoder":
+                            UPDATER.emit('display_encoder_binding', key_answer[k])
+                        elif k == "fast":
+                            UPDATER.emit('jog_fast', key_answer[k])
+
+                    last_key[k] = key_answer[k]
             except (KeyboardInterrupt, SystemExit):
                 raise
             except Exception as e:

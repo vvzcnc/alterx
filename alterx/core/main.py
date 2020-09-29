@@ -30,6 +30,8 @@ from alterx.common import *
 from alterx.core.linuxcnc import *
 from alterx.gui.util import *
 
+from functools import partial
+
 class Main():
     #------ Initialize ------#
     def __init__(self):
@@ -43,8 +45,27 @@ class Main():
         UPDATER.signal("file", self.load_program_handler)
         UPDATER.signal("program_units", self.change_units_handler)
         UPDATER.signal("gcodes", self.gcode_changed)
+        
+        if HAL:
+            self.halcomp = HAL.component( "alterx" )
+            for i in range(7):
+                pin = self.halcomp.newpin( "io.output-"+str(i), HAL.HAL_BIT, HAL.HAL_IN )
+                UPDATER.listen("io.output-"+str(i),pin.get)
+                UPDATER.signal("io.output-"+str(i), partial(self.hw_output_state_handler,i))
+                self.halcomp.newpin( "io.input-"+str(i), HAL.HAL_BIT, HAL.HAL_OUT )
+            self.halcomp.ready()
 
 #------ Global handlers ------#
+    def display_encoder_handler(self, signal):
+        printVerbose(_("LinuxCNC display input signal {}", signal))
+
+    def display_inputs_handler(self, signals):
+        for i in range(7):
+            self.halcomp["io.input-"+str(i)] = signals[i]
+
+    def hw_output_state_handler(self, number, signal):
+        UPDATER.emit("keyboard_set_output_state",[number, signal])
+
     def gcode_changed(self, data):
         for i in sorted(data[1:]):
             if i == -1:
@@ -133,6 +154,56 @@ class Main():
         printInfo(_('Units: {}', INFO.linear_units))
 
 #------ Button callbacks ------#
+    def jog_button_callback(self, button):  
+        if UPDATER.value("jog_activate"):
+            COMMAND.teleop_enable(1)
+            direction = 0
+            if button in (4,6,7,8):
+                direction = -1
+            elif button in (1,2,3,5):
+                direction = 1  
+
+            selected_axis = -1            
+            if button in (4,5):
+                selected_axis = 0
+            elif button in (2,7):
+                selected_axis = 1
+            elif button in (3,6):
+                selected_axis = 2  
+            elif button in (1,8):
+                selected_axis = 3
+
+            speed = 0
+            if STAT.joint[selected_axis]['jointType'] == 1:
+                if UPDATER.value("jog_fast"):
+                    speed = direction*float(
+                        INI.find("DISPLAY", "MAX_LINEAR_VELOCITY"))/60.0
+                else:
+                    speed = direction*UPDATER.value("jog_speed")*float(
+                        INI.find("DISPLAY", "MAX_LINEAR_VELOCITY"))/60.0
+            else:
+                if UPDATER.value("jog_fast"):
+                    speed = direction*float(
+                        INI.find("DISPLAY", "MAX_ANGULAR_VELOCITY"))/60.0
+                else:
+                    speed = direction*UPDATER.value("jog_speed")*float(
+                        INI.find("DISPLAY", "MAX_LINEAR_VELOCITY"))/60.0
+
+            if not UPDATER.value("jog_encoder"):
+                if UPDATER.value("jog_continuous"):
+                    if button:
+                        COMMAND.jog(LINUXCNC.JOG_CONTINUOUS,False,selected_axis,speed)
+                    else:
+                        for a in range(9):
+                            COMMAND.jog(LINUXCNC.JOG_STOP,False,a) 
+                else:
+                    if button:
+                        COMMAND.jog(LINUXCNC.JOG_INCREMENT,False,
+                            selected_axis,speed,UPDATER.value("jog_increment"))
+                    else:
+                        for a in range(9):
+                            COMMAND.jog(LINUXCNC.JOG_STOP,False,a) 
+            printVerbose(_("LinuxCNC mode {} {} {} {}", direction,selected_axis,speed,button))
 
     def side_button_callback(self, button):
         if button.label == "abort":

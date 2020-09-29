@@ -21,7 +21,7 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-__all__ = ['STAT', 'COMMAND', 'INI', 'UPDATER', 'LINUXCNC', 'INFO', 'POSLOG','GCODE']
+__all__ = ['STAT', 'COMMAND', 'INI', 'UPDATER', 'LINUXCNC', 'INFO', 'POSLOG','GCODE','HAL']
 
 from alterx.common.locale import _
 from alterx.common.compat import *
@@ -48,7 +48,7 @@ class fake_linuxcnc():
         
     def find(self,section,option):
         return ""
-        
+
         
 class fake_position_logger():
     def __getattr__(self,name):
@@ -69,6 +69,7 @@ class fake_command():
 try:
     import linuxcnc as LINUXCNC
     import gcode as GCODE
+    import hal as HAL
 
     STAT = LINUXCNC.stat()
     COMMAND = LINUXCNC.command()
@@ -96,6 +97,7 @@ except Exception as e:
     ERROR = fake_linuxcnc()
     INI = fake_linuxcnc()
     GCODE = fake_linuxcnc()
+    HAL = None
     
     QMessageBox.critical(None,
             _("AlterX: Failed to import LinuxCNC"),
@@ -169,6 +171,7 @@ class linuxcnc_poll(QTimer):
         self.timeout.connect(self.run)
         self.stat_old = {}
         self._observers = {}
+        self._listener = {}
         self.custom_signals = {}
         self.custom_signals_old = {}
 
@@ -202,6 +205,9 @@ class linuxcnc_poll(QTimer):
                                 printError(
                                     _("Failed to execute '{}' handler {}: '{}'", s, h, e))
 
+		for name in self._listener:
+			self.custom_signals[name] = self._listener[name]()
+
         for name in self.custom_signals:
             if ( self.custom_signals[name] != self.custom_signals_old[name] and 
                 name in self._observers ):
@@ -222,6 +228,12 @@ class linuxcnc_poll(QTimer):
             return True
         return False
 
+    # 'Many to one' item get value
+    def value(self, name):
+        if name in self.custom_signals:
+            return self.custom_signals[name]
+        return False
+
     # Emit custom signal
     def emit(self, name, value=None):
         if name in self.custom_signals:
@@ -232,6 +244,15 @@ class linuxcnc_poll(QTimer):
             self.custom_signals[name] = value
         else:
             printError(_("Failed to emit signal. Signal '{}' no exist", name))
+
+    # Create custom listener in database
+    def listen(self, name, method):
+        if name not in self._listener and name not in self.custom_signals:
+            self._listener[name] = method
+            self.custom_signals[name] = method()
+            self.custom_signals_old[name] = method()
+        else:
+            printError(_("Failed to add listener. Listener '{}' already exist", name))
 
     # Create custom signal in database
     def add(self, name, value=False):

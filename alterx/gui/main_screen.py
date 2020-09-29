@@ -257,9 +257,16 @@ class SpindleWidget(QGroupBox):
         v1.addWidget(self.actual_spindlerate)
         v1.addWidget(self.spindle_override)
         self.setLayout(v1)
-        UPDATER.signal("spindlerate", self.on_spindlerate_changed)
-        UPDATER.signal("spindle_speed", self.on_actualrate_changed)
+        UPDATER.signal("spindle", self.on_spindle_changed)
+        #UPDATER.signal("spindleoverride", self.on_spindlerate_changed)
+        #UPDATER.signal("spindle_speed", self.on_actualrate_changed)
         UPDATER.signal("feed_mode", self.on_feedmode_changed)
+
+    def on_spindle_changed(self, spindles):
+        for spindle in spindles:
+            self.on_spindlerate_changed(spindle["override"])
+            self.on_actualrate_changed(spindle["speed"])
+            break
 
     def on_feedmode_changed(self, mode):
         self.spindle_override.setVisible(False if mode == 'G96' else True)
@@ -334,6 +341,7 @@ class JOGWidget(QGroupBox):
         UPDATER.add('jog_activate')
         UPDATER.add('jog_continuous')
         UPDATER.add('jog_encoder')
+        UPDATER.add('jog_fast')       
 
         self.setTitle(_("JOG"))
         hlay = QHBoxLayout()
@@ -374,7 +382,7 @@ class JOGWidget(QGroupBox):
 
     def on_speed_changed(self, s):
         self.jog_speed = s
-        self.label_jog_speed.setText(_("Speed: {}", self.jog_speed))
+        self.label_jog_speed.setText(_("Speed: {}%", self.jog_speed*100))
 
     def on_increment_changed(self, i):
         self.jog_increment = i
