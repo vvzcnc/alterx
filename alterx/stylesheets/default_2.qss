@@ -22,30 +22,30 @@ QGroupBox::title {
     background: transparent;
     }
 
-QLabel[objectName|=lbl_dro_name] {
+QLabel[objectName^=lbl_dro_name] {
     color: #2e3436;
     font-size: 90pt;
     }
 
-QLabel[objectName|=lbl_dro_act] {
+QLabel[objectName^=lbl_dro_act] {
     font-size: 55pt;
     font-weight: bold;
     }
     
-QLabel[objectName|=lbl_dro_act][homed=true] {
+QLabel[objectName^=lbl_dro_act][homed=true] {
     color: #4e9a06;
     }
     
-QLabel[objectName|=lbl_dro_act][homed=false] {
+QLabel[objectName^=lbl_dro_act][homed=false] {
     color: #a40000;
     }    
 
-QLabel[objectName|=lbl_dro_ferror] {
+QLabel[objectName^=lbl_dro_ferror] {
     color: #1f1157;
     font-size: 25pt;
     }
 
-QLabel[objectName|=lbl_dro_dtg] {
+QLabel[objectName^=lbl_dro_dtg] {
     color: #a40000;
     font-size: 25pt;
     }
@@ -82,7 +82,7 @@ QPushButton:disabled{
     border: 2px solid #c4a000;
     }
 
-QPushButton[objectName|=btn_]{
+QPushButton[objectName^=btn_]{
     color: transparent
     }
 

@@ -59,7 +59,8 @@ class MainWindow(QWidget):
         mainwnd = cls()
         mainwnd.show()
 
-        mainwnd.setWindowState(Qt.WindowMaximized)
+        #mainwnd.setWindowState(Qt.WindowMaximized)
+        mainwnd.setWindowState(Qt.WindowFullScreen)
 
         return mainwnd
 
@@ -98,8 +99,11 @@ class MainWindow(QWidget):
 
         ON_STATE = [LINUXCNC.STATE_ON]  # Enable when CNC is ON
         # Enable when CNC is ON, is HOMED
-        HOMED_STATE = ON_STATE + \
-            [(1,)*len(INFO.coordinates)+(0,)*(9-len(INFO.coordinates))]
+        homed_list = [0,]*9
+        for i in INFO.joints:
+            homed_list[i] = 1
+ 
+        HOMED_STATE = ON_STATE + [tuple(homed_list)]
         # Enable when CNC is ON, is HOMED and in MDI mode
         MDI_STATE = HOMED_STATE + [LINUXCNC.MODE_MDI]
         # Enable when CNC is ON, is HOMED and in AUTO mode

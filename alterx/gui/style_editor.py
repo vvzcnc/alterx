@@ -148,12 +148,12 @@ class StyleSheetEditor(QWidget):
         name = self.styleSheetCombo.itemData(i, role=Qt.DisplayRole)
         if name == 'Default':
             sheetName = name
-            self.loadStyleSheet(sheetName)
-            PREF.putpref("stylesheet", name)
         else:
             sheetName = os.path.join(path, name)
-            styleSheet = self.origStyleSheet
-            self.styleTextView.setPlainText(styleSheet)
+
+        self.loadStyleSheet(sheetName)
+        PREF.putpref("stylesheet", name)   
+        self.on_applyButton_clicked()
 
     def on_styleTextView_textChanged(self):
         self.applyButton.setEnabled(True)
@@ -161,8 +161,10 @@ class StyleSheetEditor(QWidget):
     def on_applyButton_clicked(self):
         if self.mainwindow:
             if self.tabWidget.currentIndex() == 0:
+                self.mainwindow.setStyleSheet("")
                 self.mainwindow.setStyleSheet(self.styleTextView.toPlainText())
             else:
+                self.mainwindow.setStyleSheet("")
                 self.mainwindow.setStyleSheet(self.styleTextEdit.toPlainText())
 
     def on_openButton_clicked(self):

@@ -153,7 +153,7 @@ class keyboardListener():
                     break
                     
                 for k in key_answer:
-                    printVerbose('Key [%s] received: %s' % (k, key_answer[k]))
+                    #printVerbose('Key [%s] received: %s' % (k, key_answer[k]))
                     if k in last_key and key_answer[k] != last_key[k]:
                         if k == "button":
                             UPDATER.emit('display_button_binding', key_answer[k])

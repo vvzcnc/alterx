@@ -115,7 +115,13 @@ class linuxcnc_info():
 
         self.units_factor = 1
 
+        self.default_axes_list = {'X':0,'Y':1,'Z':2,'A':3,'B':4,'C':5,'U':6,'V':7,'W':8}
         self.coordinates = (INI.find('TRAJ', 'COORDINATES') or ' ').split(' ')
+        
+        if int(INI.find('TRAJ', 'AXES')) == len(self.coordinates):
+            self.joints = [ i for i,j in enumerate(self.coordinates) ]
+        else:
+            self.joints = [ self.default_axes_list[j] for j in self.coordinates ]
 
         self.machine_is_lathe = True if INI.find('DISPLAY', 'LATHE') else False
 

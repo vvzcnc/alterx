@@ -102,7 +102,9 @@ class DROWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         dro_layout = QVBoxLayout()
-        for i, axis in enumerate(INFO.coordinates):
-            dro_layout.addLayout(DROLayout(i, axis))
+        
+        for i, j in enumerate(INFO.joints):
+            dro_layout.addLayout(DROLayout(j, INFO.coordinates[i]))
+
         dro_layout.addStretch()
         self.setLayout(dro_layout)

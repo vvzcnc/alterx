@@ -464,6 +464,9 @@ class MainLayout(QVBoxLayout):
     def __init__(self, parent=None):
         QVBoxLayout.__init__(self, parent)
 
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setSpacing(2)
+
         h1 = QHBoxLayout()
 
         self.leftLayout = QVBoxLayout()
