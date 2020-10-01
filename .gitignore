@@ -139,7 +139,7 @@ log/
 position.txt
 *.var
 *.bak
-*.tbl
+#*.tbl
 
 #linuxcnc
 *.halscope

@@ -139,6 +139,9 @@ class linuxcnc_info():
         self.mdi_history_file = INI.find("DISPLAY", "MDI_HISTORY_FILE") or 'mdi.log'
         self.working_dir = os.path.dirname(os.environ['INI_FILE_NAME'])
         
+        self.max_feed_override = float(INI.find("TRAJ", "MAX_FEED_OVERRIDE") or '1.0')
+        self.max_spindle_override = float(INI.find("TRAJ", "MAX_SPINDLE_OVERRIDE") or '1.0')
+        
         self.dro_format = "{:.3f}"
         self.linear_units = _("mm")
         self.angular_units = _("deg")

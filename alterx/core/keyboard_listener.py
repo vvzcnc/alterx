@@ -84,8 +84,8 @@ def listener_process(log, key, led, board):
                     button = struct.unpack("B",answer[6:7])[0]
                     inputs = struct.unpack("B",answer[7:8])[0]
                     
-                    keys["spindlerate"] = spindle/4096.0*130.0
-                    keys["feedrate"] = feedrate/4096.0*130.0
+                    keys["spindlerate"] = spindle/40.0
+                    keys["feedrate"] = feedrate/40.0
                     keys["encoder"] = encoder
                     
                     def int_to_bool_list(num):
@@ -119,18 +119,16 @@ class keyboardListener():
         kp.daemon = True
         kp.start()
 
-    def update_output_state(self, number, state):
-        self.keyboard_cmd_list[number] = state
-        QOUTPUT.put_nowait(self.keyboard_cmd_list)
-
+    def set_outputs(self, signal):
+        result = [True if c == '1' else False for c in signal]
+        QOUTPUT.put_nowait(result)
+        
     def init_keybindings( self ):
         context=pyudev.Context()
         self.keyboard=None
-        self.keyboard_cmd_list= [False,False,False,False,False,False,False,False]
-        self.keyboard_answer = {}
 
-        UPDATER.add("keyboard_set_output_state",[0,0])
-        UPDATER.signal("keyboard_set_output_state",lambda s: self.update_output_state(s[0],s[1]))
+        UPDATER.add("keyboard_set_output_state")
+        UPDATER.signal("keyboard_set_output_state", self.set_outputs)
 
         for device in context.list_devices(subsystem='tty',ID_VENDOR_ID='0483',
                                     ID_MODEL_ID='5740',ID_MODEL='BK-A05K-D'):
@@ -154,22 +152,25 @@ class keyboardListener():
                     
                 for k in key_answer:
                     #printVerbose('Key [%s] received: %s' % (k, key_answer[k]))
-                    if k in last_key and key_answer[k] != last_key[k]:
+                    if k not in last_key or key_answer[k] != last_key[k]:
                         if k == "button":
                             UPDATER.emit('display_button_binding', key_answer[k])
                         elif k == "spindlerate":
-                            COMMAND.spindleoverride(round((key_answer[k]/1.25))/100.0)
+                            speed = key_answer[k]
+                            if speed > 100:
+                                speed = 100
+                            UPDATER.emit('display_spindlerate', round(speed))
                         elif k == "feedrate":
-                            speed = round((key_answer[k]/1.25))/100.0
-                            COMMAND.feedrate(speed)
-                            COMMAND.rapidrate(speed)
-                            UPDATER.emit('jog_speed', speed)
+                            speed = key_answer[k]
+                            if speed > 100:
+                                speed = 100
+                            UPDATER.emit('display_feedrate', round(speed))
                         elif k == "inputs":
                             UPDATER.emit('display_inputs_binding', key_answer[k])
                         elif k == "encoder":
                             UPDATER.emit('display_encoder_binding', key_answer[k])
                         elif k == "fast":
-                            UPDATER.emit('jog_fast', key_answer[k])
+                            UPDATER.emit('display_jog_fast', key_answer[k])
 
                     last_key[k] = key_answer[k]
             except (KeyboardInterrupt, SystemExit):

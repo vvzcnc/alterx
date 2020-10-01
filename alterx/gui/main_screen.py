@@ -341,7 +341,6 @@ class JOGWidget(QGroupBox):
         UPDATER.add('jog_activate')
         UPDATER.add('jog_continuous')
         UPDATER.add('jog_encoder')
-        UPDATER.add('jog_fast')       
 
         self.setTitle(_("JOG"))
         hlay = QHBoxLayout()
@@ -524,6 +523,7 @@ class MainLayout(QVBoxLayout):
                 
         UPDATER.add("mainscreen_full")
         UPDATER.signal("mainscreen_full",setFullscreen)
+        UPDATER.signal("display_button_binding", self.display_button_pressed)
 
         h1.addLayout(self.leftLayout, 1)
         h1.addLayout(h2, 9)
@@ -535,3 +535,24 @@ class MainLayout(QVBoxLayout):
         self.bottomWidgets.currentChanged.connect(
             lambda i: UPDATER.emit("secondary_mode", i))
         self.addWidget(self.bottomWidgets, 1)
+
+    def display_button_pressed(self, button):
+        try:
+            if button >= 0 and button < 9:
+                MAIN.jog_button_callback(button)
+                
+            elif button > 8 and button < 15:
+                btn = self.leftLayout.itemAt(button-9).widget() 
+                btn.clicked.emit()
+                
+            elif button > 14 and button < 26:
+                layout = self.bottomWidgets.currentWidget().layout()
+                btn = layout.itemAt(button-15).widget()
+                btn.clicked.emit()
+                
+            elif button > 25 and button < 32:
+                btn = self.rightLayout.itemAt(31-button).widget()
+                btn.clicked.emit()
+                
+        except Exception as e:
+            printWarning(_("Failed to emit button click: {}",e))

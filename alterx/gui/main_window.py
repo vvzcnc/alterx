@@ -167,34 +167,5 @@ class MainWindow(QWidget):
                     self.mainLayout.rightLayout.addWidget(sidebutton)
                 else:
                     self.mainLayout.leftLayout.addWidget(sidebutton)
-
-        UPDATER.add('display_button_binding')
-        UPDATER.add('display_inputs_binding')
-        UPDATER.add('display_encoder_binding')
-        
-        UPDATER.signal("display_encoder_binding", MAIN.display_encoder_handler)
-        UPDATER.signal("display_inputs_binding", MAIN.display_inputs_handler)
-        UPDATER.signal("display_button_binding", self.display_button_pressed)
- 
+                    
         UPDATER.start(INFO.display_cycle_time)
-
-    def display_button_pressed(self, button):
-        try:
-            if button >= 0 and button < 9:
-                MAIN.jog_button_callback(button)
-                
-            elif button > 8 and button < 15:
-                btn = self.mainLayout.leftLayout.itemAt(button-9).widget() 
-                btn.clicked.emit()
-                
-            elif button > 14 and button < 26:
-                layout = self.mainLayout.bottomWidgets.currentWidget().layout()
-                btn = layout.itemAt(button-15).widget()
-                btn.clicked.emit()
-                
-            elif button > 25 and button < 32:
-                btn = self.mainLayout.rightLayout.itemAt(31-button).widget()
-                btn.clicked.emit()
-                
-        except Exception as e:
-            printWarning(_("Failed to emit button click: {}",e))

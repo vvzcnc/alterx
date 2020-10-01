@@ -38,7 +38,17 @@ class Main():
         UPDATER.add('update_feed_labels')
         UPDATER.add('feed_mode')
         UPDATER.add('diameter_multiplier', 1)
+        UPDATER.add('display_feedrate',-1)
+        UPDATER.add('display_spindlerate',-1)
+        UPDATER.add('display_jog_fast')  
+        UPDATER.add('display_button_binding')
+        UPDATER.add('display_inputs_binding')
+        UPDATER.add('display_encoder_binding')   
 
+        UPDATER.signal("display_encoder_binding", self.display_encoder_handler)
+        UPDATER.signal("display_inputs_binding", self.display_inputs_handler)
+        UPDATER.signal("display_spindlerate", self.spindlerate_changed)
+        UPDATER.signal("display_feedrate", self.feedrate_changed)
         UPDATER.signal("task_state", self.task_state_handler)
         UPDATER.signal("task_mode", self.task_mode_handler)
         UPDATER.signal("homed", self.homed_handler)
@@ -46,6 +56,7 @@ class Main():
         UPDATER.signal("program_units", self.change_units_handler)
         UPDATER.signal("gcodes", self.gcode_changed)
         
+        self.keyboard_cmd_list = "0000000"
         if HAL:
             self.halcomp = HAL.component( "alterx" )
             for i in range(7):
@@ -64,7 +75,18 @@ class Main():
             self.halcomp["io.input-"+str(i)] = signals[i]
 
     def hw_output_state_handler(self, number, signal):
-        UPDATER.emit("keyboard_set_output_state",[number, signal])
+        self.keyboard_cmd_list = ( self.keyboard_cmd_list[:number] + 
+                                    str(int(signal)) + 
+                                    self.keyboard_cmd_list[number+1:] )
+        UPDATER.emit("keyboard_set_output_state",self.keyboard_cmd_list)
+
+    def spindlerate_changed(self, value):
+		COMMAND.spindleoverride(value/100.0*INFO.max_spindle_override)
+
+    def feedrate_changed(self, value):
+        COMMAND.feedrate(value/100.0*INFO.max_feed_override)
+        COMMAND.rapidrate(value/100.0*INFO.max_feed_override)
+        UPDATER.emit("jog_speed",value/100.0)
 
     def gcode_changed(self, data):
         for i in sorted(data[1:]):
@@ -175,7 +197,7 @@ class Main():
 
             speed = 0
             if STAT.joint[selected_axis]['jointType'] == 1:
-                if UPDATER.value("jog_fast"):
+                if UPDATER.value("display_jog_fast"):
                     speed = direction*float(
                         INI.find("DISPLAY", "MAX_LINEAR_VELOCITY"))/60.0
                 else:
