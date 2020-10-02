@@ -31,6 +31,14 @@ from alterx.core.linuxcnc import *
 from alterx.gui.util import *
 
 from functools import partial
+from collections import OrderedDict
+
+class MultiOrderedDict(OrderedDict):
+    def __setitem__(self, key, value):
+        if isinstance(value, list) and key in self:
+            self[key].extend(value)
+        else:
+            OrderedDict.__setitem__(self, key, value)
 
 class Main():
     #------ Initialize ------#
@@ -44,6 +52,7 @@ class Main():
         UPDATER.add('display_button_binding')
         UPDATER.add('display_inputs_binding')
         UPDATER.add('display_encoder_binding')   
+        UPDATER.add('hal_jog_enable')
 
         UPDATER.signal("display_encoder_binding", self.display_encoder_handler)
         UPDATER.signal("display_inputs_binding", self.display_inputs_handler)
@@ -55,10 +64,27 @@ class Main():
         UPDATER.signal("file", self.load_program_handler)
         UPDATER.signal("program_units", self.change_units_handler)
         UPDATER.signal("gcodes", self.gcode_changed)
+        UPDATER.signal("hal_jog_enable", self.hal_jog_enable_changed)
         
         self.keyboard_cmd_list = "0000000"
         if HAL:
             self.halcomp = HAL.component( "alterx" )
+
+            self.config = ConfigParser.ConfigParser(
+                dict_type=MultiOrderedDict,allow_no_value=True)
+            self.config.optionxform = str
+            ini = os.environ['INI_FILE_NAME']
+            self.config.read(ini)
+            items = self.config.items("DISPLAY")
+            for i in items:
+                item = i[0].lower()
+                if item.startswith("message_"):
+                    pin = self.halcomp.newpin( "messages.{}".format(item), HAL.HAL_BIT, HAL.HAL_IN )
+                    UPDATER.listen("messages.{}".format(item), pin.get)
+                    UPDATER.signal("messages.{}".format(item), partial(self.hal_messages_handler,i[1]))
+            
+            self.halcomp.newpin( "jog-enable", HAL.HAL_BIT, HAL.HAL_OUT )
+            
             for i in range(7):
                 pin = self.halcomp.newpin( "io.output-"+str(i), HAL.HAL_BIT, HAL.HAL_IN )
                 UPDATER.listen("io.output-"+str(i),pin.get)
@@ -67,12 +93,21 @@ class Main():
             self.halcomp.ready()
 
 #------ Global handlers ------#
+    def hal_messages_handler(self, message, signal):
+        printInfo(message)
+        Notify.Info(message)
+        
+    def hal_jog_enable_changed(self, signal):
+        if HAL and self.halcomp:
+            self.halcomp["jog-enable"] = signal
+
     def display_encoder_handler(self, signal):
         printVerbose(_("LinuxCNC display input signal {}", signal))
 
     def display_inputs_handler(self, signals):
-        for i in range(7):
-            self.halcomp["io.input-"+str(i)] = signals[i]
+        if HAL and self.halcomp:
+            for i in range(7):
+                self.halcomp["io.input-"+str(i)] = signals[i]
 
     def hw_output_state_handler(self, number, signal):
         self.keyboard_cmd_list = ( self.keyboard_cmd_list[:number] + 

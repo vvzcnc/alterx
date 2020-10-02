@@ -8,7 +8,7 @@ from . import jog_0001
 from . import jog_act
 from . import jog_cont
 from . import jog_enc
-from . import exit
+from . import poweroff
 
 buttons_order = [
     'jog_0001',
@@ -21,5 +21,5 @@ buttons_order = [
     'jog_enc',
     None,
     None,
-    'exit',
+    'poweroff',
 ]

@@ -392,6 +392,11 @@ class JOGWidget(QGroupBox):
         self.jog_activate = active
         self.label_jog_activate.setText(
             _("JOG ")+self.activate[self.jog_activate])
+            
+        if self.jog_activate and self.jog_device:
+            UPDATER.emit("hal_jog_enable", True)
+        else:
+            UPDATER.emit("hal_jog_enable", False)
 
     def on_mode_changed(self, mode):
         self.jog_mode = mode
@@ -401,6 +406,11 @@ class JOGWidget(QGroupBox):
         self.jog_device = encoder
         self.label_jog_device.setText(
             _("Device: ")+self.device[self.jog_device])
+
+        if self.jog_activate and self.jog_device:
+            UPDATER.emit("hal_jog_enable", True)
+        else:
+            UPDATER.emit("hal_jog_enable", False)
 
     def task_mode_handler(self, data):
         if data == LINUXCNC.MODE_MANUAL:
