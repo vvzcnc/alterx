@@ -437,6 +437,10 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.zooming = 0
 
         self.pan_mode = False
+        
+        timer_viewer = QTimer(self)
+        timer_viewer.timeout.connect(self.update_render)
+        timer_viewer.start(float(INI.find("DISPLAY", "PATH_CYCLE_TIME") or '1.0')*1000)
 
     def update_dro(self, stat):
         if self.visibleRegion().isEmpty():
@@ -705,9 +709,6 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.update_render()
 
     def update_position(self, position):
-        if self.visibleRegion().isEmpty():
-            return
-    
         self.spindle_position = position[:3]
         self.spindle_rotation = position[3:6]
 
@@ -726,7 +727,8 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         # self.spindle_actor.SetPosition(self.spindle_position)
         # self.tool_actor.SetPosition(self.spindle_position)
         self.path_cache.add_line_point(self.tooltip_position)
-        self.update_render()
+
+        #self.update_render()
 
     def on_offset_table_changed(self, table):
         self.path_position_table = table
@@ -880,6 +882,8 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.update_render()
 
     def update_render(self):
+        if self.visibleRegion().isEmpty():
+            return
         self.GetRenderWindow().Render()
 
     def setViewOrtho(self):
