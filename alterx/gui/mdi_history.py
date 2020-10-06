@@ -78,6 +78,9 @@ class MDIHistory(QWidget):
         self.reload()
         self.select_row('last')
 
+        UPDATER.add("mdi_run_command")
+        UPDATER.signal("mdi_run_command", lambda s: self.run_command())
+
     def reload(self, w=None):
         self.model.clear()
         try:
@@ -117,7 +120,7 @@ class MDIHistory(QWidget):
         # self.select_row('down')
 
     def run_command(self):
-        self.MDILine.submit()
+        self.MDI.submit()
         self.select_row('last')
 
     def select_row(self, style):

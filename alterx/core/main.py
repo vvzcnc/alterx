@@ -90,9 +90,45 @@ class Main():
                 UPDATER.listen("io.output-"+str(i),pin.get)
                 UPDATER.signal("io.output-"+str(i), partial(self.hw_output_state_handler,i))
                 self.halcomp.newpin( "io.input-"+str(i), HAL.HAL_BIT, HAL.HAL_OUT )
+                
+            pin = self.halcomp.newpin("hal_run_command", HAL.HAL_BIT, HAL.HAL_IN )
+            UPDATER.listen("hal_run_command",pin.get)
+            UPDATER.signal("hal_run_command", self.hal_run_command_handler)
+
+            pin = self.halcomp.newpin("hal_stop_command", HAL.HAL_BIT, HAL.HAL_IN )
+            UPDATER.listen("hal_stop_command",pin.get)
+            UPDATER.signal("hal_stop_command", self.hal_stop_command_handler)
+            
             self.halcomp.ready()
+            
+        postgui_halfile = INI.find("HAL", "POSTGUI_HALFILE")
+        if postgui_halfile:
+            inifile = os.environ['INI_FILE_NAME']
+            printInfo(_("LinuxCNC postgui halfile: {}",postgui_halfile))
+            if postgui_halfile.lower().endswith('.tcl'):
+                res = os.spawnvp(os.P_WAIT, "haltcl", ["haltcl", "-i", inifile, postgui_halfile])
+            else:
+                res = os.spawnvp( os.P_WAIT, "halcmd", ["halcmd", "-i", inifile, "-f", postgui_halfile] )
+            if res:
+                raise SystemExit, res
 
 #------ Global handlers ------#
+    def hal_run_command_handler(self, signal):
+        if signal:
+            printVerbose(_("LinuxCNC hal input run signal activated"))
+            if STAT.task_mode == LINUXCNC.MODE_AUTO:
+                if STAT.interp_state == LINUXCNC.INTERP_PAUSED:
+                    COMMAND.auto(LINUXCNC.AUTO_RESUME)
+                else:
+                    COMMAND.auto(LINUXCNC.AUTO_RUN, 0)
+            elif STAT.task_mode == LINUXCNC.MODE_MDI:
+                UPDATER.emit("mdi_run_command")
+            
+    def hal_stop_command_handler(self, signal):
+        if signal:
+            printVerbose(_("LinuxCNC hal input stop signal activated"))
+            COMMAND.abort()
+
     def hal_messages_handler(self, message, signal):
         printInfo(message)
         Notify.Info(message)
@@ -102,10 +138,11 @@ class Main():
             self.halcomp["jog-enable"] = signal
 
     def display_encoder_handler(self, signal):
-        printVerbose(_("LinuxCNC display input signal {}", signal))
+        printVerbose(_("LinuxCNC display encoder signal {}", signal))
 
     def display_inputs_handler(self, signals):
         if HAL and self.halcomp:
+            printVerbose(_("LinuxCNC display input signals {}", signals))
             for i in range(7):
                 self.halcomp["io.input-"+str(i)] = signals[i]
 

@@ -438,6 +438,9 @@ class AxisWidget(QGroupBox):
         self.update_position(getattr(STAT,INFO.axes_list))
 
     def update_position(self, stat):
+        if self.drolabel.visibleRegion().isEmpty():
+			return
+    
         text = ""
         for i, axis in enumerate(INFO.coordinates):
             #position=stat[i]['input'] is absolute

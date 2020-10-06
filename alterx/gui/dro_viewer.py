@@ -73,6 +73,9 @@ class DROLayout(QHBoxLayout):
             self.name, ['', 'R', 'D'][UPDATER.diameter_multiplier]))
 
     def update_position(self, stat):
+        if self.drolabel_act.visibleRegion().isEmpty():
+            return
+
         homed = False if stat['homed'] == 0 else True
         self.drolabel_act.setProperty("homed", QVariant(homed))
         self.drolabel_act.setStyleSheet(self.drolabel_act.styleSheet())

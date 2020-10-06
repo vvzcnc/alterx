@@ -439,6 +439,9 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.pan_mode = False
 
     def update_dro(self, stat):
+        if self.visibleRegion().isEmpty():
+            return
+            
         text = ""
         for i, axis in enumerate(INFO.coordinates):
             if not axis:
@@ -702,6 +705,9 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.update_render()
 
     def update_position(self, position):
+        if self.visibleRegion().isEmpty():
+            return
+    
         self.spindle_position = position[:3]
         self.spindle_rotation = position[3:6]
 
