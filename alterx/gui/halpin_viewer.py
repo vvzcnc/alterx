@@ -107,6 +107,7 @@ class HalPinWidget(QWidget):
         self.item_value = QLineEdit()
         self.item_value.setObjectName("edit_halpin_value")
         self.item_value.installEventFilter(self)
+        self.set_focus = self.item_value.setFocus
 
         vlay.addWidget(self.item_value)
 
@@ -603,7 +604,8 @@ class HalPinWidget(QWidget):
         except Exception as e:
             printInfo(_("Failed to get hal pin list: {}",e))
             return
-        
+        if not data:
+			data = [[' ',' ',' ',_("HAL Pin viewer works only with\n loaded hal component 'ascope'."),' '],]
         self.get_tree(data,self.tree)
 
     def get_tree(self,pins,parent):

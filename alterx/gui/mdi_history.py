@@ -35,8 +35,9 @@ class MDI(QLineEdit):
     def __init__(self, parent=None):
         QLineEdit.__init__(self, parent)
         self.mdi_history_file = INFO.mdi_history_file
-        self.returnPressed.connect(lambda: self.submit())
-
+        self.parent = parent
+        #self.returnPressed.connect(lambda: self.submit())
+        
     def submit(self):
         text = str(self.text()).rstrip()
         if text == '':
@@ -70,7 +71,10 @@ class MDIHistory(QWidget):
         self.model = QStandardItemModel(self.list)
 
         self.MDI = MDI()
-
+        self.MDI.installEventFilter(self)
+        
+        self.set_focus = self.MDI.setFocus
+        
         lay.addWidget(self.list)
         lay.addWidget(self.MDI)
 
@@ -80,6 +84,19 @@ class MDIHistory(QWidget):
 
         UPDATER.add("mdi_run_command")
         UPDATER.signal("mdi_run_command", lambda s: self.run_command())
+
+    def eventFilter(self, source, event):
+        if ( event.type() == QEvent.KeyPress ):
+            if event.key() == Qt.Key_Up:
+                 self.line_up()
+            elif event.key() == Qt.Key_Down:
+                self.line_down()
+            elif event.key() == Qt.Key_Return:
+                self.MDI.submit()
+            #else:
+            #    self.MDI.setFocus()
+                
+        return QWidget.eventFilter(self, source, event)
 
     def reload(self, w=None):
         self.model.clear()

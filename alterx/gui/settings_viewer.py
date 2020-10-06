@@ -57,6 +57,10 @@ class SettingsWidget(QStackedWidget):
         UPDATER.signal("settings_page_next",self.next_page)
         UPDATER.signal("settings_page_prev",self.prev_page)
         
+    def set_focus(self):
+        if hasattr(self.currentWidget(),"set_focus"):
+            self.currentWidget().set_focus()
+        
     def next_page(self,state=None):
         if self.blocked:
             return
@@ -68,6 +72,8 @@ class SettingsWidget(QStackedWidget):
         else:
             self.setCurrentIndex(self.currentIndex()+1)
 
+        self.set_focus()
+
     def prev_page(self,state=None):
         if self.blocked:
             return
@@ -78,3 +84,5 @@ class SettingsWidget(QStackedWidget):
             self.setCurrentIndex(self.count()-1)
         else:
             self.setCurrentIndex(self.currentIndex()-1)
+
+        self.set_focus()

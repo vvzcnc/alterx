@@ -50,6 +50,8 @@ class UnlockWidget(QWidget):
         self.pw.setEchoMode(QLineEdit.Password)
         vlay.addWidget(self.pw)
         
+        self.set_focus = self.pw.setFocus
+        
         unlock_button = QPushButton()
         unlock_button.setText(_("Unlock"))
         unlock_button.clicked.connect(self.unlock_clicked)

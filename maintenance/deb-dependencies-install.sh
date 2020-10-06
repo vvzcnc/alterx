@@ -11,4 +11,5 @@
     vtk \
     crcmod \
     pyudev \
-    serial )
+    serial \
+    pyqtgraph )

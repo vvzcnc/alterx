@@ -68,6 +68,8 @@ class MainWindow(QWidget):
         w, b, i = screen
         if w:
             self.mainLayout.centralWidgets.setCurrentWidget(w)
+            if hasattr(w,"set_focus"):
+				w.set_focus()
         if b:
             self.mainLayout.bottomWidgets.setCurrentWidget(b)
             
