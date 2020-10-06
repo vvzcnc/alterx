@@ -83,7 +83,7 @@ class Main():
                     UPDATER.listen("messages.{}".format(item), pin.get)
                     UPDATER.signal("messages.{}".format(item), partial(self.hal_messages_handler,i[1]))
             
-            self.halcomp.newpin( "jog-enable", HAL.HAL_BIT, HAL.HAL_OUT )
+            self.halcomp.newpin( "jog_enable", HAL.HAL_BIT, HAL.HAL_OUT )
             
             for i in range(7):
                 pin = self.halcomp.newpin( "io.output-"+str(i), HAL.HAL_BIT, HAL.HAL_IN )
@@ -130,12 +130,13 @@ class Main():
             COMMAND.abort()
 
     def hal_messages_handler(self, message, signal):
-        printInfo(message)
-        Notify.Info(message)
+        if signal:
+            printInfo(message)
+            Notify.Info(message)
         
     def hal_jog_enable_changed(self, signal):
         if HAL and self.halcomp:
-            self.halcomp["jog-enable"] = signal
+            self.halcomp["jog_enable"] = signal
 
     def display_encoder_handler(self, signal):
         printVerbose(_("LinuxCNC display encoder signal {}", signal))
