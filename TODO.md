@@ -18,10 +18,9 @@
 ## Other:
 
 * Pyside dependencies install
-* Jog
-* Startup open ngc file
 * Add locales
-* Add notes inside widgets    
+* Add notes inside widgets
+* VTK path bounds not working
 
 ## Need more time:
 

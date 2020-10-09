@@ -704,7 +704,7 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
             self.renderer.AddActor(actor)
 
             self.offset_axes[origin] = axes
-            self.extents[origin] = extents_actor
+            #self.extents[origin] = extents_actor
         self.canon.draw_lines()
         self.update_render()
 

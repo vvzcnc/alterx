@@ -171,3 +171,7 @@ class MainWindow(QWidget):
                     self.mainLayout.leftLayout.addWidget(sidebutton)
                     
         UPDATER.start(INFO.display_cycle_time)
+        
+        open_file = INI.find("DISPLAY", "OPEN_FILE")
+        if open_file:
+            COMMAND.program_open(os.path.expanduser(open_file))
