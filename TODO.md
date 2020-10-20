@@ -20,7 +20,6 @@
 * Pyside dependencies install
 * Add locales
 * Add notes inside widgets
-* VTK path bounds not working
 
 ## Need more time:
 

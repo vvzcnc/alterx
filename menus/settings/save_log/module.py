@@ -63,7 +63,7 @@ class func:
                     
             tar.close()
         
-        dest = QFileDialog.getExistingDirectory(None, "Open directory", ".", QFileDialog.ShowDirsOnly)
+        dest = QFileDialog.getExistingDirectory(None, _("Open directory"), ".", QFileDialog.ShowDirsOnly)
 
         for file in files:
             try:
