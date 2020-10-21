@@ -101,11 +101,7 @@ class MainWindow(QWidget):
 
         ON_STATE = [LINUXCNC.STATE_ON]  # Enable when CNC is ON
         # Enable when CNC is ON, is HOMED
-        homed_list = [0,]*9
-        for i in INFO.joints:
-            homed_list[i] = 1
- 
-        HOMED_STATE = ON_STATE + [tuple(homed_list)]
+        HOMED_STATE = ON_STATE + [tuple(INFO.homed_list)]
         # Enable when CNC is ON, is HOMED and in MDI mode
         MDI_STATE = HOMED_STATE + [LINUXCNC.MODE_MDI]
         # Enable when CNC is ON, is HOMED and in AUTO mode

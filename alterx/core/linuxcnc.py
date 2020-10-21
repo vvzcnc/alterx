@@ -123,6 +123,10 @@ class linuxcnc_info():
         else:
             self.joints = [ self.default_axes_list[j] for j in self.coordinates ]
 
+        self.homed_list = [0,]*9
+        for i in self.joints:
+            self.homed_list[i] = 1
+
         self.machine_is_lathe = True if INI.find('DISPLAY', 'LATHE') else False
 
         self.get_metric = lambda: False if STAT.program_units == 1 else True
@@ -183,6 +187,8 @@ class linuxcnc_poll(QTimer):
         self._listener = {}
         self.custom_signals = {}
         self.custom_signals_old = {}
+        
+        self.add("last_error")
 
     # 'One to many' item check
     def run(self):
@@ -195,6 +201,7 @@ class linuxcnc_poll(QTimer):
 
         if error_data:
             kind, text = error_data
+            self.emit("last_error",text)
             if kind in (LINUXCNC.NML_ERROR, LINUXCNC.OPERATOR_ERROR):
                 printError(text)
                 Notify.Error(text)
@@ -241,6 +248,8 @@ class linuxcnc_poll(QTimer):
     def value(self, name):
         if name in self.custom_signals:
             return self.custom_signals[name]
+        elif name in dir(STAT):
+            return getattr(STAT, name)
         return False
 
     # Emit custom signal

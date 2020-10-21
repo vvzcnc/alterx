@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# AlterX GUI - settings widget
+# AlterX GUI - unlock settings widget
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
@@ -31,8 +31,67 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
-import zipfile
+from functools import partial
 from datetime import datetime
+
+import zipfile
+
+
+class DocBrowser(QWidget):
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent) 
+        self.docs_dir = pkg_resources.resource_filename("alterx", "docs")
+        vlay = QVBoxLayout()
+        vlay.setContentsMargins(0, 0, 0, 0)
+        vlay.addWidget(QLabel(_("Docs")))
+        vlay.addWidget(HSeparator())
+        
+        self.browser = QWebView()
+        vlay.addWidget(self.browser)
+        vlay.addStretch()
+        self.setLayout(vlay)
+        self.load("startup")
+        
+        UPDATER.signal("task_state", partial(self.state_changed,"task_state"))
+        UPDATER.signal("task_mode", partial(self.state_changed,"task_mode"))
+        UPDATER.signal("homed", partial(self.state_changed,"homed"))
+        UPDATER.signal("last_error", partial(self.state_changed,"last_error"))
+
+    def state_changed(self, source, state):
+        task_state = STAT.task_state
+        task_mode = STAT.task_mode
+                
+        if source in "last_error":
+            self.load("error")
+        else:
+            if task_state == LINUXCNC.STATE_ESTOP:
+                self.load("estop")
+            elif task_state == LINUXCNC.STATE_OFF:
+                self.load("turn_on")
+            elif ( task_state == LINUXCNC.STATE_ON and 
+                    STAT.homed != tuple(INFO.homed_list)):
+                self.load("home")
+            elif task_mode == LINUXCNC.MODE_MANUAL:
+                self.load("manual")
+            elif task_mode == LINUXCNC.MODE_MDI:
+                self.load("mdi")
+            elif task_mode == LINUXCNC.MODE_AUTO:
+                self.load("auto")
+          
+    def load(self, docname):
+        filepath = ""
+        if os.path.isfile(os.path.join(self.docs_dir,
+            "{}{}.html".format(docname,'_'.join(_._locale[:2])))):
+            filepath = os.path.join(self.docs_dir,
+                "{}{}.html".format(docname,'_'.join(_._locale[:2])))
+        elif os.path.isfile(os.path.join(self.docs_dir,
+            "{}.html".format(docname))):
+            filepath = os.path.join(self.docs_dir,
+                "{}.html".format(docname))
+        else:
+            filepath = os.path.join(self.docs_dir,"404.html")
+        self.browser.load(QUrl.fromLocalFile(filepath))
+
 
 class UnlockWidget(QWidget):
     def __init__(self, parent=None):
@@ -40,10 +99,11 @@ class UnlockWidget(QWidget):
         parent.blocked = PREF.getpref("blocked", True, bool)
         self.parent = parent
         hlay = QHBoxLayout()
-        hlay.addStretch()
+        hlay.addWidget(DocBrowser())
         
         vlay = QVBoxLayout()
-        vlay.addWidget(QLabel(_("Unlock")))
+        vlay.setContentsMargins(0, 0, 0, 0)
+        vlay.addWidget(QLabel(_("Unlock settings")))
         vlay.addWidget(HSeparator())
         vlay.addWidget(QLabel(_("Enter password:")))
         self.pw = QLineEdit()
@@ -151,18 +211,10 @@ class UnlockWidget(QWidget):
 
     def unlock_clicked(self):
         if self.pw.text() == self.password:
-            QMessageBox.information(None,
-                _("Unlock"),
-                _("Access granted\n"),
-                QMessageBox.Ok,
-                QMessageBox.Ok)
             self.parent.blocked = False
+            Notify.Info(_("Access granted"))
         else:
-            QMessageBox.information(None,
-                _("Unlock"),
-                _("Access denied\n"),
-                QMessageBox.Ok,
-                QMessageBox.Ok)
+            Notify.Info(_("Access denied"))
             self.parent.blocked = True
             
         self.change_pw_widget.setEnabled(not self.parent.blocked)
