@@ -294,7 +294,7 @@ class ToolOffsetView(QTableView):
 
     def reload_tool_file(self):
         if self.toolfile is None or not os.path.exists(self.toolfile) or os.stat(self.toolfile).st_size==0:
-            printDebug(_("Toolfile does not exist' {}", self.toolfile))
+            printDebug(_("Toolfile does not exist {}", self.toolfile))
             return None
         #print 'file',self.toolfile
         # clear the current liststore, search the tool file, and add each tool

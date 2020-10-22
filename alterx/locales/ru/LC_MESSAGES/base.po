@@ -1,15 +1,15 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: alterx\n"
-"POT-Creation-Date: 2020-06-15 09:58+0300\n"
-"PO-Revision-Date: 2020-06-15 09:59+0300\n"
+"POT-Creation-Date: 2020-10-22 12:35+0300\n"
+"PO-Revision-Date: 2020-10-22 13:29+0300\n"
 "Last-Translator: uncle-yura <uncle-yura@tuta.io>\n"
 "Language-Team: \n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.8.11\n"
+"X-Generator: Poedit 2.2.1\n"
 "X-Poedit-Basepath: ../../../..\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Poedit-SearchPath-0: .\n"
@@ -17,622 +17,672 @@ msgstr ""
 
 #: alterx/common/preferences.py:57
 msgid "Preferences file is not exist."
-msgstr ""
+msgstr "Файл настроек не существует."
 
 #: alterx/common/preferences.py:64
 msgid "Failed to get preference: {} "
-msgstr ""
+msgstr "Не удалось загрузить настройку: {} "
 
-#: alterx/core/ascope.py:73
+#: alterx/core/ascope.py:75 alterx/core/remote.py:84
 msgid "Failed to send packet: {}"
-msgstr ""
+msgstr "Не удалось отправить пакет: {}"
 
-#: alterx/core/linuxcnc.py:82
+#: alterx/core/linuxcnc.py:91
 msgid "Failed to import LinuxCNC module: '{}'"
-msgstr ""
+msgstr "Не удалось импортировать модуль LinuxCNC: '{}'"
 
-#: alterx/core/linuxcnc.py:93
+#: alterx/core/linuxcnc.py:103
 msgid "AlterX: Failed to import LinuxCNC"
-msgstr ""
+msgstr "AlterX: Не удалось импортировать LinuxCNC"
 
-#: alterx/core/linuxcnc.py:94
+#: alterx/core/linuxcnc.py:104
 msgid "AlterX interface launched in recovery mode!"
-msgstr ""
+msgstr "Интерфейс AlterX запущен в режиме восстановления!"
 
-#: alterx/core/linuxcnc.py:127 alterx/core/main.py:119
+#: alterx/core/linuxcnc.py:150 alterx/core/main.py:235
 msgid "mm"
-msgstr ""
+msgstr "мм"
 
-#: alterx/core/linuxcnc.py:128
+#: alterx/core/linuxcnc.py:151
 msgid "deg"
-msgstr ""
+msgstr "град"
 
-#: alterx/core/linuxcnc.py:129 alterx/core/main.py:65
+#: alterx/core/linuxcnc.py:152 alterx/core/main.py:181
 msgid "rev"
-msgstr ""
+msgstr "об"
 
-#: alterx/core/linuxcnc.py:130 alterx/core/linuxcnc.py:131
-#: alterx/core/linuxcnc.py:132 alterx/core/main.py:63
+#: alterx/core/linuxcnc.py:153 alterx/core/linuxcnc.py:154
+#: alterx/core/linuxcnc.py:155 alterx/core/main.py:179
 msgid "min"
-msgstr ""
+msgstr "мин"
 
-#: alterx/core/linuxcnc.py:165
+#: alterx/core/linuxcnc.py:199
 msgid "Failed to poll LinuxCNC stat: '{}'"
-msgstr ""
+msgstr "Не удалось обновить статус LinuxCNC: '{}'"
 
-#: alterx/core/linuxcnc.py:187 alterx/core/linuxcnc.py:198
+#: alterx/core/linuxcnc.py:222 alterx/core/linuxcnc.py:237
 msgid "Failed to execute '{}' handler {}: '{}'"
-msgstr ""
+msgstr "Не удалось вызвать '{}' обработчик {}: '{}'"
 
-#: alterx/core/linuxcnc.py:215
+#: alterx/core/linuxcnc.py:264
 msgid "Failed to emit signal. Signal '{}' no exist"
-msgstr ""
+msgstr "Не удалось имитировать сигнал. Сигнал '{}' не существет"
 
-#: alterx/core/linuxcnc.py:223
+#: alterx/core/linuxcnc.py:273
+msgid "Failed to add listener. Listener '{}' already exist"
+msgstr "Не удалось добавить слушателя. Слушатель '{}' уже существет"
+
+#: alterx/core/linuxcnc.py:281
 msgid "Failed to add signal. Signal '{}' already exist"
-msgstr ""
+msgstr "Не удалось добавить сигнал. Сигнал '{}' уже существует"
 
-#: alterx/core/linuxcnc.py:236
+#: alterx/core/linuxcnc.py:294
 msgid "Failed to get atribute {}: {}"
-msgstr ""
+msgstr "Не удалось получить атрибут {}: {}"
 
-#: alterx/core/main.py:74
+#: alterx/core/main.py:107
+msgid "LinuxCNC postgui halfile: {}"
+msgstr "Загружаемый после интерфейса LinuxCNC hal-файл: {}"
+
+#: alterx/core/main.py:118
+msgid "LinuxCNC hal input run signal activated"
+msgstr "Активирован LinuxCNC старт hal-сигнал"
+
+#: alterx/core/main.py:129
+msgid "LinuxCNC hal input stop signal activated"
+msgstr "Активирован LinuxCNC стоп hal-сигнал"
+
+#: alterx/core/main.py:142
+msgid "LinuxCNC display encoder signal {}"
+msgstr "Сигнал LinuxCNC экранного энкодера {}"
+
+#: alterx/core/main.py:146
+msgid "LinuxCNC display input signals {}"
+msgstr "Сигналы LinuxCNC экранных входов {}"
+
+#: alterx/core/main.py:190
 msgid "ESTOP"
-msgstr ""
+msgstr "А-СТОП"
 
-#: alterx/core/main.py:76
+#: alterx/core/main.py:192
 msgid "ESTOP RESET"
-msgstr ""
+msgstr "А-СТОП СБРОС"
 
-#: alterx/core/main.py:78
+#: alterx/core/main.py:194
 msgid "ON"
-msgstr ""
+msgstr "ВКЛ"
 
-#: alterx/core/main.py:80
+#: alterx/core/main.py:196
 msgid "OFF"
-msgstr ""
+msgstr "ВЫКЛ"
 
-#: alterx/core/main.py:82 alterx/core/main.py:103
-#: alterx/gui/halpin_viewer.py:187
+#: alterx/core/main.py:198 alterx/core/main.py:219
+#: alterx/gui/halpin_viewer.py:205
 msgid "None"
-msgstr ""
+msgstr "Ничего"
 
-#: alterx/core/main.py:90
+#: alterx/core/main.py:206
 msgid "LinuxCNC state {}"
-msgstr ""
+msgstr "Статус LinuxCNC {}"
 
-#: alterx/core/main.py:94
+#: alterx/core/main.py:210
 msgid "MANUAL"
-msgstr ""
+msgstr "РУЧНОЙ"
 
-#: alterx/core/main.py:97
+#: alterx/core/main.py:213
 msgid "MDI"
-msgstr ""
+msgstr "MDI"
 
-#: alterx/core/main.py:100
+#: alterx/core/main.py:216
 msgid "AUTO"
-msgstr ""
+msgstr "АВТО"
 
-#: alterx/core/main.py:105
+#: alterx/core/main.py:221
 msgid "LinuxCNC mode {}"
-msgstr ""
+msgstr "Режим LinuxCNC {}"
 
-#: alterx/core/main.py:108
+#: alterx/core/main.py:224
 msgid "LinuxCNC homed {}"
-msgstr ""
+msgstr "LinuxCNC в нулях {}"
 
-#: alterx/core/main.py:113
+#: alterx/core/main.py:229
 msgid "Loaded: {}"
-msgstr ""
+msgstr "Загружено: {}"
 
-#: alterx/core/main.py:117
+#: alterx/core/main.py:233
 msgid "inch"
-msgstr ""
+msgstr "дюйм"
 
-#: alterx/core/main.py:121
+#: alterx/core/main.py:237
 msgid "cm"
-msgstr ""
+msgstr "см"
 
-#: alterx/core/main.py:133
+#: alterx/core/main.py:249
 msgid "Units: {}"
-msgstr ""
+msgstr "Единицы: {}"
 
-#: alterx/core/main.py:163
+#: alterx/core/main.py:301
+msgid "LinuxCNC mode {} {} {} {}"
+msgstr "LinuxCNC режим {} {} {} {}"
+
+#: alterx/core/main.py:329
 msgid "Unknown button"
-msgstr ""
+msgstr "Неизвестная кнопка"
+
+#: alterx/core/remote.py:58
+msgid "Failed to execute cmd: {}"
+msgstr "Не удалось выполнить комманду: {}"
 
 #: alterx/gui/awlsim_widget.py:45
 msgid "Start Awlsim"
-msgstr ""
+msgstr "Запуск Awlsim"
 
 #: alterx/gui/awlsim_widget.py:55
 msgid "Failed to import awlsim, {}"
-msgstr ""
+msgstr "Не удалось импортировать awlsim, {}"
 
 #: alterx/gui/config_editor.py:49
 msgid "Yes"
-msgstr ""
+msgstr "Да"
 
 #: alterx/gui/config_editor.py:52
 msgid "No"
-msgstr ""
+msgstr "Нет"
 
 #: alterx/gui/config_editor.py:55
 msgid "Next"
-msgstr ""
+msgstr "Следующий"
 
 #: alterx/gui/config_editor.py:100
 msgid "Default hal file copy failed, {}"
-msgstr ""
+msgstr "Копирование стандартного hal-файла не удалось, {}"
 
 #: alterx/gui/config_editor.py:146
 msgid "Config Editor"
-msgstr ""
+msgstr "Редактор конфигураций"
 
-#: alterx/gui/config_editor.py:153 alterx/gui/hal_editor.py:127
+#: alterx/gui/config_editor.py:153 alterx/gui/hal_editor.py:136
 #: alterx/gui/style_editor.py:91
 msgid "Save"
-msgstr ""
+msgstr "Сохранить"
 
 #: alterx/gui/config_editor.py:156
 msgid "Load"
-msgstr ""
+msgstr "Загрузить"
 
 #: alterx/gui/config_editor.py:159
 msgid "Load default"
-msgstr ""
+msgstr "По-умолчанию"
 
 #: alterx/gui/config_editor.py:162 alterx/gui/config_editor.py:414
 msgid "Save as"
-msgstr ""
+msgstr "Сохранить как"
 
 #: alterx/gui/config_editor.py:165 alterx/gui/config_editor.py:539
 msgid "Run wizard"
-msgstr ""
+msgstr "Запуск помощника"
 
 #: alterx/gui/config_editor.py:210
 msgid "COORDINATES not equal AXES"
-msgstr ""
+msgstr "COORDINATES не соответствует AXES"
 
 #: alterx/gui/config_editor.py:211
 msgid ""
 "The number of axes and coordinates does not converge.\n"
 "Check [TRAJ]COORDINATES and [KINS]JOINTS"
 msgstr ""
+"Количество осей и координат не сходиться.\n"
+"Проверьте [TRAJ]COORDINATES и [KINS]JOINTS"
 
 #: alterx/gui/config_editor.py:217
 msgid "Wrong core version"
-msgstr ""
+msgstr "Неправильная версия ядра"
 
 #: alterx/gui/config_editor.py:218
 msgid "Invalid parameter [EMC]CORE.\n"
-msgstr ""
+msgstr "Неправильный параметр [EMC]CORE.\n"
 
 #: alterx/gui/config_editor.py:255
 msgid "Can't find section"
-msgstr ""
+msgstr "Не удалось найти секцию"
 
 #: alterx/gui/config_editor.py:256
 msgid ""
 "Can't find section. {}.\n"
 "Probably wrong core version."
 msgstr ""
+"Не удалось найти секцию. {}.\n"
+"Вероятно неправильная версия ядра."
 
 #: alterx/gui/config_editor.py:260
 msgid "Add default axis exception: {}"
-msgstr ""
+msgstr "Исключение при добавлении оси: {}"
 
 #: alterx/gui/config_editor.py:284 alterx/gui/config_editor.py:335
 #: alterx/gui/config_editor.py:547
 msgid "Delete tab exception: {}"
-msgstr ""
+msgstr "Исключение при удалении вкладки: {}"
 
 #: alterx/gui/config_editor.py:303 alterx/gui/config_editor.py:352
 msgid ""
 "Broken wizard line: {}\n"
 "{}"
 msgstr ""
+"Ошибка в строке помощника: {}\n"
+"{}"
 
 #: alterx/gui/config_editor.py:341
 msgid "Stop wizard"
-msgstr ""
+msgstr "Остановить помощника"
 
 #: alterx/gui/config_editor.py:382
 msgid "Delete section"
-msgstr ""
+msgstr "Удалить секцию"
 
 #: alterx/gui/config_editor.py:388
 msgid "New option"
-msgstr ""
+msgstr "Новая опция"
 
 #: alterx/gui/config_editor.py:410
 msgid "Add section exception: {}"
-msgstr ""
+msgstr "Исключение добавления секции: {}"
 
 #: alterx/gui/config_editor.py:431 alterx/gui/config_editor.py:573
 msgid "INI-file arg is not found."
-msgstr ""
+msgstr "Аргумент INI-файла не найден."
 
 #: alterx/gui/config_editor.py:474
 msgid "Option changed: {} {} {}"
-msgstr ""
+msgstr "Опция изменена: {} {} {}"
 
 #: alterx/gui/config_editor.py:497
 msgid "Delete"
-msgstr ""
+msgstr "Удалить"
 
 #: alterx/gui/config_editor.py:520
 msgid "Insert"
-msgstr ""
+msgstr "Вставить"
 
 #: alterx/gui/config_editor.py:532
 msgid "Delete section exception: {}"
-msgstr ""
+msgstr "Исключение удаления секции: {}"
 
 #: alterx/gui/config_editor.py:554
 msgid "Add new section"
-msgstr ""
+msgstr "Добавить секцию"
 
 #: alterx/gui/file_manager.py:102
 msgid "Failed to delete path {}: {}"
-msgstr ""
+msgstr "Не удалось удалить путь {}: {}"
 
 #: alterx/gui/file_manager.py:156
 msgid "Loading: {}"
-msgstr ""
+msgstr "Загрузка: {}"
 
-#: alterx/gui/gcode_editor.py:59
-msgid "Custom lexer for the G code programming languages"
-msgstr ""
-
-#: alterx/gui/gcode_editor.py:253 alterx/gui/gcode_editor.py:302
+#: alterx/gui/gcode_editor.py:131 alterx/gui/gcode_editor.py:174
 msgid "File path is not valid: {}"
-msgstr ""
+msgstr "Неправильный путь к файлу: {}"
 
-#: alterx/gui/gcode_editor.py:337
+#: alterx/gui/gcode_editor.py:212
 msgid "Program"
-msgstr ""
+msgstr "Программа"
 
-#: alterx/gui/gcode_editor.py:341 alterx/gui/gcode_editor.py:385
+#: alterx/gui/gcode_editor.py:216 alterx/gui/gcode_editor.py:260
 msgid "Filename: "
-msgstr ""
+msgstr "Имя файла: "
 
-#: alterx/gui/gcode_editor.py:347
+#: alterx/gui/gcode_editor.py:222
 msgid "Lines: "
-msgstr ""
+msgstr "Строки: "
 
-#: alterx/gui/gcode_editor.py:350
+#: alterx/gui/gcode_editor.py:225
 msgid "Progress: "
-msgstr ""
+msgstr "Прогресс: "
 
-#: alterx/gui/gcode_editor.py:358
+#: alterx/gui/gcode_editor.py:233
 msgid "Progress: {:2.2f}%"
-msgstr ""
+msgstr "Прогресс: {:2.2f}%"
 
-#: alterx/gui/gcode_editor.py:361 alterx/gui/gcode_editor.py:433
-#: alterx/gui/gcode_editor.py:445
+#: alterx/gui/gcode_editor.py:236 alterx/gui/gcode_editor.py:308
+#: alterx/gui/gcode_editor.py:320
 msgid "Filename: {}"
-msgstr ""
+msgstr "Имя файла: {}"
 
-#: alterx/gui/gcode_editor.py:362
+#: alterx/gui/gcode_editor.py:237
 msgid "Lines: {}"
-msgstr ""
+msgstr "Строки: {}"
 
-#: alterx/gui/gcode_editor.py:381
+#: alterx/gui/gcode_editor.py:256
 msgid "Editor"
-msgstr ""
+msgstr "Редактор"
 
-#: alterx/gui/gcode_editor.py:395 alterx/gui/gcode_editor.py:437
+#: alterx/gui/gcode_editor.py:270 alterx/gui/gcode_editor.py:312
 msgid "Search: {}"
-msgstr ""
+msgstr "Поиск: {}"
 
-#: alterx/gui/gcode_editor.py:398 alterx/gui/gcode_editor.py:442
+#: alterx/gui/gcode_editor.py:273 alterx/gui/gcode_editor.py:317
 msgid "Replace: {}"
-msgstr ""
+msgstr "Замена: {}"
 
-#: alterx/gui/hal_editor.py:116 alterx/gui/halpin_viewer.py:572
+#: alterx/gui/hal_editor.py:85
+msgid "HAL Editor"
+msgstr "HAL редактор"
+
+#: alterx/gui/hal_editor.py:125 alterx/gui/halpin_viewer.py:605
 msgid "Failed to get hal pin list: {}"
-msgstr ""
+msgstr "Не удалось получить список hal пинов: {}"
 
-#: alterx/gui/hal_editor.py:123 alterx/gui/style_editor.py:87
+#: alterx/gui/hal_editor.py:132 alterx/gui/style_editor.py:87
 msgid "Open"
-msgstr ""
+msgstr "Открыть"
 
-#: alterx/gui/hal_editor.py:149
+#: alterx/gui/hal_editor.py:158
 msgid "Failed to set hal path,{}"
-msgstr ""
+msgstr "Не удалось установить hal путь,{}"
 
-#: alterx/gui/hal_editor.py:164
+#: alterx/gui/hal_editor.py:173
 msgid "Failed to load hal-file {}"
-msgstr ""
+msgstr "Не удалось загрузить hal-файл {}"
 
-#: alterx/gui/hal_editor.py:190
+#: alterx/gui/hal_editor.py:199
 msgid "Failed to save hal-file, {}"
-msgstr ""
+msgstr "Не удалось сохранить hal-файл, {}"
 
-#: alterx/gui/halpin_viewer.py:41
+#: alterx/gui/halpin_viewer.py:58
 msgid "HAL Pin Viewer"
-msgstr ""
+msgstr "Просмотр HAL пинов"
 
-#: alterx/gui/halpin_viewer.py:53 alterx/gui/status_viewer.py:46
-#: alterx/gui/status_viewer.py:60 alterx/configs/default_wizard.cfg:15
+#: alterx/gui/halpin_viewer.py:70 alterx/gui/status_viewer.py:46
+#: alterx/gui/status_viewer.py:60
 msgid "Name"
 msgstr "Имя"
 
-#: alterx/gui/halpin_viewer.py:53 alterx/gui/halpin_viewer.py:71
+#: alterx/gui/halpin_viewer.py:70 alterx/gui/halpin_viewer.py:88
 msgid "Type"
-msgstr ""
+msgstr "Тип"
 
-#: alterx/gui/halpin_viewer.py:53 alterx/gui/halpin_viewer.py:71
+#: alterx/gui/halpin_viewer.py:70 alterx/gui/halpin_viewer.py:88
 msgid "Dir."
-msgstr ""
+msgstr "Напр."
 
-#: alterx/gui/halpin_viewer.py:54 alterx/gui/halpin_viewer.py:71
+#: alterx/gui/halpin_viewer.py:71 alterx/gui/halpin_viewer.py:88
 msgid "Addr."
-msgstr ""
+msgstr "Адр."
 
-#: alterx/gui/halpin_viewer.py:54 alterx/gui/halpin_viewer.py:71
+#: alterx/gui/halpin_viewer.py:71 alterx/gui/halpin_viewer.py:88
 msgid "HAL type"
-msgstr ""
+msgstr "HAL тип"
 
-#: alterx/gui/halpin_viewer.py:70
+#: alterx/gui/halpin_viewer.py:87
 msgid "Osc."
-msgstr ""
+msgstr "Осц."
 
-#: alterx/gui/halpin_viewer.py:70
+#: alterx/gui/halpin_viewer.py:87
 msgid "Pin"
-msgstr ""
+msgstr "Пин"
 
-#: alterx/gui/halpin_viewer.py:71 alterx/gui/status_viewer.py:46
+#: alterx/gui/halpin_viewer.py:88 alterx/gui/status_viewer.py:46
 #: alterx/gui/status_viewer.py:60
 msgid "Value"
-msgstr ""
+msgstr "Значение"
 
-#: alterx/gui/halpin_viewer.py:86
+#: alterx/gui/halpin_viewer.py:103
 msgid "Name: "
-msgstr ""
+msgstr "Имя: "
 
-#: alterx/gui/halpin_viewer.py:102
+#: alterx/gui/halpin_viewer.py:120
 msgid "Run command"
-msgstr ""
+msgstr "Пуск комманды"
 
-#: alterx/gui/halpin_viewer.py:106
+#: alterx/gui/halpin_viewer.py:124
 msgid "Update tree"
-msgstr ""
+msgstr "Обновить дерево"
 
-#: alterx/gui/halpin_viewer.py:115
+#: alterx/gui/halpin_viewer.py:133
 msgid "HAL Pin"
-msgstr ""
-
-#: alterx/gui/halpin_viewer.py:150
-msgid "Run"
-msgstr ""
-
-#: alterx/gui/halpin_viewer.py:154
-msgid "Stop"
-msgstr ""
+msgstr "HAL Пин"
 
 #: alterx/gui/halpin_viewer.py:168
+msgid "Run"
+msgstr "Пуск"
+
+#: alterx/gui/halpin_viewer.py:172
+msgid "Stop"
+msgstr "Стоп"
+
+#: alterx/gui/halpin_viewer.py:186
 msgid "Auto"
-msgstr ""
+msgstr "Авто"
 
-#: alterx/gui/halpin_viewer.py:174
+#: alterx/gui/halpin_viewer.py:192
 msgid "One Shot"
-msgstr ""
+msgstr "Одиночный"
 
-#: alterx/gui/halpin_viewer.py:193 alterx/gui/unlock_widget.py:77
+#: alterx/gui/halpin_viewer.py:211 alterx/gui/unlock_widget.py:139
 msgid "Change"
-msgstr ""
+msgstr "Смена"
 
-#: alterx/gui/halpin_viewer.py:198
+#: alterx/gui/halpin_viewer.py:216
 msgid "High"
-msgstr ""
+msgstr "Высокий"
 
-#: alterx/gui/halpin_viewer.py:202
+#: alterx/gui/halpin_viewer.py:220
 msgid "Low"
-msgstr ""
+msgstr "Низкий"
 
-#: alterx/gui/halpin_viewer.py:211
+#: alterx/gui/halpin_viewer.py:229
 msgid "Trigger signal:"
-msgstr ""
-
-#: alterx/gui/halpin_viewer.py:219
-msgid "Trigger value:"
-msgstr ""
+msgstr "Сигнал триггера:"
 
 #: alterx/gui/halpin_viewer.py:237
+msgid "Trigger value:"
+msgstr "Значение триггера:"
+
+#: alterx/gui/halpin_viewer.py:255
 msgid "Oscilloscope"
-msgstr ""
+msgstr "Осцилограф"
 
-#: alterx/gui/halpin_viewer.py:272
+#: alterx/gui/halpin_viewer.py:290
 msgid "Failed to send run cmd: {}"
-msgstr ""
+msgstr "Не удалось отослать комманду: {}"
 
-#: alterx/gui/halpin_viewer.py:349
+#: alterx/gui/halpin_viewer.py:367
 msgid "Complete"
-msgstr ""
+msgstr "Готово"
 
-#: alterx/gui/halpin_viewer.py:356
+#: alterx/gui/halpin_viewer.py:374
 msgid "Reading"
-msgstr ""
+msgstr "Считывание"
 
-#: alterx/gui/halpin_viewer.py:359
+#: alterx/gui/halpin_viewer.py:377
 msgid "Idle"
-msgstr ""
+msgstr "Простой"
 
-#: alterx/gui/halpin_viewer.py:362
+#: alterx/gui/halpin_viewer.py:380
 msgid "Waiting"
-msgstr ""
+msgstr "Ожидание"
 
-#: alterx/gui/halpin_viewer.py:513
+#: alterx/gui/halpin_viewer.py:533
 msgid "Name: {}"
+msgstr "Имя: {}"
+
+#: alterx/gui/halpin_viewer.py:608
+msgid ""
+"HAL Pin viewer works only with\n"
+" loaded hal component 'ascope'."
 msgstr ""
+"Просмотровщик HAL работает только\n"
+"с загруженным компонентом 'ascope'."
 
 #: alterx/gui/main_screen.py:76
 msgid "Invalid buttons order list for menu {}, {}"
-msgstr ""
+msgstr "Неправильный список порядка кнопок для меню {}, {}"
 
 #: alterx/gui/main_screen.py:93
 msgid "No menu module with name: menus.{}.{}"
-msgstr ""
+msgstr "Нет модуля меню с именем: menus.{}.{}"
 
-#: alterx/gui/main_screen.py:170 alterx/gui/tool_viewer.py:232
+#: alterx/gui/main_screen.py:171 alterx/gui/tool_viewer.py:232
 msgid "Tool"
-msgstr ""
+msgstr "Инструмент"
 
-#: alterx/gui/main_screen.py:172 alterx/gui/main_screen.py:185
+#: alterx/gui/main_screen.py:173 alterx/gui/main_screen.py:186
 msgid "No tool"
-msgstr ""
+msgstr "Нет инструмента"
 
-#: alterx/gui/main_screen.py:174 alterx/gui/main_screen.py:186
+#: alterx/gui/main_screen.py:175 alterx/gui/main_screen.py:187
 msgid "No comment"
-msgstr ""
+msgstr "Нет комментария"
 
-#: alterx/gui/main_screen.py:195
+#: alterx/gui/main_screen.py:196
 msgid "Codes"
-msgstr ""
+msgstr "Коды"
 
-#: alterx/gui/main_screen.py:249
+#: alterx/gui/main_screen.py:250
 msgid "Spindlerate"
-msgstr ""
+msgstr "Шпиндель"
 
-#: alterx/gui/main_screen.py:252 alterx/gui/main_screen.py:268
-#: alterx/gui/main_screen.py:307
+#: alterx/gui/main_screen.py:253 alterx/gui/main_screen.py:276
+#: alterx/gui/main_screen.py:315
 msgid "Actual: {:.2f} {}/{}"
-msgstr ""
+msgstr "Акт.: {:.2f} {}/{}"
 
-#: alterx/gui/main_screen.py:254 alterx/gui/main_screen.py:271
+#: alterx/gui/main_screen.py:255 alterx/gui/main_screen.py:279
 msgid "SO: {}%"
-msgstr ""
+msgstr "ШП: {}%"
 
-#: alterx/gui/main_screen.py:276
+#: alterx/gui/main_screen.py:284
 msgid "Feedrate"
-msgstr ""
+msgstr "Подача"
 
-#: alterx/gui/main_screen.py:278
+#: alterx/gui/main_screen.py:286
 msgid "Actual: {:.2f}"
-msgstr ""
+msgstr "Акт.: {:.2f}"
 
-#: alterx/gui/main_screen.py:280 alterx/gui/main_screen.py:310
+#: alterx/gui/main_screen.py:288 alterx/gui/main_screen.py:318
 msgid "FO: {}%"
-msgstr ""
+msgstr "ПП: {}%"
 
-#: alterx/gui/main_screen.py:282 alterx/gui/main_screen.py:313
+#: alterx/gui/main_screen.py:290 alterx/gui/main_screen.py:321
 msgid "RO: {}%"
-msgstr ""
+msgstr "БП: {}%"
 
-#: alterx/gui/main_screen.py:321
+#: alterx/gui/main_screen.py:329
 msgid "Disactivated"
-msgstr ""
+msgstr "Заблокировано"
 
-#: alterx/gui/main_screen.py:321
+#: alterx/gui/main_screen.py:329
 msgid "Activated"
-msgstr ""
+msgstr "Активировано"
 
-#: alterx/gui/main_screen.py:322
+#: alterx/gui/main_screen.py:330
 msgid "Increment"
-msgstr ""
+msgstr "Инкремент"
 
-#: alterx/gui/main_screen.py:322
+#: alterx/gui/main_screen.py:330
 msgid "Continuous"
-msgstr ""
+msgstr "Продолжительный"
 
-#: alterx/gui/main_screen.py:323
+#: alterx/gui/main_screen.py:331
 msgid "Joystick"
-msgstr ""
+msgstr "Джойстик"
 
-#: alterx/gui/main_screen.py:323
+#: alterx/gui/main_screen.py:331
 msgid "Encoder"
-msgstr ""
+msgstr "Энкодер"
 
-#: alterx/gui/main_screen.py:337
+#: alterx/gui/main_screen.py:345
 msgid "JOG"
-msgstr ""
+msgstr "Ручные"
 
-#: alterx/gui/main_screen.py:341
+#: alterx/gui/main_screen.py:349
 msgid "Speed: {:.2f}"
-msgstr ""
+msgstr "Скорость: {:.2f}"
 
-#: alterx/gui/main_screen.py:344 alterx/gui/main_screen.py:381
+#: alterx/gui/main_screen.py:352 alterx/gui/main_screen.py:389
 msgid "Increment: {}"
-msgstr ""
+msgstr "Инкремент: {}"
 
-#: alterx/gui/main_screen.py:354 alterx/gui/main_screen.py:386
+#: alterx/gui/main_screen.py:362 alterx/gui/main_screen.py:394
 msgid "JOG "
-msgstr ""
+msgstr "Ручные "
 
-#: alterx/gui/main_screen.py:356 alterx/gui/main_screen.py:390
+#: alterx/gui/main_screen.py:364 alterx/gui/main_screen.py:403
 msgid "Mode: "
-msgstr ""
+msgstr "Режим: "
 
-#: alterx/gui/main_screen.py:359 alterx/gui/main_screen.py:395
+#: alterx/gui/main_screen.py:367 alterx/gui/main_screen.py:408
 msgid "Device: "
-msgstr ""
+msgstr "Устройство: "
 
-#: alterx/gui/main_screen.py:376
-msgid "Speed: {}"
-msgstr ""
+#: alterx/gui/main_screen.py:384
+msgid "Speed: {}%"
+msgstr "Скорость: {}%"
 
-#: alterx/gui/main_screen.py:406
+#: alterx/gui/main_screen.py:424
 msgid "Axis"
-msgstr ""
+msgstr "Ось"
+
+#: alterx/gui/main_screen.py:571
+msgid "Failed to emit button click: {}"
+msgstr "Не удалось имитировать нажатие кнопки: {}"
 
 #: alterx/gui/main_window.py:50
 msgid "AlterX v{}"
-msgstr ""
+msgstr "AlterX v{}"
 
-#: alterx/gui/main_window.py:88
+#: alterx/gui/main_window.py:91
 msgid "Failed to load stylesheet: {}"
-msgstr ""
+msgstr "Не удалось загрузить стиль: {}"
 
-#: alterx/gui/mdi_history.py:90
+#: alterx/gui/mdi_history.py:110
 msgid "MDI history file path is not valid: {}"
-msgstr ""
+msgstr "Неправильный путь к файлу истории MDI: {}"
 
 #: alterx/gui/offset_viewer.py:199 alterx/gui/tool_viewer.py:253
 msgid "Text: {}, Row: {}, Column: {}"
-msgstr ""
+msgstr "Текст: {}, Строка: {}, Колонка: {}"
 
 #: alterx/gui/offset_viewer.py:281
 msgid "File does not exist: {}"
-msgstr ""
+msgstr "Файл не существет: {}"
 
 #: alterx/gui/offset_viewer.py:309
 msgid "Reading parameter file failed: {}"
-msgstr ""
+msgstr "Не удалось прочитать файл параметров: {}"
 
 #: alterx/gui/offset_viewer.py:338
 msgid "Offset data changed error {}"
-msgstr ""
+msgstr "Ошибка изменения данных отступа {}"
 
 #: alterx/gui/offset_viewer.py:361
 msgid "Offsetpage widget error: MDI call error, {}"
-msgstr ""
+msgstr "Ошибка виджета Offsetpage: ошибка вызова MDI, {}"
 
 #: alterx/gui/offset_viewer.py:438
 msgid "Set offset data failed: {}"
-msgstr ""
+msgstr "Ошибка установки данных отступа: {}"
 
 #: alterx/gui/path_viewer/gl/path_viewer_gl.py:50
 msgid "Error with path_viewer.Package python-pyqt5.qtopengl not installed."
-msgstr ""
+msgstr "Ошибка path_viewer. Пакет python-pyqt5.qtopengl не установлен."
 
 #: alterx/gui/path_viewer/gl/path_viewer_gl.py:61
 msgid "Error with path_viewer.Package python-opengl not installed."
-msgstr ""
+msgstr "Ошибка path_viewer. Пакет python-opengl не установлен."
 
 #: alterx/gui/path_viewer/gl/path_viewer_gl.py:254
 msgid "PathViewer load error: {}"
-msgstr ""
+msgstr "PathViewer ошибка загрузки: {}"
 
 #: alterx/gui/path_viewer/gl/path_viewer_gl.py:286
 msgid "No file loaded"
-msgstr ""
+msgstr "Файл не загружен"
 
 #: alterx/gui/path_viewer/gl/path_viewer_gl.py:294
 #, python-format
 msgid "generated from %s"
-msgstr ""
+msgstr "сгенерировано из %s"
 
 #: alterx/gui/path_viewer/gl/path_viewer_gl.py:300
 #, python-format
@@ -640,310 +690,333 @@ msgid ""
 "%(size)s bytes\n"
 "%(lines)s gcode lines"
 msgstr ""
+"%(size)s байт\n"
+"%(lines)s gcode строк"
 
 #: alterx/gui/path_viewer/gl/path_viewer_gl.py:329
 #, python-format
 msgid "%.1f Minutes"
-msgstr ""
+msgstr "%.1f Минуты"
 
 #: alterx/gui/path_viewer/gl/path_viewer_gl.py:331
 #, python-format
-msgid "%d Ceconds"
-msgstr ""
+msgid "%d Seconds"
+msgstr "%d Секунды"
 
 #: alterx/gui/path_viewer/gl/path_viewer_gl.py:339
 #, python-format
 msgid "%(a)f to %(b)f = %(diff)f %(units)s"
-msgstr ""
+msgstr "%(a)f в %(b)f = %(diff)f %(units)s"
 
 #: alterx/gui/path_viewer/vtk/base_backplot.py:58
 msgid "3D plot, Can't load backplot, invalid file: {}"
-msgstr ""
+msgstr "3D чертеж, не удалось загрузить чертеж, неправильный файл: {}"
 
 #: alterx/gui/path_viewer/vtk/base_backplot.py:85
 msgid ""
 "3D plot, Error in {} line {}\n"
 "{}"
 msgstr ""
+"3D чертеж, ошибка в {} строка {}\n"
+"{}"
 
 #: alterx/gui/qt_bindings.py:33
 msgid "alterx ERROR: {}"
-msgstr ""
+msgstr "alterx ОШИБКА: {}"
 
 #: alterx/gui/qt_bindings.py:36
 msgid "Press enter to exit."
-msgstr ""
+msgstr "Нажмите enter для выхода."
 
 #: alterx/gui/qt_bindings.py:48
 msgid ""
 "Deprecated QString API detected.\n"
-"Awlsim does not support PyQt QString v1 API.\n"
+"AlterX does not support PyQt QString v1 API.\n"
 "---> Please use PySide2 or a newer PyQt5. <---"
 msgstr ""
+"Обнаружено устаревшее QString API.\n"
+"AlterX не поддерживает PyQt QString v1 API.\n"
+"---> Установите PySide2 или PyQt5. <---"
 
-#: alterx/gui/qt_bindings.py:92
+#: alterx/gui/qt_bindings.py:96
 msgid ""
 "Failed to import PySide2 modules:\n"
 " {}"
 msgstr ""
+"Не удалось импортировать модули PySide2:\n"
+" {}"
 
-#: alterx/gui/qt_bindings.py:100
+#: alterx/gui/qt_bindings.py:105
 msgid ""
 "Failed to import PyQt5 modules:\n"
 " {}"
 msgstr ""
+"Не удалось импортировать модули PyQt5:\n"
+" {}"
 
-#: alterx/gui/qt_bindings.py:103
+#: alterx/gui/qt_bindings.py:108
 msgid ""
 "Unknown GUI framework '{}' requested.\n"
-"Please fix the AWLSIM_GUI environment variable."
+"Please fix the ALTERX_GUI environment variable."
 msgstr ""
+"Неизвестный фреймворк GUI '{}' запрошен.\n"
+"Исправьте переменную среды ALTERX_GUI."
 
 #: alterx/gui/status_viewer.py:40
 msgid "Status"
-msgstr ""
+msgstr "Статус"
 
 #: alterx/gui/status_viewer.py:54
 msgid "Parameters"
-msgstr ""
+msgstr "Параметры"
 
 #: alterx/gui/status_viewer.py:88
 msgid "Failed to load parameter file: {}"
-msgstr ""
+msgstr "Не удалось загрузить файл параметров: {}"
 
 #: alterx/gui/status_viewer.py:125
 msgid "New"
-msgstr ""
+msgstr "Новый"
 
 #: alterx/gui/status_viewer.py:142
 msgid "Failed to delete parameter: {}"
-msgstr ""
+msgstr "Не удалось удалить параметр: {}"
+
+#: alterx/gui/style_editor.py:43
+msgid "Stylesheet Editor"
+msgstr "Редактор стилей"
 
 #: alterx/gui/style_editor.py:62
 msgid "Copy and Edit"
-msgstr ""
+msgstr "Скопировать и редактировать"
 
 #: alterx/gui/style_editor.py:68
 msgid "View"
-msgstr ""
+msgstr "Просмотр"
 
 #: alterx/gui/style_editor.py:76
 msgid "Color"
-msgstr ""
+msgstr "Цвет"
 
 #: alterx/gui/style_editor.py:81
 msgid "Font"
-msgstr ""
+msgstr "Шрифт"
 
 #: alterx/gui/style_editor.py:98
 msgid "Apply"
-msgstr ""
+msgstr "Применить"
 
 #: alterx/gui/style_editor.py:102
 msgid "Clear"
-msgstr ""
+msgstr "Очистить"
 
 #: alterx/gui/style_editor.py:109
 msgid "Edit"
-msgstr ""
+msgstr "Редактировать"
 
 #: alterx/gui/style_editor.py:114
 msgid "Style sheet editor"
-msgstr ""
+msgstr "Редактор стилей"
 
 #: alterx/gui/style_editor.py:144
 msgid "Failed to set stylesheet path,{}"
-msgstr ""
+msgstr "Не удалось установить путь к стилю,{}"
 
-#: alterx/gui/style_editor.py:231
+#: alterx/gui/style_editor.py:233
 msgid "Failed to load stylesheet {}"
-msgstr ""
+msgstr "Не удалось загрузить стиль {}"
 
-#: alterx/gui/style_editor.py:242
+#: alterx/gui/style_editor.py:244
 msgid "Failed to save stylesheet {}"
-msgstr ""
+msgstr "Не удалось сохранить стиль {}"
 
 #: alterx/gui/tabs_viewer.py:47
 msgid "Invalid tabs order list, {}"
-msgstr ""
+msgstr "Неправильный список порядка вкладок, {}"
 
 #: alterx/gui/tabs_viewer.py:54
 msgid "No menu tab with name: tabs.{}"
-msgstr ""
+msgstr "Нет вкладки меню с именем: tabs.{}"
 
 #: alterx/gui/tool_viewer.py:121
 msgid "Add tool request: {}"
-msgstr ""
+msgstr "Запрос добавления инструмента: {}"
 
 #: alterx/gui/tool_viewer.py:127
 msgid "Failed to find new tool number"
-msgstr ""
+msgstr "Не удалось найти новый номер инструмента"
 
 #: alterx/gui/tool_viewer.py:143
 msgid "Delete tool request: {}"
-msgstr ""
+msgstr "Запрос удаления инструмента: {}"
 
 #: alterx/gui/tool_viewer.py:210
 msgid "Failed to get tool info: {}"
-msgstr ""
+msgstr "Не удалось получить информацию об инструменте: {}"
 
 #: alterx/gui/tool_viewer.py:232
 msgid "*"
-msgstr ""
+msgstr "*"
 
 #: alterx/gui/tool_viewer.py:232
 msgid "Pocket"
-msgstr ""
+msgstr "Карман"
 
 #: alterx/gui/tool_viewer.py:233
 msgid "X"
-msgstr ""
+msgstr "X"
 
 #: alterx/gui/tool_viewer.py:233
 msgid "X Wear"
-msgstr ""
+msgstr "X износ"
 
 #: alterx/gui/tool_viewer.py:233
 msgid "Y"
-msgstr ""
+msgstr "Y"
 
 #: alterx/gui/tool_viewer.py:233
 msgid "Y Wear"
-msgstr ""
+msgstr "Y износ"
 
 #: alterx/gui/tool_viewer.py:233
 msgid "Z"
-msgstr ""
+msgstr "Z"
 
 #: alterx/gui/tool_viewer.py:233
 msgid "Z Wear"
-msgstr ""
+msgstr "Z износ"
 
 #: alterx/gui/tool_viewer.py:234
 msgid "A"
-msgstr ""
+msgstr "A"
 
 #: alterx/gui/tool_viewer.py:234
 msgid "B"
-msgstr ""
+msgstr "B"
 
 #: alterx/gui/tool_viewer.py:234
 msgid "C"
-msgstr ""
+msgstr "C"
 
 #: alterx/gui/tool_viewer.py:234
 msgid "U"
-msgstr ""
+msgstr "U"
 
 #: alterx/gui/tool_viewer.py:234
 msgid "V"
-msgstr ""
+msgstr "V"
 
 #: alterx/gui/tool_viewer.py:234
 msgid "W"
-msgstr ""
+msgstr "W"
 
 #: alterx/gui/tool_viewer.py:235
 msgid "Diameter"
-msgstr ""
+msgstr "Диаметр"
 
 #: alterx/gui/tool_viewer.py:235
 msgid "Front Angle"
-msgstr ""
+msgstr "Передн. угол"
 
 #: alterx/gui/tool_viewer.py:235
 msgid "Back Angle"
-msgstr ""
+msgstr "Задн. угол"
 
 #: alterx/gui/tool_viewer.py:236
 msgid "Orientation"
-msgstr ""
+msgstr "Ориентация"
 
 #: alterx/gui/tool_viewer.py:236
 msgid "Comment"
-msgstr ""
+msgstr "Описание"
 
 #: alterx/gui/tool_viewer.py:297
-msgid "Toolfile does not exist' {}"
-msgstr ""
+msgid "Toolfile does not exist {}"
+msgstr "Файл не существет: {}"
 
 #: alterx/gui/tool_viewer.py:348
 msgid "Toolfile integer access: {} : {}"
-msgstr ""
+msgstr "Toolfile integer access: {} : {}"
 
 #: alterx/gui/tool_viewer.py:357
 msgid "Toolfile float access: {}"
-msgstr ""
+msgstr "Toolfile float access: {}"
 
 #: alterx/gui/tool_viewer.py:387
 msgid "Delete tool: {}"
-msgstr ""
+msgstr "Удалить инструмент: {}"
 
 #: alterx/gui/tool_viewer.py:399
 msgid "Save line: {}"
-msgstr ""
+msgstr "Сохранить строку: {}"
 
 #: alterx/gui/tool_viewer.py:406
 msgid "Reloading of tool table into linuxcnc: {}"
-msgstr ""
+msgstr "Перезагрузка таблицы инструментов в linuxcnc: {}"
 
 #: alterx/gui/tool_viewer.py:507
 msgid "Entered tool data:{} {} {}"
-msgstr ""
+msgstr "Введенные данные инструмента:{} {} {}"
 
 #: alterx/gui/tool_viewer.py:520
 msgid "Tool offsetpage widget error: MDI call error, {}"
-msgstr ""
+msgstr "Ошибка виджета поправок инструмента: ошибка вызова MDI, {}"
 
 #: alterx/gui/tool_viewer.py:621
 msgid "Invaliad data type in row {} column:{} "
-msgstr ""
+msgstr "Неправильный тип данных в строке {} колонка:{} "
 
-#: alterx/gui/unlock_widget.py:46 alterx/gui/unlock_widget.py:54
-#: alterx/gui/unlock_widget.py:145 alterx/gui/unlock_widget.py:153
-#: alterx/gui/unlock_widget.py:160
-msgid "Unlock"
-msgstr ""
+#: alterx/gui/unlock_widget.py:46
+msgid "Docs"
+msgstr "Документация"
 
-#: alterx/gui/unlock_widget.py:48
+#: alterx/gui/unlock_widget.py:106
+msgid "Unlock settings"
+msgstr "Разблокировать настройки"
+
+#: alterx/gui/unlock_widget.py:108
 msgid "Enter password:"
-msgstr ""
+msgstr "Введите пароль:"
 
-#: alterx/gui/unlock_widget.py:66
+#: alterx/gui/unlock_widget.py:116 alterx/gui/unlock_widget.py:207
+msgid "Unlock"
+msgstr "Разблокировать"
+
+#: alterx/gui/unlock_widget.py:128
 msgid "Lock settings"
-msgstr ""
+msgstr "Заблокировать"
 
-#: alterx/gui/unlock_widget.py:71
+#: alterx/gui/unlock_widget.py:133
 msgid "New password:"
-msgstr ""
-
-#: alterx/gui/unlock_widget.py:84
-msgid "Load configuration"
-msgstr ""
-
-#: alterx/gui/unlock_widget.py:89
-msgid "Save configuration"
-msgstr ""
+msgstr "Новый пароль:"
 
 #: alterx/gui/unlock_widget.py:146
+msgid "Load configuration"
+msgstr "Загрузить конфигурацию"
+
+#: alterx/gui/unlock_widget.py:151
+msgid "Save configuration"
+msgstr "Сохранить конфигурацию"
+
+#: alterx/gui/unlock_widget.py:208
 msgid "Password changed\n"
-msgstr ""
+msgstr "Пароль изменен\n"
 
-#: alterx/gui/unlock_widget.py:154
-msgid "Access granted\n"
-msgstr ""
+#: alterx/gui/unlock_widget.py:215
+msgid "Access granted"
+msgstr "Доступ открыт"
 
-#: alterx/gui/unlock_widget.py:161
-msgid "Access denied\n"
-msgstr ""
+#: alterx/gui/unlock_widget.py:217
+msgid "Access denied"
+msgstr "Доступ закрыт"
 
 #: alterx/gui/util.py:64
 msgid "Fatal exception:\n"
-msgstr ""
+msgstr "Неисправимое исключение:\n"
 
 #: alterx/gui/util.py:67
 msgid "A fatal exception occurred"
-msgstr ""
+msgstr "Произошло неисправимое исключение"
 
 #: alterx/gui/util.py:68
 msgid ""
@@ -953,558 +1026,460 @@ msgid ""
 "\n"
 "AlterX will be terminated.</pre>"
 msgstr ""
+"<pre>Произошло неисправимое исключение:\n"
+"\n"
+"{}\n"
+"\n"
+"AlterX будет остановлен.</pre>"
 
 #: alterx/gui/util.py:119
 msgid "Show verbose information"
-msgstr ""
+msgstr "Показать дополнительную информацию"
 
 #: alterx/gui/util.py:126
 msgid "&Ok"
-msgstr ""
+msgstr "&Ок"
 
 #: alterx/gui/util.py:129
 msgid "C&ontinue"
-msgstr ""
+msgstr "П&родолжить"
 
 #: alterx/gui/util.py:132
 msgid "&Cancel"
-msgstr ""
+msgstr "&Отмена"
 
 #: alterx/startup.py:38
 msgid "AlterX version {}"
-msgstr ""
+msgstr "AlterX версия {}"
 
 #: alterx/startup.py:40
 msgid "Usage: alterx [OPTIONS]"
-msgstr ""
+msgstr "Использование: alterx [OPTIONS]"
 
 #: alterx/startup.py:42
 msgid "Options:"
-msgstr ""
+msgstr "Опции:"
 
 #: alterx/startup.py:43
 msgid " -h|--help             Print this help text"
-msgstr ""
+msgstr " -h|--help             Вывести эту справку"
 
 #: alterx/startup.py:44
 msgid " -i|--ini              Set config file path"
-msgstr ""
+msgstr " -i|--ini              Установить путь к конфигурации"
 
 #: alterx/startup.py:45
 msgid " -L|--loglevel LVL     Set the log level:"
-msgstr ""
+msgstr " -L|--loglevel LVL     Установить уровень лога:"
 
 #: alterx/startup.py:46
 msgid "                       0: Log nothing"
-msgstr ""
+msgstr "                       0: Не записывать"
 
 #: alterx/startup.py:47
 msgid "                       1: Debug logging"
-msgstr ""
+msgstr "                       1: Записи отладки"
 
 #: alterx/startup.py:48
 msgid "                       2: Log errors, warnings and info messages"
-msgstr ""
+msgstr "                       2: Записи ошибок, предупреждения и информации"
 
 #: alterx/startup.py:49
 msgid "                       3: Log errors and warnings (default)"
-msgstr ""
+msgstr "                       3: Записи ошибок и предупреждений (по-умолчанию)"
 
 #: alterx/startup.py:50
 msgid "                       4: Log errors"
-msgstr ""
+msgstr "                       4: Записи ошибок"
 
 #: alterx/startup.py:51
 msgid "                       5: Log critical"
-msgstr ""
+msgstr "                       5: Критические записи"
 
 #: alterx/startup.py:52
 msgid " -l|--lang             Set locale"
-msgstr ""
+msgstr " -l|--lang             Выбор языка"
 
 #: alterx/startup.py:53
 msgid " -v|--verbose          Set verbose output"
-msgstr ""
+msgstr " -v|--verbose          Установить расширенный вывод лога"
 
 #: alterx/startup.py:99
 msgid "AlterX: Config file not found"
-msgstr ""
+msgstr "AlterX: Конфигурационный файл не найден"
 
 #: alterx/startup.py:100
 msgid "There is no option '--ini config_file_path'.\n"
-msgstr ""
+msgstr "Нет опции '--ini config_file_path'.\n"
 
 #: alterx/startup.py:111
 msgid "Get preference error: {} "
-msgstr ""
+msgstr "Ошибка получения настроек: {} "
 
 #: alterx/startup.py:113
 msgid "Loglevel: {}"
-msgstr ""
+msgstr "Уровень лога: {}"
 
 #: alterx/startup.py:114
 msgid "Logfile: {}"
-msgstr ""
+msgstr "Файл лога: {}"
 
 #: alterx/startup.py:115
 msgid "Locale: {}"
-msgstr ""
+msgstr "Язык: {}"
 
 #: alterx/startup.py:120
 msgid "Using {} GUI framework"
-msgstr ""
+msgstr "Использование {} GUI фреймворка"
 
 #: alterx/startup.py:127
 msgid "AlterX: ABORTING due to unhandled exception:"
-msgstr ""
+msgstr "AlterX: ОСТАНОВКА по причине необработанного исключения:"
 
 #: alterx/startup.py:135
 msgid "AlterX: Unhandled exception"
-msgstr ""
+msgstr "AlterX: Необработанное исключение"
 
 #: menus/auto/from_line/module.py:61
 msgid "Run program from line: {}"
-msgstr ""
+msgstr "Запустить программу со строки: {}"
 
 #: menus/auto/from_line/module.py:66
 msgid "Button Run from line clicked"
-msgstr ""
+msgstr "Нажата кнопка запуска с строки"
 
 #: menus/auto/opt_blocks/module.py:65
 msgid "Button block delete clicked"
-msgstr ""
+msgstr "Нажата кнопка удаления блоков"
 
 #: menus/auto/opt_stops/module.py:64
 msgid "Button optional stop clicked"
-msgstr ""
+msgstr "Нажата кнопка опциональных остановок"
 
 #: menus/auto/pause/module.py:48
 msgid "Button Pause clicked"
-msgstr ""
+msgstr "Нажата кнопка паузы"
 
 #: menus/auto/run/module.py:48
 msgid "Button program run clicked"
-msgstr ""
+msgstr "Нажата кнопка пуска программы"
 
 #: menus/auto/step/module.py:48
 msgid "Button Step clicked"
-msgstr ""
+msgstr "Нажата кнопка шага программы"
 
 #: menus/auto/stop/module.py:48
 msgid "Button Stop clicked"
-msgstr ""
+msgstr "Нажата кнопка остановки программы"
 
 #: menus/display/delete_view/module.py:44
 msgid "Button delete view clicked"
-msgstr ""
+msgstr "Нажата кнопка удаления просмотра пути"
 
 #: menus/display/view_p/module.py:44
 msgid "Button set view P clicked"
-msgstr ""
+msgstr "Нажата кнопка вида P"
 
 #: menus/display/view_x/module.py:44
 msgid "Button set view X clicked"
-msgstr ""
+msgstr "Нажата кнопка вида X"
 
 #: menus/display/view_y/module.py:44
 msgid "Button set view Y clicked"
-msgstr ""
+msgstr "Нажата кнопка вида Y"
 
 #: menus/display/view_z/module.py:44
 msgid "Button set view Z clicked"
-msgstr ""
+msgstr "Нажата кнопка Z"
 
 #: menus/display/zoom_in/module.py:44
 msgid "Button zoom plus clicked"
-msgstr ""
+msgstr "Нажата кнопка приближения"
 
 #: menus/display/zoom_out/module.py:44
 msgid "Button zoom minus clicked"
-msgstr ""
+msgstr "Нажата кнопка отдаления"
 
 #: menus/edit/new_file/module.py:44
 msgid "Button geditor new clicked"
-msgstr ""
+msgstr "Нажата кнопка редактора - новый"
 
 #: menus/edit/redo/module.py:44
 msgid "Button geditor redo clicked"
-msgstr ""
+msgstr "Нажата кнопка редактора - повтор"
 
 #: menus/edit/replace/module.py:44
 msgid "Button geditor replace clicked"
-msgstr ""
+msgstr "Нажата кнопка редактора - замена"
 
 #: menus/edit/save/module.py:44
 msgid "Button geditor save clicked"
-msgstr ""
+msgstr "Нажата кнопка редактора - сохранить"
 
 #: menus/edit/save_as/module.py:64
 msgid "Button save as clicked, path: {}"
-msgstr ""
+msgstr "Нажата кнопка сохранить как, путь: {}"
 
 #: menus/edit/save_as/module.py:69
 msgid "Button save as clicked"
-msgstr ""
+msgstr "Нажата кнопка сохранить как"
 
 #: menus/edit/search/module.py:44
 msgid "Button geditor find clicked"
-msgstr ""
+msgstr "Нажата кнопка редактора - поиск"
 
 #: menus/edit/set_replace/module.py:55
 msgid "Button set replace clicked"
-msgstr ""
+msgstr "Нажата кнопка установки замены"
 
 #: menus/edit/set_search/module.py:55
 msgid "Button set search clicked"
-msgstr ""
+msgstr "Нажата кнопка установки поиска"
 
 #: menus/edit/undo/module.py:44
 msgid "Button geditor undo clicked"
-msgstr ""
+msgstr "Нажата кнопка редактора - отмена"
 
 #: menus/equipment/flood/module.py:55
 msgid "Button flood clicked, flood disactivated"
-msgstr ""
+msgstr "Нажата кнопка подачи жидкости, жидкость заблокирована"
 
 #: menus/equipment/flood/module.py:58
 msgid "Button flood clicked, flood activated"
-msgstr ""
+msgstr "Нажата кнопка подачи жидкости, жидкость активирована"
 
 #: menus/equipment/mist/module.py:55
 msgid "Button mist clicked, mist disactivated"
-msgstr ""
+msgstr "Нажата кнопка подачи тумана, туман заблокирован"
 
 #: menus/equipment/mist/module.py:58
 msgid "Button mist clicked, mist activated"
-msgstr ""
+msgstr "Нажата кнопка подачи тумана, туман активирован"
 
 #: menus/homing/home_a/module.py:43
 msgid "Command Home A"
-msgstr ""
+msgstr "Комманда A в ноль"
 
 #: menus/homing/home_all/module.py:43
 msgid "Command Home ALL"
-msgstr ""
+msgstr "Комманда ВСЕ в ноль"
 
 #: menus/homing/home_b/module.py:43
 msgid "Command Home B"
-msgstr ""
+msgstr "Комманда B в ноль"
 
 #: menus/homing/home_c/module.py:43
 msgid "Command Home C"
-msgstr ""
+msgstr "Комманда C в ноль"
 
 #: menus/homing/home_x/module.py:43
 msgid "Command Home X"
-msgstr ""
+msgstr "Комманда X в ноль"
 
 #: menus/homing/home_y/module.py:43
 msgid "Command Home Y"
-msgstr ""
+msgstr "Комманда Y в ноль"
 
 #: menus/homing/home_z/module.py:43
 msgid "Command Home Z"
-msgstr ""
+msgstr "Комманда Z в ноль"
 
 #: menus/homing/unhome_all/module.py:44
 msgid "Command Unhome ALL"
-msgstr ""
+msgstr "Комманда ВСЕ забыть ноль"
 
 #: menus/load/delete_file/module.py:53
 msgid "Button filemanager delete clicked"
-msgstr ""
+msgstr "Нажата кнопка файлменеджера - удалить"
 
 #: menus/load/delete_file/module.py:62
 msgid ""
 "Are you sure?\n"
 "Click to delete."
 msgstr ""
+"Вы уверены?\n"
+"Нажмите для\n"
+"удаления."
 
 #: menus/load/edit/module.py:44
 msgid "Button edit page clicked"
-msgstr ""
+msgstr "Нажата кнопка редактора"
 
 #: menus/load/home/module.py:44
 msgid "Button filemanager home clicked"
-msgstr ""
+msgstr "Нажата кнопка файлменеджера - в дом"
 
 #: menus/load/jump_to/module.py:44
 msgid "Button filemanager jump to clicked"
-msgstr ""
+msgstr "Нажата кнопка файлменеджера - переход"
 
 #: menus/load/sel_next/module.py:44
 msgid "Button filemanager next clicked"
-msgstr ""
+msgstr "Нажата кнопка файлменеджера - следующий"
 
 #: menus/load/sel_prev/module.py:44
 msgid "Button filemanager previous clicked"
-msgstr ""
+msgstr "Нажата кнопка файлменеджера - предыдущий"
 
 #: menus/load/select_file/module.py:44
 msgid "Button filemanager select clicked"
-msgstr ""
-
-#: menus/manual/exit/module.py:42
-msgid "Button exit clicked"
-msgstr ""
+msgstr "Нажата кнопка файлменеджера - выбор"
 
 #: menus/manual/jog_0001/module.py:44
 msgid "Button set JOG 0.001 clicked"
-msgstr ""
+msgstr "Нажата кнопка установить JOG 0.001"
 
 #: menus/manual/jog_001/module.py:44
 msgid "Button set JOG 0.01 clicked"
-msgstr ""
+msgstr "Нажата кнопка установить JOG 0.01"
 
 #: menus/manual/jog_01/module.py:44
 msgid "Button set JOG 0.1 clicked"
-msgstr ""
+msgstr "Нажата кнопка установить JOG 0.1"
 
 #: menus/manual/jog_1/module.py:44
 msgid "Button set JOG 1 clicked"
-msgstr ""
+msgstr "Нажата кнопка установить JOG 1"
 
 #: menus/manual/jog_act/module.py:57
 msgid "Button JOG activate clicked"
-msgstr ""
+msgstr "Нажата кнопка активировать ручные"
 
 #: menus/manual/jog_act/module.py:60
 msgid "Button JOG disactivate clicked"
-msgstr ""
+msgstr "Нажата кнопка заблокировать ручные"
 
 #: menus/manual/jog_cont/module.py:57
 msgid "Button JOG incremental clicked"
-msgstr ""
+msgstr "Нажата кнопка инкрементальные ручные"
 
 #: menus/manual/jog_cont/module.py:60
 msgid "Button JOG continuous clicked"
-msgstr ""
+msgstr "Нажата кнопка продолжительные ручные"
 
 #: menus/manual/jog_enc/module.py:57
 msgid "Button JOG joystick clicked"
-msgstr ""
+msgstr "Нажата кнопка джойстик для ручных"
 
 #: menus/manual/jog_enc/module.py:60
 msgid "Button JOG encoder clicked"
-msgstr ""
+msgstr "Нажата кнопка энкодер для ручных"
+
+#: menus/manual/poweroff/module.py:42 menus/settings/exit/module.py:42
+msgid "Button exit clicked"
+msgstr "Нажата кнопка выхода"
 
 #: menus/mdi/macro_stop/module.py:44
 msgid "Button macro stop clicked"
-msgstr ""
+msgstr "Нажата кнопка остановки макроса"
 
 #: menus/offset/edit_value_x/module.py:61
 msgid "Offset viewer edit X: {}"
-msgstr ""
+msgstr "Поправки редактирование X: {}"
 
 #: menus/offset/edit_value_x/module.py:67
 msgid "Offset viewer edit X clicked"
-msgstr ""
+msgstr "Нажата кнопка поправки редактирование X"
 
 #: menus/offset/edit_value_y/module.py:61
 msgid "Offset viewer edit Y: {}"
-msgstr ""
+msgstr "Поправки редактирование Y: {}"
 
 #: menus/offset/edit_value_y/module.py:67
 msgid "Offset viewer edit Y clicked"
-msgstr ""
+msgstr "Нажата кнопка поправки редактирование Y"
 
 #: menus/offset/edit_value_z/module.py:61
 msgid "Offset viewer edit Z: {}"
-msgstr ""
+msgstr "Поправки редактирование Z: {}"
 
 #: menus/offset/edit_value_z/module.py:67
 msgid "Offset viewer edit Z clicked"
-msgstr ""
+msgstr "Нажата кнопка поправки редактирование Z"
 
 #: menus/offset/next_offset/module.py:44
 msgid "Offset viewer next button clicked"
-msgstr ""
+msgstr "Нажата кнопка поправки следующая"
 
 #: menus/offset/prev_offset/module.py:44
 msgid "Offset viewer prev button clicked"
-msgstr ""
+msgstr "Нажата кнопка поправки предыдущая"
 
 #: menus/offset/set_selected/module.py:44
 msgid "Offset viewer select button clicked"
-msgstr ""
+msgstr "Нажата кнопка поправки выбрать"
 
 #: menus/offset/zero_g92/module.py:44
 msgid "Button zero g92 clicked"
-msgstr ""
+msgstr "Нажата кнопка обнулить g92"
 
 #: menus/settings/next_page/module.py:44
 msgid "Settings page next button clicked"
-msgstr ""
+msgstr "Нажата кнопка настройки следующая страница"
 
 #: menus/settings/prev_page/module.py:44
 msgid "Settings page prev button clicked"
-msgstr ""
+msgstr "Нажата кнопка настройки предыдущая страница"
+
+#: menus/settings/restart/module.py:42
+msgid "Button restart clicked"
+msgstr "Нажата кнопка перезапуска"
+
+#: menus/settings/save_log/module.py:44
+msgid "Button save log clicked"
+msgstr "Нажата кнопка сохранения логов"
+
+#: menus/settings/save_log/module.py:61
+msgid "Open log failed: {}"
+msgstr "Не удалось открыть лог: {}"
+
+#: menus/settings/save_log/module.py:66
+msgid "Open directory"
+msgstr "Открыть папку"
+
+#: menus/settings/save_log/module.py:72
+msgid "Save log '{}' failed: {}"
+msgstr "Не удалось сохранить лог '{}': {}"
 
 #: menus/tool/add_tool/module.py:44
 msgid "Tool viewer add button clicked"
-msgstr ""
+msgstr "Нажата кнопка инструмент добавить"
 
 #: menus/tool/change_tool/module.py:43
 msgid "Tool viewer change tool button clicked"
-msgstr ""
+msgstr "Нажата кнопка инструмент сменить"
 
 #: menus/tool/delete_tool/module.py:44
 msgid "Tool viewer delete button clicked"
-msgstr ""
+msgstr "Нажата кнопка инструмент удалить"
 
 #: menus/tool/edit_tool/module.py:59
 msgid "Tool viewer edit: {}"
-msgstr ""
+msgstr "Редактирование инструмента: {}"
 
 #: menus/tool/edit_tool/module.py:65
 msgid "Tool viewer edit clicked"
-msgstr ""
+msgstr "Нажата кнопка инструмент редактировать"
 
 #: menus/tool/index_tool/module.py:44
 msgid "Tool viewer index tool button clicked"
-msgstr ""
+msgstr "Нажата кнопка инструмент применить индекс"
 
 #: menus/tool/left_tool/module.py:43
 msgid "Tool viewer left button clicked"
-msgstr ""
+msgstr "Нажата кнопка инструмент влево"
 
 #: menus/tool/next_tool/module.py:44
 msgid "Tool viewer next button clicked"
-msgstr ""
+msgstr "Нажата кнопка инструмент следующий"
 
 #: menus/tool/prev_tool/module.py:44
 msgid "Tool viewer prev button clicked"
-msgstr ""
+msgstr "Нажата кнопка инструмент предыдущий"
 
 #: menus/tool/right_tool/module.py:44
 msgid "Tool viewer right button clicked"
-msgstr ""
+msgstr "Нажата кнопка инструмент вправо"
 
-#: alterx/configs/axis_wizard.cfg:17
-#, python-brace-format
-msgid "AXIS_{0} Step"
-msgstr ""
-
-#: alterx/configs/axis_wizard.cfg:17
-#, python-brace-format
-msgid "Add default stepper HAL configuration for AXIS_{0}({1})"
-msgstr ""
-
-#: alterx/configs/axis_wizard.cfg:18
-#, python-brace-format
-msgid "AXIS_{0} Servo"
-msgstr ""
-
-#: alterx/configs/axis_wizard.cfg:18
-#, python-brace-format
-msgid "Add default servo HAL configuration for AXIS_{0}({1})"
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:15
-msgid "Enter the name of the machine."
-msgstr "Введите название станка."
-
-#: alterx/configs/default_wizard.cfg:16
-msgid "Version"
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:16
-msgid "Enter the version of LinuxCNC core."
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:17
-msgid "Lathe"
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:17
-msgid "Is this machine a lathe?"
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:18
-msgid "Base period"
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:18
-msgid ""
-"Enter task period, in nanoseconds - this is the fastest thread in the "
-"machine."
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:19
-msgid "Servo period"
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:19
-msgid ""
-"Enter \"servo\" task period, in nanoseconds - this is the low-speed thread "
-"in the machine."
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:20
-msgid "Axes"
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:20
-msgid "Enter the number of axes."
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:21
-msgid "Axis names"
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:21
-msgid "Enter the names of all axes(space separeted)."
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:22
-msgid "LPT"
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:22
-msgid "Add configuration for using LPT port on this machine?"
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:23
-msgid "HM2"
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:23
-msgid "Add configuration for using HOSTMOT2 interface on this machine?"
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:24
-msgid "HM2_ETH"
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:24
-msgid ""
-"Add configuration for using ethernet HOSTMOT2 interface on this machine?"
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:25
-msgid "Axis wizard"
-msgstr ""
-
-#: alterx/configs/default_wizard.cfg:25
-msgid "Run axis wizard?"
-msgstr ""
-
-#: alterx/configs/joint_wizard.cfg:17
-#, python-brace-format
-msgid "JOINT_{0} Step"
-msgstr ""
-
-#: alterx/configs/joint_wizard.cfg:17
-#, python-brace-format
-msgid "Add default stepper HAL configuration for JOINT_{0}({1})"
-msgstr ""
-
-#: alterx/configs/joint_wizard.cfg:18
-#, python-brace-format
-msgid "JOINT_{0} Servo"
-msgstr ""
-
-#: alterx/configs/joint_wizard.cfg:18
-#, python-brace-format
-msgid "Add default servo HAL configuration for JOINT_{0}({1})"
-msgstr ""
+#~ msgid "Enter the name of the machine."
+#~ msgstr "Введите название станка."

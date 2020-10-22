@@ -82,7 +82,7 @@ class HalEditor(QWidget):
 
         layout = QVBoxLayout()
         
-        label = QLabel("HAL Editor")
+        label = QLabel(_("HAL Editor"))
         label.setObjectName("lbl_settings_haleditor")
         layout.addWidget(label)
         

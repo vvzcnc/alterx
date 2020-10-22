@@ -1,17 +1,18 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: alterx\n"
-"POT-Creation-Date: 2020-06-15 09:59+0300\n"
-"PO-Revision-Date: 2020-06-15 09:59+0300\n"
+"POT-Creation-Date: 2020-10-22 11:28+0300\n"
+"PO-Revision-Date: 2020-10-22 11:51+0300\n"
 "Last-Translator: uncle-yura <uncle-yura@tuta.io>\n"
 "Language-Team: \n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.8.11\n"
+"X-Generator: Poedit 2.2.1\n"
 "X-Poedit-Basepath: ../../../..\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-SearchPath-0: .\n"
 "X-Poedit-SearchPathExcluded-0: tabs\n"
 
@@ -23,123 +24,167 @@ msgstr "Preferences file is not exist."
 msgid "Failed to get preference: {} "
 msgstr "Failed to get preference: {} "
 
-#: alterx/core/ascope.py:73
+#: alterx/core/ascope.py:75 alterx/core/remote.py:84
 msgid "Failed to send packet: {}"
 msgstr "Failed to send packet: {}"
 
-#: alterx/core/linuxcnc.py:82
+#: alterx/core/linuxcnc.py:91
 msgid "Failed to import LinuxCNC module: '{}'"
 msgstr "Failed to import LinuxCNC module: '{}'"
 
-#: alterx/core/linuxcnc.py:93
+#: alterx/core/linuxcnc.py:103
 msgid "AlterX: Failed to import LinuxCNC"
 msgstr "AlterX: Failed to import LinuxCNC"
 
-#: alterx/core/linuxcnc.py:94
+#: alterx/core/linuxcnc.py:104
 msgid "AlterX interface launched in recovery mode!"
 msgstr "AlterX interface launched in recovery mode!"
 
-#: alterx/core/linuxcnc.py:127 alterx/core/main.py:119
+#: alterx/core/linuxcnc.py:150 alterx/core/main.py:235
 msgid "mm"
 msgstr "mm"
 
-#: alterx/core/linuxcnc.py:128
+#: alterx/core/linuxcnc.py:151
 msgid "deg"
 msgstr "deg"
 
-#: alterx/core/linuxcnc.py:129 alterx/core/main.py:65
+#: alterx/core/linuxcnc.py:152 alterx/core/main.py:181
 msgid "rev"
 msgstr "rev"
 
-#: alterx/core/linuxcnc.py:130 alterx/core/linuxcnc.py:131
-#: alterx/core/linuxcnc.py:132 alterx/core/main.py:63
+#: alterx/core/linuxcnc.py:153 alterx/core/linuxcnc.py:154
+#: alterx/core/linuxcnc.py:155 alterx/core/main.py:179
 msgid "min"
 msgstr "min"
 
-#: alterx/core/linuxcnc.py:165
+#: alterx/core/linuxcnc.py:199
 msgid "Failed to poll LinuxCNC stat: '{}'"
 msgstr "Failed to poll LinuxCNC stat: '{}'"
 
-#: alterx/core/linuxcnc.py:187 alterx/core/linuxcnc.py:198
+#: alterx/core/linuxcnc.py:222 alterx/core/linuxcnc.py:237
 msgid "Failed to execute '{}' handler {}: '{}'"
 msgstr "Failed to execute '{}' handler {}: '{}'"
 
-#: alterx/core/linuxcnc.py:215
+#: alterx/core/linuxcnc.py:264
 msgid "Failed to emit signal. Signal '{}' no exist"
 msgstr "Failed to emit signal. Signal '{}' no exist"
 
-#: alterx/core/linuxcnc.py:223
+#: alterx/core/linuxcnc.py:273
+#, fuzzy
+#| msgid "Failed to add signal. Signal '{}' already exist"
+msgid "Failed to add listener. Listener '{}' already exist"
+msgstr "Failed to add signal. Signal '{}' already exist"
+
+#: alterx/core/linuxcnc.py:281
 msgid "Failed to add signal. Signal '{}' already exist"
 msgstr "Failed to add signal. Signal '{}' already exist"
 
-#: alterx/core/linuxcnc.py:236
+#: alterx/core/linuxcnc.py:294
 msgid "Failed to get atribute {}: {}"
 msgstr "Failed to get atribute {}: {}"
 
-#: alterx/core/main.py:74
+#: alterx/core/main.py:107
+#, fuzzy
+#| msgid "LinuxCNC state {}"
+msgid "LinuxCNC postgui halfile: {}"
+msgstr "LinuxCNC state {}"
+
+#: alterx/core/main.py:118
+msgid "LinuxCNC hal input run signal activated"
+msgstr ""
+
+#: alterx/core/main.py:129
+msgid "LinuxCNC hal input stop signal activated"
+msgstr ""
+
+#: alterx/core/main.py:142
+#, fuzzy
+#| msgid "LinuxCNC mode {}"
+msgid "LinuxCNC display encoder signal {}"
+msgstr "LinuxCNC mode {}"
+
+#: alterx/core/main.py:146
+#, fuzzy
+#| msgid "LinuxCNC state {}"
+msgid "LinuxCNC display input signals {}"
+msgstr "LinuxCNC state {}"
+
+#: alterx/core/main.py:190
 msgid "ESTOP"
 msgstr "ESTOP"
 
-#: alterx/core/main.py:76
+#: alterx/core/main.py:192
 msgid "ESTOP RESET"
 msgstr "ESTOP RESET"
 
-#: alterx/core/main.py:78
+#: alterx/core/main.py:194
 msgid "ON"
 msgstr "ON"
 
-#: alterx/core/main.py:80
+#: alterx/core/main.py:196
 msgid "OFF"
 msgstr "OFF"
 
-#: alterx/core/main.py:82 alterx/core/main.py:103
-#: alterx/gui/halpin_viewer.py:187
+#: alterx/core/main.py:198 alterx/core/main.py:219
+#: alterx/gui/halpin_viewer.py:205
 msgid "None"
 msgstr "None"
 
-#: alterx/core/main.py:90
+#: alterx/core/main.py:206
 msgid "LinuxCNC state {}"
 msgstr "LinuxCNC state {}"
 
-#: alterx/core/main.py:94
+#: alterx/core/main.py:210
 msgid "MANUAL"
 msgstr "MANUAL"
 
-#: alterx/core/main.py:97
+#: alterx/core/main.py:213
 msgid "MDI"
 msgstr "MDI"
 
-#: alterx/core/main.py:100
+#: alterx/core/main.py:216
 msgid "AUTO"
 msgstr "AUTO"
 
-#: alterx/core/main.py:105
+#: alterx/core/main.py:221
 msgid "LinuxCNC mode {}"
 msgstr "LinuxCNC mode {}"
 
-#: alterx/core/main.py:108
+#: alterx/core/main.py:224
 msgid "LinuxCNC homed {}"
 msgstr "LinuxCNC homed {}"
 
-#: alterx/core/main.py:113
+#: alterx/core/main.py:229
 msgid "Loaded: {}"
 msgstr "Loaded: {}"
 
-#: alterx/core/main.py:117
+#: alterx/core/main.py:233
 msgid "inch"
 msgstr "inch"
 
-#: alterx/core/main.py:121
+#: alterx/core/main.py:237
 msgid "cm"
 msgstr "cm"
 
-#: alterx/core/main.py:133
+#: alterx/core/main.py:249
 msgid "Units: {}"
 msgstr "Units: {}"
 
-#: alterx/core/main.py:163
+#: alterx/core/main.py:301
+#, fuzzy
+#| msgid "LinuxCNC mode {}"
+msgid "LinuxCNC mode {} {} {} {}"
+msgstr "LinuxCNC mode {}"
+
+#: alterx/core/main.py:329
 msgid "Unknown button"
 msgstr "Unknown button"
+
+#: alterx/core/remote.py:58
+#, fuzzy
+#| msgid "Failed to send run cmd: {}"
+msgid "Failed to execute cmd: {}"
+msgstr "Failed to send run cmd: {}"
 
 #: alterx/gui/awlsim_widget.py:45
 msgid "Start Awlsim"
@@ -169,7 +214,7 @@ msgstr "Default hal file copy failed, {}"
 msgid "Config Editor"
 msgstr "Config Editor"
 
-#: alterx/gui/config_editor.py:153 alterx/gui/hal_editor.py:127
+#: alterx/gui/config_editor.py:153 alterx/gui/hal_editor.py:136
 #: alterx/gui/style_editor.py:91
 msgid "Save"
 msgstr "Save"
@@ -287,192 +332,194 @@ msgstr "Failed to delete path {}: {}"
 msgid "Loading: {}"
 msgstr "Loading: {}"
 
-#: alterx/gui/gcode_editor.py:59
-msgid "Custom lexer for the G code programming languages"
-msgstr "Custom lexer for the G code programming languages"
-
-#: alterx/gui/gcode_editor.py:253 alterx/gui/gcode_editor.py:302
+#: alterx/gui/gcode_editor.py:131 alterx/gui/gcode_editor.py:174
 msgid "File path is not valid: {}"
 msgstr "File path is not valid: {}"
 
-#: alterx/gui/gcode_editor.py:337
+#: alterx/gui/gcode_editor.py:212
 msgid "Program"
 msgstr "Program"
 
-#: alterx/gui/gcode_editor.py:341 alterx/gui/gcode_editor.py:385
+#: alterx/gui/gcode_editor.py:216 alterx/gui/gcode_editor.py:260
 msgid "Filename: "
 msgstr "Filename: "
 
-#: alterx/gui/gcode_editor.py:347
+#: alterx/gui/gcode_editor.py:222
 msgid "Lines: "
 msgstr "Lines: "
 
-#: alterx/gui/gcode_editor.py:350
+#: alterx/gui/gcode_editor.py:225
 msgid "Progress: "
 msgstr "Progress: "
 
-#: alterx/gui/gcode_editor.py:358
+#: alterx/gui/gcode_editor.py:233
 msgid "Progress: {:2.2f}%"
 msgstr "Progress: {:2.2f}%"
 
-#: alterx/gui/gcode_editor.py:361 alterx/gui/gcode_editor.py:433
-#: alterx/gui/gcode_editor.py:445
+#: alterx/gui/gcode_editor.py:236 alterx/gui/gcode_editor.py:308
+#: alterx/gui/gcode_editor.py:320
 msgid "Filename: {}"
 msgstr "Filename: {}"
 
-#: alterx/gui/gcode_editor.py:362
+#: alterx/gui/gcode_editor.py:237
 msgid "Lines: {}"
 msgstr "Lines: {}"
 
-#: alterx/gui/gcode_editor.py:381
+#: alterx/gui/gcode_editor.py:256
 msgid "Editor"
 msgstr "Editor"
 
-#: alterx/gui/gcode_editor.py:395 alterx/gui/gcode_editor.py:437
+#: alterx/gui/gcode_editor.py:270 alterx/gui/gcode_editor.py:312
 msgid "Search: {}"
 msgstr "Search: {}"
 
-#: alterx/gui/gcode_editor.py:398 alterx/gui/gcode_editor.py:442
+#: alterx/gui/gcode_editor.py:273 alterx/gui/gcode_editor.py:317
 msgid "Replace: {}"
 msgstr "Replace: {}"
 
-#: alterx/gui/hal_editor.py:116 alterx/gui/halpin_viewer.py:572
+#: alterx/gui/hal_editor.py:125 alterx/gui/halpin_viewer.py:605
 msgid "Failed to get hal pin list: {}"
 msgstr "Failed to get hal pin list: {}"
 
-#: alterx/gui/hal_editor.py:123 alterx/gui/style_editor.py:87
+#: alterx/gui/hal_editor.py:132 alterx/gui/style_editor.py:87
 msgid "Open"
 msgstr "Open"
 
-#: alterx/gui/hal_editor.py:149
+#: alterx/gui/hal_editor.py:158
 msgid "Failed to set hal path,{}"
 msgstr "Failed to set hal path,{}"
 
-#: alterx/gui/hal_editor.py:164
+#: alterx/gui/hal_editor.py:173
 msgid "Failed to load hal-file {}"
 msgstr "Failed to load hal-file {}"
 
-#: alterx/gui/hal_editor.py:190
+#: alterx/gui/hal_editor.py:199
 msgid "Failed to save hal-file, {}"
 msgstr "Failed to save hal-file, {}"
 
-#: alterx/gui/halpin_viewer.py:41
+#: alterx/gui/halpin_viewer.py:58
 msgid "HAL Pin Viewer"
 msgstr "HAL Pin Viewer"
 
-#: alterx/gui/halpin_viewer.py:53 alterx/gui/status_viewer.py:46
-#: alterx/gui/status_viewer.py:60 alterx/configs/default_wizard.cfg:15
+#: alterx/gui/halpin_viewer.py:70 alterx/gui/status_viewer.py:46
+#: alterx/gui/status_viewer.py:60
 msgid "Name"
 msgstr "Name"
 
-#: alterx/gui/halpin_viewer.py:53 alterx/gui/halpin_viewer.py:71
+#: alterx/gui/halpin_viewer.py:70 alterx/gui/halpin_viewer.py:88
 msgid "Type"
 msgstr "Type"
 
-#: alterx/gui/halpin_viewer.py:53 alterx/gui/halpin_viewer.py:71
+#: alterx/gui/halpin_viewer.py:70 alterx/gui/halpin_viewer.py:88
 msgid "Dir."
 msgstr "Dir."
 
-#: alterx/gui/halpin_viewer.py:54 alterx/gui/halpin_viewer.py:71
+#: alterx/gui/halpin_viewer.py:71 alterx/gui/halpin_viewer.py:88
 msgid "Addr."
 msgstr "Addr."
 
-#: alterx/gui/halpin_viewer.py:54 alterx/gui/halpin_viewer.py:71
+#: alterx/gui/halpin_viewer.py:71 alterx/gui/halpin_viewer.py:88
 msgid "HAL type"
 msgstr "HAL type"
 
-#: alterx/gui/halpin_viewer.py:70
+#: alterx/gui/halpin_viewer.py:87
 msgid "Osc."
 msgstr "Osc."
 
-#: alterx/gui/halpin_viewer.py:70
+#: alterx/gui/halpin_viewer.py:87
 msgid "Pin"
 msgstr "Pin"
 
-#: alterx/gui/halpin_viewer.py:71 alterx/gui/status_viewer.py:46
+#: alterx/gui/halpin_viewer.py:88 alterx/gui/status_viewer.py:46
 #: alterx/gui/status_viewer.py:60
 msgid "Value"
 msgstr "Value"
 
-#: alterx/gui/halpin_viewer.py:86
+#: alterx/gui/halpin_viewer.py:103
 msgid "Name: "
 msgstr "Name: "
 
-#: alterx/gui/halpin_viewer.py:102
+#: alterx/gui/halpin_viewer.py:120
 msgid "Run command"
 msgstr "Run command"
 
-#: alterx/gui/halpin_viewer.py:106
+#: alterx/gui/halpin_viewer.py:124
 msgid "Update tree"
 msgstr "Update tree"
 
-#: alterx/gui/halpin_viewer.py:115
+#: alterx/gui/halpin_viewer.py:133
 msgid "HAL Pin"
 msgstr "HAL Pin"
 
-#: alterx/gui/halpin_viewer.py:150
+#: alterx/gui/halpin_viewer.py:168
 msgid "Run"
 msgstr "Run"
 
-#: alterx/gui/halpin_viewer.py:154
+#: alterx/gui/halpin_viewer.py:172
 msgid "Stop"
 msgstr "Stop"
 
-#: alterx/gui/halpin_viewer.py:168
+#: alterx/gui/halpin_viewer.py:186
 msgid "Auto"
 msgstr "Auto"
 
-#: alterx/gui/halpin_viewer.py:174
+#: alterx/gui/halpin_viewer.py:192
 msgid "One Shot"
 msgstr "One Shot"
 
-#: alterx/gui/halpin_viewer.py:193 alterx/gui/unlock_widget.py:77
+#: alterx/gui/halpin_viewer.py:211 alterx/gui/unlock_widget.py:139
 msgid "Change"
 msgstr "Change"
 
-#: alterx/gui/halpin_viewer.py:198
+#: alterx/gui/halpin_viewer.py:216
 msgid "High"
 msgstr "High"
 
-#: alterx/gui/halpin_viewer.py:202
+#: alterx/gui/halpin_viewer.py:220
 msgid "Low"
 msgstr "Low"
 
-#: alterx/gui/halpin_viewer.py:211
+#: alterx/gui/halpin_viewer.py:229
 msgid "Trigger signal:"
 msgstr "Trigger signal:"
 
-#: alterx/gui/halpin_viewer.py:219
+#: alterx/gui/halpin_viewer.py:237
 msgid "Trigger value:"
 msgstr "Trigger value:"
 
-#: alterx/gui/halpin_viewer.py:237
+#: alterx/gui/halpin_viewer.py:255
 msgid "Oscilloscope"
 msgstr "Oscilloscope"
 
-#: alterx/gui/halpin_viewer.py:272
+#: alterx/gui/halpin_viewer.py:290
 msgid "Failed to send run cmd: {}"
 msgstr "Failed to send run cmd: {}"
 
-#: alterx/gui/halpin_viewer.py:349
+#: alterx/gui/halpin_viewer.py:367
 msgid "Complete"
 msgstr "Complete"
 
-#: alterx/gui/halpin_viewer.py:356
+#: alterx/gui/halpin_viewer.py:374
 msgid "Reading"
 msgstr "Reading"
 
-#: alterx/gui/halpin_viewer.py:359
+#: alterx/gui/halpin_viewer.py:377
 msgid "Idle"
 msgstr "Idle"
 
-#: alterx/gui/halpin_viewer.py:362
+#: alterx/gui/halpin_viewer.py:380
 msgid "Waiting"
 msgstr "Waiting"
 
-#: alterx/gui/halpin_viewer.py:513
+#: alterx/gui/halpin_viewer.py:533
 msgid "Name: {}"
 msgstr "Name: {}"
+
+#: alterx/gui/halpin_viewer.py:608
+msgid ""
+"HAL Pin viewer works only with\n"
+" loaded hal component 'ascope'."
+msgstr ""
 
 #: alterx/gui/main_screen.py:76
 msgid "Invalid buttons order list for menu {}, {}"
@@ -482,116 +529,124 @@ msgstr "Invalid buttons order list for menu {}, {}"
 msgid "No menu module with name: menus.{}.{}"
 msgstr "No menu module with name: menus.{}.{}"
 
-#: alterx/gui/main_screen.py:170 alterx/gui/tool_viewer.py:232
+#: alterx/gui/main_screen.py:171 alterx/gui/tool_viewer.py:232
 msgid "Tool"
 msgstr "Tool"
 
-#: alterx/gui/main_screen.py:172 alterx/gui/main_screen.py:185
+#: alterx/gui/main_screen.py:173 alterx/gui/main_screen.py:186
 msgid "No tool"
 msgstr "No tool"
 
-#: alterx/gui/main_screen.py:174 alterx/gui/main_screen.py:186
+#: alterx/gui/main_screen.py:175 alterx/gui/main_screen.py:187
 msgid "No comment"
 msgstr "No comment"
 
-#: alterx/gui/main_screen.py:195
+#: alterx/gui/main_screen.py:196
 msgid "Codes"
 msgstr "Codes"
 
-#: alterx/gui/main_screen.py:249
+#: alterx/gui/main_screen.py:250
 msgid "Spindlerate"
 msgstr "Spindlerate"
 
-#: alterx/gui/main_screen.py:252 alterx/gui/main_screen.py:268
-#: alterx/gui/main_screen.py:307
+#: alterx/gui/main_screen.py:253 alterx/gui/main_screen.py:276
+#: alterx/gui/main_screen.py:315
 msgid "Actual: {:.2f} {}/{}"
 msgstr "Actual: {:.2f} {}/{}"
 
-#: alterx/gui/main_screen.py:254 alterx/gui/main_screen.py:271
+#: alterx/gui/main_screen.py:255 alterx/gui/main_screen.py:279
 msgid "SO: {}%"
 msgstr "SO: {}%"
 
-#: alterx/gui/main_screen.py:276
+#: alterx/gui/main_screen.py:284
 msgid "Feedrate"
 msgstr "Feedrate"
 
-#: alterx/gui/main_screen.py:278
+#: alterx/gui/main_screen.py:286
 msgid "Actual: {:.2f}"
 msgstr "Actual: {:.2f}"
 
-#: alterx/gui/main_screen.py:280 alterx/gui/main_screen.py:310
+#: alterx/gui/main_screen.py:288 alterx/gui/main_screen.py:318
 msgid "FO: {}%"
 msgstr "FO: {}%"
 
-#: alterx/gui/main_screen.py:282 alterx/gui/main_screen.py:313
+#: alterx/gui/main_screen.py:290 alterx/gui/main_screen.py:321
 msgid "RO: {}%"
 msgstr "RO: {}%"
 
-#: alterx/gui/main_screen.py:321
+#: alterx/gui/main_screen.py:329
 msgid "Disactivated"
 msgstr "Disactivated"
 
-#: alterx/gui/main_screen.py:321
+#: alterx/gui/main_screen.py:329
 msgid "Activated"
 msgstr "Activated"
 
-#: alterx/gui/main_screen.py:322
+#: alterx/gui/main_screen.py:330
 msgid "Increment"
 msgstr "Increment"
 
-#: alterx/gui/main_screen.py:322
+#: alterx/gui/main_screen.py:330
 msgid "Continuous"
 msgstr "Continuous"
 
-#: alterx/gui/main_screen.py:323
+#: alterx/gui/main_screen.py:331
 msgid "Joystick"
 msgstr "Joystick"
 
-#: alterx/gui/main_screen.py:323
+#: alterx/gui/main_screen.py:331
 msgid "Encoder"
 msgstr "Encoder"
 
-#: alterx/gui/main_screen.py:337
+#: alterx/gui/main_screen.py:345
 msgid "JOG"
 msgstr "JOG"
 
-#: alterx/gui/main_screen.py:341
+#: alterx/gui/main_screen.py:349
 msgid "Speed: {:.2f}"
 msgstr "Speed: {:.2f}"
 
-#: alterx/gui/main_screen.py:344 alterx/gui/main_screen.py:381
+#: alterx/gui/main_screen.py:352 alterx/gui/main_screen.py:389
 msgid "Increment: {}"
 msgstr "Increment: {}"
 
-#: alterx/gui/main_screen.py:354 alterx/gui/main_screen.py:386
+#: alterx/gui/main_screen.py:362 alterx/gui/main_screen.py:394
 msgid "JOG "
 msgstr "JOG "
 
-#: alterx/gui/main_screen.py:356 alterx/gui/main_screen.py:390
+#: alterx/gui/main_screen.py:364 alterx/gui/main_screen.py:403
 msgid "Mode: "
 msgstr "Mode: "
 
-#: alterx/gui/main_screen.py:359 alterx/gui/main_screen.py:395
+#: alterx/gui/main_screen.py:367 alterx/gui/main_screen.py:408
 msgid "Device: "
 msgstr "Device: "
 
-#: alterx/gui/main_screen.py:376
-msgid "Speed: {}"
+#: alterx/gui/main_screen.py:384
+#, fuzzy
+#| msgid "Speed: {}"
+msgid "Speed: {}%"
 msgstr "Speed: {}"
 
-#: alterx/gui/main_screen.py:406
+#: alterx/gui/main_screen.py:424
 msgid "Axis"
 msgstr "Axis"
+
+#: alterx/gui/main_screen.py:571
+#, fuzzy
+#| msgid "Failed to get tool info: {}"
+msgid "Failed to emit button click: {}"
+msgstr "Failed to get tool info: {}"
 
 #: alterx/gui/main_window.py:50
 msgid "AlterX v{}"
 msgstr "AlterX v{}"
 
-#: alterx/gui/main_window.py:88
+#: alterx/gui/main_window.py:91
 msgid "Failed to load stylesheet: {}"
 msgstr "Failed to load stylesheet: {}"
 
-#: alterx/gui/mdi_history.py:90
+#: alterx/gui/mdi_history.py:110
 msgid "MDI history file path is not valid: {}"
 msgstr "MDI history file path is not valid: {}"
 
@@ -655,8 +710,9 @@ msgid "%.1f Minutes"
 msgstr "%.1f Minutes"
 
 #: alterx/gui/path_viewer/gl/path_viewer_gl.py:331
-#, python-format
-msgid "%d Ceconds"
+#, fuzzy, python-format
+#| msgid "%d Ceconds"
+msgid "%d Seconds"
 msgstr "%d Ceconds"
 
 #: alterx/gui/path_viewer/gl/path_viewer_gl.py:339
@@ -685,16 +741,21 @@ msgid "Press enter to exit."
 msgstr "Press enter to exit."
 
 #: alterx/gui/qt_bindings.py:48
+#, fuzzy
+#| msgid ""
+#| "Deprecated QString API detected.\n"
+#| "Awlsim does not support PyQt QString v1 API.\n"
+#| "---> Please use PySide2 or a newer PyQt5. <---"
 msgid ""
 "Deprecated QString API detected.\n"
-"Awlsim does not support PyQt QString v1 API.\n"
+"AlterX does not support PyQt QString v1 API.\n"
 "---> Please use PySide2 or a newer PyQt5. <---"
 msgstr ""
 "Deprecated QString API detected.\n"
 "Awlsim does not support PyQt QString v1 API.\n"
 "---> Please use PySide2 or a newer PyQt5. <---"
 
-#: alterx/gui/qt_bindings.py:92
+#: alterx/gui/qt_bindings.py:96
 msgid ""
 "Failed to import PySide2 modules:\n"
 " {}"
@@ -702,7 +763,7 @@ msgstr ""
 "Failed to import PySide2 modules:\n"
 " {}"
 
-#: alterx/gui/qt_bindings.py:100
+#: alterx/gui/qt_bindings.py:105
 msgid ""
 "Failed to import PyQt5 modules:\n"
 " {}"
@@ -710,10 +771,14 @@ msgstr ""
 "Failed to import PyQt5 modules:\n"
 " {}"
 
-#: alterx/gui/qt_bindings.py:103
+#: alterx/gui/qt_bindings.py:108
+#, fuzzy
+#| msgid ""
+#| "Unknown GUI framework '{}' requested.\n"
+#| "Please fix the AWLSIM_GUI environment variable."
 msgid ""
 "Unknown GUI framework '{}' requested.\n"
-"Please fix the AWLSIM_GUI environment variable."
+"Please fix the ALTERX_GUI environment variable."
 msgstr ""
 "Unknown GUI framework '{}' requested.\n"
 "Please fix the AWLSIM_GUI environment variable."
@@ -774,11 +839,11 @@ msgstr "Style sheet editor"
 msgid "Failed to set stylesheet path,{}"
 msgstr "Failed to set stylesheet path,{}"
 
-#: alterx/gui/style_editor.py:231
+#: alterx/gui/style_editor.py:233
 msgid "Failed to load stylesheet {}"
 msgstr "Failed to load stylesheet {}"
 
-#: alterx/gui/style_editor.py:242
+#: alterx/gui/style_editor.py:244
 msgid "Failed to save stylesheet {}"
 msgstr "Failed to save stylesheet {}"
 
@@ -883,7 +948,9 @@ msgid "Comment"
 msgstr "Comment"
 
 #: alterx/gui/tool_viewer.py:297
-msgid "Toolfile does not exist' {}"
+#, fuzzy
+#| msgid "Toolfile does not exist' {}"
+msgid "Toolfile does not exist {}"
 msgstr "Toolfile does not exist' {}"
 
 #: alterx/gui/tool_viewer.py:348
@@ -918,42 +985,54 @@ msgstr "Tool offsetpage widget error: MDI call error, {}"
 msgid "Invaliad data type in row {} column:{} "
 msgstr "Invaliad data type in row {} column:{} "
 
-#: alterx/gui/unlock_widget.py:46 alterx/gui/unlock_widget.py:54
-#: alterx/gui/unlock_widget.py:145 alterx/gui/unlock_widget.py:153
-#: alterx/gui/unlock_widget.py:160
-msgid "Unlock"
-msgstr "Unlock"
+#: alterx/gui/unlock_widget.py:46
+msgid "Docs"
+msgstr ""
 
-#: alterx/gui/unlock_widget.py:48
+#: alterx/gui/unlock_widget.py:106
+#, fuzzy
+#| msgid "Lock settings"
+msgid "Unlock settings"
+msgstr "Lock settings"
+
+#: alterx/gui/unlock_widget.py:108
 msgid "Enter password:"
 msgstr "Enter password:"
 
-#: alterx/gui/unlock_widget.py:66
+#: alterx/gui/unlock_widget.py:116 alterx/gui/unlock_widget.py:207
+msgid "Unlock"
+msgstr "Unlock"
+
+#: alterx/gui/unlock_widget.py:128
 msgid "Lock settings"
 msgstr "Lock settings"
 
-#: alterx/gui/unlock_widget.py:71
+#: alterx/gui/unlock_widget.py:133
 msgid "New password:"
 msgstr "New password:"
 
-#: alterx/gui/unlock_widget.py:84
+#: alterx/gui/unlock_widget.py:146
 msgid "Load configuration"
 msgstr "Load configuration"
 
-#: alterx/gui/unlock_widget.py:89
+#: alterx/gui/unlock_widget.py:151
 msgid "Save configuration"
 msgstr "Save configuration"
 
-#: alterx/gui/unlock_widget.py:146
+#: alterx/gui/unlock_widget.py:208
 msgid "Password changed\n"
 msgstr "Password changed\n"
 
-#: alterx/gui/unlock_widget.py:154
-msgid "Access granted\n"
+#: alterx/gui/unlock_widget.py:215
+#, fuzzy
+#| msgid "Access granted\n"
+msgid "Access granted"
 msgstr "Access granted\n"
 
-#: alterx/gui/unlock_widget.py:161
-msgid "Access denied\n"
+#: alterx/gui/unlock_widget.py:217
+#, fuzzy
+#| msgid "Access denied\n"
+msgid "Access denied"
 msgstr "Access denied\n"
 
 #: alterx/gui/util.py:64
@@ -1270,10 +1349,6 @@ msgstr "Button filemanager previous clicked"
 msgid "Button filemanager select clicked"
 msgstr "Button filemanager select clicked"
 
-#: menus/manual/exit/module.py:42
-msgid "Button exit clicked"
-msgstr "Button exit clicked"
-
 #: menus/manual/jog_0001/module.py:44
 msgid "Button set JOG 0.001 clicked"
 msgstr "Button set JOG 0.001 clicked"
@@ -1313,6 +1388,10 @@ msgstr "Button JOG joystick clicked"
 #: menus/manual/jog_enc/module.py:60
 msgid "Button JOG encoder clicked"
 msgstr "Button JOG encoder clicked"
+
+#: menus/manual/poweroff/module.py:42 menus/settings/exit/module.py:42
+msgid "Button exit clicked"
+msgstr "Button exit clicked"
 
 #: menus/mdi/macro_stop/module.py:44
 msgid "Button macro stop clicked"
@@ -1366,6 +1445,34 @@ msgstr "Settings page next button clicked"
 msgid "Settings page prev button clicked"
 msgstr "Settings page prev button clicked"
 
+#: menus/settings/restart/module.py:42
+#, fuzzy
+#| msgid "Button exit clicked"
+msgid "Button restart clicked"
+msgstr "Button exit clicked"
+
+#: menus/settings/save_log/module.py:44
+#, fuzzy
+#| msgid "Button save as clicked"
+msgid "Button save log clicked"
+msgstr "Button save as clicked"
+
+#: menus/settings/save_log/module.py:61
+#, fuzzy
+#| msgid "Logfile: {}"
+msgid "Open log failed: {}"
+msgstr "Logfile: {}"
+
+#: menus/settings/save_log/module.py:66
+msgid "Open directory"
+msgstr ""
+
+#: menus/settings/save_log/module.py:72
+#, fuzzy
+#| msgid "Save line: {}"
+msgid "Save log '{}' failed: {}"
+msgstr "Save line: {}"
+
 #: menus/tool/add_tool/module.py:44
 msgid "Tool viewer add button clicked"
 msgstr "Tool viewer add button clicked"
@@ -1406,136 +1513,92 @@ msgstr "Tool viewer prev button clicked"
 msgid "Tool viewer right button clicked"
 msgstr "Tool viewer right button clicked"
 
-#: alterx/configs/axis_wizard.cfg:17
-#, python-brace-format
-msgid "AXIS_{0} Step"
-msgstr "AXIS_{0} Step"
+#~ msgid "Custom lexer for the G code programming languages"
+#~ msgstr "Custom lexer for the G code programming languages"
 
-#: alterx/configs/axis_wizard.cfg:17
-#, python-brace-format
-msgid "Add default stepper HAL configuration for AXIS_{0}({1})"
-msgstr "Add default stepper HAL configuration for AXIS_{0}({1})"
+#~ msgid "AXIS_{0} Step"
+#~ msgstr "AXIS_{0} Step"
 
-#: alterx/configs/axis_wizard.cfg:18
-#, python-brace-format
-msgid "AXIS_{0} Servo"
-msgstr "AXIS_{0} Servo"
+#~ msgid "Add default stepper HAL configuration for AXIS_{0}({1})"
+#~ msgstr "Add default stepper HAL configuration for AXIS_{0}({1})"
 
-#: alterx/configs/axis_wizard.cfg:18
-#, python-brace-format
-msgid "Add default servo HAL configuration for AXIS_{0}({1})"
-msgstr "Add default servo HAL configuration for AXIS_{0}({1})"
+#~ msgid "AXIS_{0} Servo"
+#~ msgstr "AXIS_{0} Servo"
 
-#: alterx/configs/default_wizard.cfg:15
-msgid "Enter the name of the machine."
-msgstr "Enter the name of the machine."
+#~ msgid "Add default servo HAL configuration for AXIS_{0}({1})"
+#~ msgstr "Add default servo HAL configuration for AXIS_{0}({1})"
 
-#: alterx/configs/default_wizard.cfg:16
-msgid "Version"
-msgstr "Version"
+#~ msgid "Enter the name of the machine."
+#~ msgstr "Enter the name of the machine."
 
-#: alterx/configs/default_wizard.cfg:16
-msgid "Enter the version of LinuxCNC core."
-msgstr "Enter the version of LinuxCNC core."
+#~ msgid "Version"
+#~ msgstr "Version"
 
-#: alterx/configs/default_wizard.cfg:17
-msgid "Lathe"
-msgstr "Lathe"
+#~ msgid "Enter the version of LinuxCNC core."
+#~ msgstr "Enter the version of LinuxCNC core."
 
-#: alterx/configs/default_wizard.cfg:17
-msgid "Is this machine a lathe?"
-msgstr "Is this machine a lathe?"
+#~ msgid "Lathe"
+#~ msgstr "Lathe"
 
-#: alterx/configs/default_wizard.cfg:18
-msgid "Base period"
-msgstr "Base period"
+#~ msgid "Is this machine a lathe?"
+#~ msgstr "Is this machine a lathe?"
 
-#: alterx/configs/default_wizard.cfg:18
-msgid ""
-"Enter task period, in nanoseconds - this is the fastest thread in the "
-"machine."
-msgstr ""
-"Enter task period, in nanoseconds - this is the fastest thread in the "
-"machine."
+#~ msgid "Base period"
+#~ msgstr "Base period"
 
-#: alterx/configs/default_wizard.cfg:19
-msgid "Servo period"
-msgstr "Servo period"
+#~ msgid "Enter task period, in nanoseconds - this is the fastest thread in the machine."
+#~ msgstr "Enter task period, in nanoseconds - this is the fastest thread in the machine."
 
-#: alterx/configs/default_wizard.cfg:19
-msgid ""
-"Enter \"servo\" task period, in nanoseconds - this is the low-speed thread "
-"in the machine."
-msgstr ""
-"Enter \"servo\" task period, in nanoseconds - this is the low-speed thread "
-"in the machine."
+#~ msgid "Servo period"
+#~ msgstr "Servo period"
 
-#: alterx/configs/default_wizard.cfg:20
-msgid "Axes"
-msgstr "Axes"
+#~ msgid "Enter \"servo\" task period, in nanoseconds - this is the low-speed thread in the machine."
+#~ msgstr "Enter \"servo\" task period, in nanoseconds - this is the low-speed thread in the machine."
 
-#: alterx/configs/default_wizard.cfg:20
-msgid "Enter the number of axes."
-msgstr "Enter the number of axes."
+#~ msgid "Axes"
+#~ msgstr "Axes"
 
-#: alterx/configs/default_wizard.cfg:21
-msgid "Axis names"
-msgstr "Axis names"
+#~ msgid "Enter the number of axes."
+#~ msgstr "Enter the number of axes."
 
-#: alterx/configs/default_wizard.cfg:21
-msgid "Enter the names of all axes(space separeted)."
-msgstr "Enter the names of all axes(space separeted)."
+#~ msgid "Axis names"
+#~ msgstr "Axis names"
 
-#: alterx/configs/default_wizard.cfg:22
-msgid "LPT"
-msgstr "LPT"
+#~ msgid "Enter the names of all axes(space separeted)."
+#~ msgstr "Enter the names of all axes(space separeted)."
 
-#: alterx/configs/default_wizard.cfg:22
-msgid "Add configuration for using LPT port on this machine?"
-msgstr "Add configuration for using LPT port on this machine?"
+#~ msgid "LPT"
+#~ msgstr "LPT"
 
-#: alterx/configs/default_wizard.cfg:23
-msgid "HM2"
-msgstr "HM2"
+#~ msgid "Add configuration for using LPT port on this machine?"
+#~ msgstr "Add configuration for using LPT port on this machine?"
 
-#: alterx/configs/default_wizard.cfg:23
-msgid "Add configuration for using HOSTMOT2 interface on this machine?"
-msgstr "Add configuration for using HOSTMOT2 interface on this machine?"
+#~ msgid "HM2"
+#~ msgstr "HM2"
 
-#: alterx/configs/default_wizard.cfg:24
-msgid "HM2_ETH"
-msgstr "HM2_ETH"
+#~ msgid "Add configuration for using HOSTMOT2 interface on this machine?"
+#~ msgstr "Add configuration for using HOSTMOT2 interface on this machine?"
 
-#: alterx/configs/default_wizard.cfg:24
-msgid ""
-"Add configuration for using ethernet HOSTMOT2 interface on this machine?"
-msgstr ""
-"Add configuration for using ethernet HOSTMOT2 interface on this machine?"
+#~ msgid "HM2_ETH"
+#~ msgstr "HM2_ETH"
 
-#: alterx/configs/default_wizard.cfg:25
-msgid "Axis wizard"
-msgstr "Axis wizard"
+#~ msgid "Add configuration for using ethernet HOSTMOT2 interface on this machine?"
+#~ msgstr "Add configuration for using ethernet HOSTMOT2 interface on this machine?"
 
-#: alterx/configs/default_wizard.cfg:25
-msgid "Run axis wizard?"
-msgstr "Run axis wizard?"
+#~ msgid "Axis wizard"
+#~ msgstr "Axis wizard"
 
-#: alterx/configs/joint_wizard.cfg:17
-#, python-brace-format
-msgid "JOINT_{0} Step"
-msgstr "JOINT_{0} Step"
+#~ msgid "Run axis wizard?"
+#~ msgstr "Run axis wizard?"
 
-#: alterx/configs/joint_wizard.cfg:17
-#, python-brace-format
-msgid "Add default stepper HAL configuration for JOINT_{0}({1})"
-msgstr "Add default stepper HAL configuration for JOINT_{0}({1})"
+#~ msgid "JOINT_{0} Step"
+#~ msgstr "JOINT_{0} Step"
 
-#: alterx/configs/joint_wizard.cfg:18
-#, python-brace-format
-msgid "JOINT_{0} Servo"
-msgstr "JOINT_{0} Servo"
+#~ msgid "Add default stepper HAL configuration for JOINT_{0}({1})"
+#~ msgstr "Add default stepper HAL configuration for JOINT_{0}({1})"
 
-#: alterx/configs/joint_wizard.cfg:18
-#, python-brace-format
-msgid "Add default servo HAL configuration for JOINT_{0}({1})"
-msgstr "Add default servo HAL configuration for JOINT_{0}({1})"
+#~ msgid "JOINT_{0} Servo"
+#~ msgstr "JOINT_{0} Servo"
+
+#~ msgid "Add default servo HAL configuration for JOINT_{0}({1})"
+#~ msgstr "Add default servo HAL configuration for JOINT_{0}({1})"

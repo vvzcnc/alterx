@@ -46,7 +46,7 @@ def __testQStringAPI(scope, silent=False):
         if silent:
             return False
         __frameworkError(_("Deprecated QString API detected.\n"
-                           "Awlsim does not support PyQt QString v1 API.\n"
+                           "AlterX does not support PyQt QString v1 API.\n"
                            "---> Please use PySide2 or a newer PyQt5. <---"))
     return True
 
@@ -70,7 +70,7 @@ def __autodetectGuiFramework():
                       urls["pyqt"]))
 
 
-# The Qt bindings can be set via AWLSIM_GUI environment variable.
+# The Qt bindings can be set via ALTERX_GUI environment variable.
 __guiFramework = AlterxEnv.getGuiFramework()
 
 # Run Qt autodetection
@@ -106,7 +106,7 @@ elif __guiFramework == "pyqt5":
     __testQStringAPI(globals())
 else:
     __frameworkError(_("Unknown GUI framework '{}' requested.\n"
-                       "Please fix the AWLSIM_GUI environment variable.",
+                       "Please fix the ALTERX_GUI environment variable.",
                        __guiFramework))
 
 

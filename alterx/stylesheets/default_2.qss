@@ -67,6 +67,8 @@ QPushButton{
     border-radius: 11px;
     padding: 5px;
     background: #cccccc;
+    min-height: 10px;
+    min-width: 5px;
     }
 
 QPushButton[active=true]{

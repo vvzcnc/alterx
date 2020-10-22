@@ -404,12 +404,18 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
 
         self.renderer.ResetCamera()
 
-        self.interactor.AddObserver("LeftButtonPressEvent", self.button_event)
-        self.interactor.AddObserver("LeftButtonReleaseEvent", self.button_event)
-        self.interactor.AddObserver("MiddleButtonPressEvent", self.button_event)
-        self.interactor.AddObserver("MiddleButtonReleaseEvent", self.button_event)
-        self.interactor.AddObserver("RightButtonPressEvent", self.button_event)
-        self.interactor.AddObserver("RightButtonReleaseEvent", self.button_event)
+        self.interactor.AddObserver("LeftButtonPressEvent", 
+			self.button_event)
+        self.interactor.AddObserver("LeftButtonReleaseEvent", 
+			self.button_event)
+        self.interactor.AddObserver("MiddleButtonPressEvent", 
+			self.button_event)
+        self.interactor.AddObserver("MiddleButtonReleaseEvent", 
+			self.button_event)
+        self.interactor.AddObserver("RightButtonPressEvent", 
+			self.button_event)
+        self.interactor.AddObserver("RightButtonReleaseEvent", 
+			self.button_event)
         self.interactor.AddObserver("MouseMoveEvent", self.mouse_move)
         self.interactor.AddObserver("KeyPressEvent", self.keypress)
         self.interactor.AddObserver("MouseWheelForwardEvent", 
@@ -513,6 +519,10 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
 
         self.corner_annotation.SetText(2,text)
 
+    def get_units(self):
+        #translated units cause unicode conversion error
+        return "inch" if STAT.program_units == 1 else "mm"
+
     def program_units(self,stat):   
         self.machine_actor.SetXAxisRange(
                         self.axis[0]["min_position_limit"]*INFO.units_factor,
@@ -524,9 +534,11 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
                         self.axis[2]["min_position_limit"]*INFO.units_factor,
                         self.axis[2]["max_position_limit"]*INFO.units_factor)
         
-        self.machine_actor.SetXUnits(INFO.linear_units)
-        self.machine_actor.SetYUnits(INFO.linear_units)
-        self.machine_actor.SetZUnits(INFO.linear_units)
+        
+        
+        self.machine_actor.SetXUnits(self.get_units())
+        self.machine_actor.SetYUnits(self.get_units())
+        self.machine_actor.SetZUnits(self.get_units())
         
         for origin, actor in self.path_actors.items():
             extents_actor = self.extents[origin]
@@ -1231,9 +1243,9 @@ class PathBoundaries:
             #cube_axes_actor.GetLabelTextProperty(i).SetOpacity(0.5)
         
         screen_size = max([
-        (path_range[1]-path_range[0])/(machine_range[1]-machine_range[0]),
-        (path_range[3]-path_range[2])/(machine_range[3]-machine_range[2]),
-        (path_range[5]-path_range[4])/(machine_range[5]-machine_range[4])])
+        (path_range[1]-path_range[0])/(1+machine_range[1]-machine_range[0]),
+        (path_range[3]-path_range[2])/(1+machine_range[3]-machine_range[2]),
+        (path_range[5]-path_range[4])/(1+machine_range[5]-machine_range[4])])
 
         cube_axes_actor.SetScreenSize(screen_size*10)
         cube_axes_actor.SetLabelOffset(screen_size*20)
@@ -1396,7 +1408,7 @@ class Machine:
                 )().SetColor(1.0, 1.0, 1.0)
                 
             getattr(self.actor,
-                "Set{}Units".format(axis))(INFO.linear_units)
+                "Set{}Units".format(axis))(parent.get_units())
 
             getattr(self.actor,
                 "Get{}AxesGridlinesProperty".format(axis)

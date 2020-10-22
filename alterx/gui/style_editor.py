@@ -40,7 +40,7 @@ class StyleSheetEditor(QWidget):
 
         layout = QVBoxLayout()
         
-        label = QLabel("Stylesheet Editor")
+        label = QLabel(_("Stylesheet Editor"))
         label.setObjectName("lbl_settings_styleeditor")
         layout.addWidget(label)
         

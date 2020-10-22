@@ -12,4 +12,5 @@
     crcmod \
     pyudev \
     serial \
-    pyqtgraph )
+    pyqtgraph \
+    polib )

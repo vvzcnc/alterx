@@ -99,7 +99,7 @@ class UnlockWidget(QWidget):
         parent.blocked = PREF.getpref("blocked", True, bool)
         self.parent = parent
         hlay = QHBoxLayout()
-        hlay.addWidget(DocBrowser())
+        hlay.addWidget(DocBrowser(),2)
         
         vlay = QVBoxLayout()
         vlay.setContentsMargins(0, 0, 0, 0)
@@ -155,7 +155,7 @@ class UnlockWidget(QWidget):
         
         vlay.addWidget(self.change_pw_widget)
         vlay.addStretch()
-        hlay.addLayout(vlay)
+        hlay.addLayout(vlay,1)
         hlay.addStretch()
         self.setLayout(hlay)
         try:
