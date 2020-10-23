@@ -1,3 +1,3 @@
 #!/bin/sh
-cd ../linuxcnc
+cd linuxcnc
 halcompile --install ascope.c

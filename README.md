@@ -43,9 +43,11 @@ The main modules implement most of AlterX's functionality.
 .  alterx/                   : Main AlterX Python-module directory.
 .  alterx/common             : Common libraries, modules and helper functions.
 .  alterx/core               : AlterX core. This is where the LinuxCNC data is processing.
+.  alterx/docs               : AlterX and LinuxCNC documentation.
 .  alterx/gui                : Graphical user interface implementation (Qt).
 .  alterx/configs            : Configs for create default files (INI, HAL or etc.).
 .  alterx/images             : Main menu images.
+.  alterx/locales            : Translation files.
 .  alterx/stylesheets        : AlterX css stylesheets.
 .  linuxcnc/                 : LinuxCNC componets directory.
 .  menus/                    : AlterX bottom menu widgets directory.
@@ -53,10 +55,21 @@ The main modules implement most of AlterX's functionality.
 </pre>
 
 ## Dependencies
-    pass
+Installing AlterX on Debian based systems:
+<pre>
+cd path/to/alterx
+sudo ./maintenance/deb-dependencies-install.sh
+</pre>
 
-## Build
-    pass
+To install alterx on windows you need to execute win-install-dependencies.cmd file.
+Note that on windows system alterx can work only in recovery mode.
+
+## Setup
+Setup script build translated files and linuxcnc components.
+<pre>
+cd path/to/alterx
+sudo ./setup.py
+</pre>
 
 ## Licence / Copyright
 
