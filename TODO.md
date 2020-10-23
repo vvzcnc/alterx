@@ -20,6 +20,7 @@
 * Pyside dependencies install
 * Add locales
 * Add notes inside widgets
+* Docs translate
 
 ## Need more time:
 

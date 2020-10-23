@@ -66,16 +66,20 @@ class DocBrowser(QWidget):
         else:
             if task_state == LINUXCNC.STATE_ESTOP:
                 self.load("estop")
-            elif task_state == LINUXCNC.STATE_OFF:
+            elif ( task_state == LINUXCNC.STATE_OFF or
+                 task_state == LINUXCNC.STATE_ESTOP_RESET ):
                 self.load("turn_on")
             elif ( task_state == LINUXCNC.STATE_ON and 
-                    STAT.homed != tuple(INFO.homed_list)):
+                STAT.homed != tuple(INFO.homed_list) ):
                 self.load("home")
-            elif task_mode == LINUXCNC.MODE_MANUAL:
+            elif ( task_mode == LINUXCNC.MODE_MANUAL and 
+                task_state == LINUXCNC.STATE_ON ):
                 self.load("manual")
-            elif task_mode == LINUXCNC.MODE_MDI:
+            elif ( task_mode == LINUXCNC.MODE_MDI and 
+                task_state == LINUXCNC.STATE_ON ):
                 self.load("mdi")
-            elif task_mode == LINUXCNC.MODE_AUTO:
+            elif ( task_mode == LINUXCNC.MODE_AUTO and 
+                task_state == LINUXCNC.STATE_ON):
                 self.load("auto")
           
     def load(self, docname):

@@ -6,7 +6,12 @@ Alterx is written in Python and some componets for LinuxCNC in C.
 See the [quick start tutorial](QUICK-START.md) for a simple example on how to use AlterX. In recovery mode AlterX can be run on any desktop PC. No special hardware is required.
     
 ## Example
-    pass
+If you don't know where to start, you can find an example project in the `examples` directory. You can easily run this example in simulation mode without the need for special hardware.
+
+<pre>
+cd path/to/alterx
+./examples/linuxcnc-demo_2.8/run-linuxcnc-demo.sh 
+</pre>
     
 ## Git repository
 The latest development version of AlterX can be fetched with git:
@@ -70,6 +75,11 @@ Setup script build translated files and linuxcnc components.
 cd path/to/alterx
 sudo ./setup.py
 </pre>
+
+## Usefull links
+[Awlsim project by Michael Büsch](https://github.com/mbuesch/awlsim)
+[QtPyVCP project by KCJ Engineering ](https://github.com/kcjengr/qtpyvcp)
+[LinuxCNC project](https://github.com/LinuxCNC/linuxcnc)
 
 ## Licence / Copyright
 
