@@ -46,7 +46,19 @@ class DocBrowser(QWidget):
         vlay.addWidget(QLabel(_("Docs")))
         vlay.addWidget(HSeparator())
         
+        tb = QToolBar()
         self.browser = QWebView()
+        for a in (QWebPage.Back, QWebPage.Forward, QWebPage.Reload):
+            tb.addAction(self.browser.pageAction(a))
+        vlay.addWidget(tb)
+        
+        tb.addWidget(QLabel(_("Search:")))
+        self.search = QLineEdit(returnPressed = lambda: self.browser.findText(self.search.text()))
+        tb.addWidget(self.search)
+        
+        self.showSearch = QShortcut("Ctrl+F", self, activated = lambda: (self.search.show() , self.search.setFocus()))
+        self.hideSearch = QShortcut("Esc", self, activated = lambda: (self.search.hide(), self.browser.setFocus()))
+        
         vlay.addWidget(self.browser)
         vlay.addStretch()
         self.setLayout(vlay)
@@ -85,9 +97,9 @@ class DocBrowser(QWidget):
     def load(self, docname):
         filepath = ""
         if os.path.isfile(os.path.join(self.docs_dir,
-            "{}{}.html".format(docname,'_'.join(_._locale[:2])))):
+            "{}_{}.html".format(docname,_._locale[:2]))):
             filepath = os.path.join(self.docs_dir,
-                "{}{}.html".format(docname,'_'.join(_._locale[:2])))
+                "{}_{}.html".format(docname,_._locale[:2]))
         elif os.path.isfile(os.path.join(self.docs_dir,
             "{}.html".format(docname))):
             filepath = os.path.join(self.docs_dir,

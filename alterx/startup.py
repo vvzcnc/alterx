@@ -24,6 +24,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from alterx.common.compat import *
 from alterx.common.util import *
 from alterx.common.locale import _
+from alterx.common.preferences import Config
 
 from alterx.gui.util import *
 
@@ -101,11 +102,10 @@ if not ini:
     QMessageBox.Ok,
     QMessageBox.Ok)
 else:
-    parameters = ConfigParser.ConfigParser()
-    parameters.read(ini)
+    parameters = Config(ini)
 
     try:
-        log = parameters.get("DISPLAY", "LOG_FILE")
+        log = parameters.find("DISPLAY", "LOG_FILE")
         logger.setLogfile(os.path.expanduser(log))
     except Exception as e:
         printError(_("Get preference error: {} ", e))

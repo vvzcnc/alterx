@@ -20,17 +20,29 @@
 #
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-__all__ = ['PREF']
+__all__ = ['PREF','Config']
 
 from alterx.common.locale import _
 from alterx.common.compat import *
 from alterx.common import *
 
-from alterx.core.linuxcnc import *
-
 import base64
 import io
 import codecs
+
+class Config(ConfigParser.ConfigParser):
+    def __init__(self,inifile):
+        ConfigParser.ConfigParser.__init__(self)
+        try:
+            self.read(inifile)
+        except Exception as e:
+            printError(_("Read ini-file error: {} ", e))
+
+    def find(self,*args):
+        try:
+            return self.get(*args)
+        except:
+            return
 
 class Preferences(ConfigParser.ConfigParser):
     def __init__(self):
@@ -43,7 +55,8 @@ class Preferences(ConfigParser.ConfigParser):
             repr: lambda section, option: eval(self.get(section, option)),
         }
 
-        path = INFO.preferences_file
+        self.ini = Config(os.environ['INI_FILE_NAME'])
+        path = self.ini.find("DISPLAY", "PREFERENCE_FILE_PATH") or 'preferences.var'
 
         self.fn = os.path.expanduser(path)
         if os.path.exists(self.fn):

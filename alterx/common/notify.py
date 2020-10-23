@@ -25,7 +25,8 @@ __all__ = ['Notify']
 
 from alterx.common.compat import *
 from alterx.gui.util import *
-
+from alterx.common.preferences import PREF
+        
 MESSAGES = []
 
 
@@ -61,10 +62,28 @@ def get_pos(widget):
     
     
 class Notify(QLabel):
+    def set_stylesheet(self):
+        ss_name = os.path.join(STYLESHEET_DIR, PREF.getpref(
+        "stylesheet", "default.qss", str))
+
+        if not os.path.isfile(ss_name):
+            ss_name = os.path.join(STYLESHEET_DIR, "default.qss")
+        try:
+            with open(ss_name,'r') as file:
+                stylesheet = file.read()
+                stylesheet = toUnicode(stylesheet)
+                self.setStyleSheet(stylesheet)
+        except Exception as e:
+            pass     
+            
     def __init__(self,msg,delay=None,parent=None):
         QLabel.__init__(self,msg,parent)
+
+        self.setObjectName("lbl_notify_{}".format(count_messages()))
         self.width = 300
         self.height = 75
+        
+        self.set_stylesheet()
         
         self.setWindowFlags(Qt.ToolTip)
         #self.setAttribute(Qt.WA_NoSystemBackground,True)
@@ -73,9 +92,9 @@ class Notify(QLabel):
         #self.setAutoFillBackground(False)
 
         self.resize(self.width, self.height)
-        self.setStyleSheet("background: qlineargradient(x1:0 y1:0, x2:1 y2:0,"
-                "stop: 0 gray, stop:1 white);"
-                "font-size: 15pt;")
+        #self.setStyleSheet("background: qlineargradient(x1:0 y1:0, x2:1 y2:0,"
+        #        "stop: 0 gray, stop:1 white);"
+        #        "font-size: 15pt;")
         self.setWordWrap(True)
         self.show()
         
