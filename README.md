@@ -17,7 +17,7 @@ cd path/to/alterx
 The latest development version of AlterX can be fetched with git:
 
 <pre>
-git https://github.com/uncle-yura/alterx.git
+git clone https://github.com/uncle-yura/alterx.git
 cd alterx
 </pre>
 
@@ -78,8 +78,11 @@ sudo ./setup.py
 
 ## Usefull links
 [Awlsim project by Michael Büsch](https://github.com/mbuesch/awlsim)
+
 [QtPyVCP project by KCJ Engineering ](https://github.com/kcjengr/qtpyvcp)
+
 [LinuxCNC project](https://github.com/LinuxCNC/linuxcnc)
+
 
 ## Licence / Copyright
 
