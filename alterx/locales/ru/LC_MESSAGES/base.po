@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alterx\n"
 "POT-Creation-Date: 2020-10-22 12:35+0300\n"
-"PO-Revision-Date: 2020-10-22 13:29+0300\n"
+"PO-Revision-Date: 2020-10-27 11:42+0200\n"
 "Last-Translator: uncle-yura <uncle-yura@tuta.io>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -569,11 +569,11 @@ msgstr "БП: {}%"
 
 #: alterx/gui/main_screen.py:329
 msgid "Disactivated"
-msgstr "Заблокировано"
+msgstr "Блок."
 
 #: alterx/gui/main_screen.py:329
 msgid "Activated"
-msgstr "Активировано"
+msgstr "Актив."
 
 #: alterx/gui/main_screen.py:330
 msgid "Increment"
@@ -581,11 +581,11 @@ msgstr "Инкремент"
 
 #: alterx/gui/main_screen.py:330
 msgid "Continuous"
-msgstr "Продолжительный"
+msgstr "Постоянный"
 
 #: alterx/gui/main_screen.py:331
 msgid "Joystick"
-msgstr "Джойстик"
+msgstr "Пульт"
 
 #: alterx/gui/main_screen.py:331
 msgid "Encoder"
@@ -613,7 +613,7 @@ msgstr "Режим: "
 
 #: alterx/gui/main_screen.py:367 alterx/gui/main_screen.py:408
 msgid "Device: "
-msgstr "Устройство: "
+msgstr "Устр.: "
 
 #: alterx/gui/main_screen.py:384
 msgid "Speed: {}%"
