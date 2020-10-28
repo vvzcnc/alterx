@@ -8,6 +8,8 @@ from . import view_y
 from . import view_z
 from . import zoom_in
 from . import zoom_out
+from . import path
+from . import dimensions
 
 buttons_order = [
     'delete_view',
@@ -17,4 +19,6 @@ buttons_order = [
     'view_z',
     'zoom_in',
     'zoom_out',
+    'path',
+    'dimensions',
 ]

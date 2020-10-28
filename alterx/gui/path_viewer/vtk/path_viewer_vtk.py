@@ -467,10 +467,15 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         UPDATER.add("display_zoomin")
         UPDATER.add("display_zoomout")
 
+        UPDATER.add("display_path")
+        UPDATER.add("display_dimensions")
+
         UPDATER.signal("display_clear", lambda s: self.clearLivePlot())
         UPDATER.signal("display_view", lambda s: self.setCurrentView(s))
         UPDATER.signal("display_zoomin", lambda s: self.zoomIn())
         UPDATER.signal("display_zoomout", lambda s: self.zoomOut())
+        UPDATER.signal("display_path", lambda s: self.toggleLivePlotVisibility())
+        UPDATER.signal("display_dimensions", lambda s: self.toggleProgramDimensions())
 
         self.line = None
         self._last_filename = str()
@@ -1037,6 +1042,10 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.renderer.AddActor(self.path_cache_actor)
         self.update_render()
 
+    def toggleLivePlotVisibility(self):
+        self.path_cache_actor.SetVisibility(not self.path_cache_actor.GetVisibility())
+	self.update_render()
+
     def enable_panning(self, enabled):
         self.pan_mode = enabled
 
@@ -1079,6 +1088,10 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
             self.machine_actor.DrawYGridlinesOff()
             self.machine_actor.DrawZGridlinesOff()
         self.update_render()
+
+    def toggleProgramDimensions(self):
+        self.toggleProgramBounds()
+        self.toggleProgramLabels()
 
     def toggleProgramBounds(self):
         self.visibleProgramBounds(not self.show_program_boundry)

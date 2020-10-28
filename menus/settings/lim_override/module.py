@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# AlterX GUI - unhome ALL
+# AlterX GUI - ignore limits widget
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
@@ -25,9 +25,8 @@ from alterx.common.locale import _
 from alterx.common.compat import *
 from alterx.common import *
 from alterx.gui.util import *
-from alterx.core.linuxcnc import COMMAND as c
-from alterx.core.linuxcnc import LINUXCNC as l
 
+from alterx.core.linuxcnc import COMMAND
 
 class func:
     def __init__(self, button):
@@ -41,8 +40,5 @@ class func:
             button.setStyleSheet("color:black")
 
     def execute(self):
-        printVerbose(_("Command Unhome ALL"))
-        c.state(l.STATE_OFF)
-        c.teleop_enable(False)
-        c.wait_complete()
-        c.unhome(-1)
+        printVerbose(_("Button ignore limits clicked"))
+        COMMAND.override_limits()

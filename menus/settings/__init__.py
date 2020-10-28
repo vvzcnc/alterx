@@ -6,6 +6,7 @@ from . import prev_page
 from . import exit
 from . import restart
 from . import save_log
+from . import lim_override
 
 buttons_order = [
     "prev_page",
@@ -13,7 +14,7 @@ buttons_order = [
     None,
     None,
     None,
-    None,
+    "lim_override",
     None,
     "save_log",
     None,

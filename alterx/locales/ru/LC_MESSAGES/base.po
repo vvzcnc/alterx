@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: alterx\n"
-"POT-Creation-Date: 2020-10-22 12:35+0300\n"
-"PO-Revision-Date: 2020-10-27 11:42+0200\n"
+"POT-Creation-Date: 2020-10-28 15:02+0200\n"
+"PO-Revision-Date: 2020-10-28 15:07+0200\n"
 "Last-Translator: uncle-yura <uncle-yura@tuta.io>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -15,11 +15,15 @@ msgstr ""
 "X-Poedit-SearchPath-0: .\n"
 "X-Poedit-SearchPathExcluded-0: tabs\n"
 
-#: alterx/common/preferences.py:57
+#: alterx/common/preferences.py:39
+msgid "Read ini-file error: {} "
+msgstr "Ошибка чтения ini-файла: {} "
+
+#: alterx/common/preferences.py:70
 msgid "Preferences file is not exist."
 msgstr "Файл настроек не существует."
 
-#: alterx/common/preferences.py:64
+#: alterx/common/preferences.py:77
 msgid "Failed to get preference: {} "
 msgstr "Не удалось загрузить настройку: {} "
 
@@ -66,7 +70,7 @@ msgstr "Не удалось вызвать '{}' обработчик {}: '{}'"
 
 #: alterx/core/linuxcnc.py:264
 msgid "Failed to emit signal. Signal '{}' no exist"
-msgstr "Не удалось имитировать сигнал. Сигнал '{}' не существет"
+msgstr "Не удалось имитировать сигнал. Сигнал '{}' не существует"
 
 #: alterx/core/linuxcnc.py:273
 msgid "Failed to add listener. Listener '{}' already exist"
@@ -458,7 +462,7 @@ msgstr "Авто"
 msgid "One Shot"
 msgstr "Одиночный"
 
-#: alterx/gui/halpin_viewer.py:211 alterx/gui/unlock_widget.py:139
+#: alterx/gui/halpin_viewer.py:211 alterx/gui/unlock_widget.py:155
 msgid "Change"
 msgstr "Смена"
 
@@ -484,7 +488,7 @@ msgstr "Осцилограф"
 
 #: alterx/gui/halpin_viewer.py:290
 msgid "Failed to send run cmd: {}"
-msgstr "Не удалось отослать комманду: {}"
+msgstr "Не удалось отослать команду: {}"
 
 #: alterx/gui/halpin_viewer.py:367
 msgid "Complete"
@@ -492,7 +496,7 @@ msgstr "Готово"
 
 #: alterx/gui/halpin_viewer.py:374
 msgid "Reading"
-msgstr "Считывание"
+msgstr "Чтение"
 
 #: alterx/gui/halpin_viewer.py:377
 msgid "Idle"
@@ -500,7 +504,7 @@ msgstr "Простой"
 
 #: alterx/gui/halpin_viewer.py:380
 msgid "Waiting"
-msgstr "Ожидание"
+msgstr "Ожид."
 
 #: alterx/gui/halpin_viewer.py:533
 msgid "Name: {}"
@@ -511,7 +515,7 @@ msgid ""
 "HAL Pin viewer works only with\n"
 " loaded hal component 'ascope'."
 msgstr ""
-"Просмотровщик HAL работает только\n"
+"Просмотр HAL работает только\n"
 "с загруженным компонентом 'ascope'."
 
 #: alterx/gui/main_screen.py:76
@@ -645,7 +649,7 @@ msgstr "Текст: {}, Строка: {}, Колонка: {}"
 
 #: alterx/gui/offset_viewer.py:281
 msgid "File does not exist: {}"
-msgstr "Файл не существет: {}"
+msgstr "Файл не существует: {}"
 
 #: alterx/gui/offset_viewer.py:309
 msgid "Reading parameter file failed: {}"
@@ -932,7 +936,7 @@ msgstr "Описание"
 
 #: alterx/gui/tool_viewer.py:297
 msgid "Toolfile does not exist {}"
-msgstr "Файл не существет: {}"
+msgstr "Файл не существует: {}"
 
 #: alterx/gui/tool_viewer.py:348
 msgid "Toolfile integer access: {} : {}"
@@ -970,43 +974,47 @@ msgstr "Неправильный тип данных в строке {} коло
 msgid "Docs"
 msgstr "Документация"
 
-#: alterx/gui/unlock_widget.py:106
+#: alterx/gui/unlock_widget.py:55
+msgid "Search:"
+msgstr "Поиск:"
+
+#: alterx/gui/unlock_widget.py:122
 msgid "Unlock settings"
 msgstr "Разблокировать настройки"
 
-#: alterx/gui/unlock_widget.py:108
+#: alterx/gui/unlock_widget.py:124
 msgid "Enter password:"
 msgstr "Введите пароль:"
 
-#: alterx/gui/unlock_widget.py:116 alterx/gui/unlock_widget.py:207
+#: alterx/gui/unlock_widget.py:132 alterx/gui/unlock_widget.py:223
 msgid "Unlock"
 msgstr "Разблокировать"
 
-#: alterx/gui/unlock_widget.py:128
+#: alterx/gui/unlock_widget.py:144
 msgid "Lock settings"
 msgstr "Заблокировать"
 
-#: alterx/gui/unlock_widget.py:133
+#: alterx/gui/unlock_widget.py:149
 msgid "New password:"
 msgstr "Новый пароль:"
 
-#: alterx/gui/unlock_widget.py:146
+#: alterx/gui/unlock_widget.py:162
 msgid "Load configuration"
 msgstr "Загрузить конфигурацию"
 
-#: alterx/gui/unlock_widget.py:151
+#: alterx/gui/unlock_widget.py:167
 msgid "Save configuration"
 msgstr "Сохранить конфигурацию"
 
-#: alterx/gui/unlock_widget.py:208
+#: alterx/gui/unlock_widget.py:224
 msgid "Password changed\n"
 msgstr "Пароль изменен\n"
 
-#: alterx/gui/unlock_widget.py:215
+#: alterx/gui/unlock_widget.py:231
 msgid "Access granted"
 msgstr "Доступ открыт"
 
-#: alterx/gui/unlock_widget.py:217
+#: alterx/gui/unlock_widget.py:233
 msgid "Access denied"
 msgstr "Доступ закрыт"
 
@@ -1048,67 +1056,67 @@ msgstr "П&родолжить"
 msgid "&Cancel"
 msgstr "&Отмена"
 
-#: alterx/startup.py:38
+#: alterx/startup.py:39
 msgid "AlterX version {}"
 msgstr "AlterX версия {}"
 
-#: alterx/startup.py:40
+#: alterx/startup.py:41
 msgid "Usage: alterx [OPTIONS]"
 msgstr "Использование: alterx [OPTIONS]"
 
-#: alterx/startup.py:42
+#: alterx/startup.py:43
 msgid "Options:"
 msgstr "Опции:"
 
-#: alterx/startup.py:43
+#: alterx/startup.py:44
 msgid " -h|--help             Print this help text"
 msgstr " -h|--help             Вывести эту справку"
 
-#: alterx/startup.py:44
+#: alterx/startup.py:45
 msgid " -i|--ini              Set config file path"
 msgstr " -i|--ini              Установить путь к конфигурации"
 
-#: alterx/startup.py:45
+#: alterx/startup.py:46
 msgid " -L|--loglevel LVL     Set the log level:"
 msgstr " -L|--loglevel LVL     Установить уровень лога:"
 
-#: alterx/startup.py:46
+#: alterx/startup.py:47
 msgid "                       0: Log nothing"
 msgstr "                       0: Не записывать"
 
-#: alterx/startup.py:47
+#: alterx/startup.py:48
 msgid "                       1: Debug logging"
 msgstr "                       1: Записи отладки"
 
-#: alterx/startup.py:48
+#: alterx/startup.py:49
 msgid "                       2: Log errors, warnings and info messages"
 msgstr "                       2: Записи ошибок, предупреждения и информации"
 
-#: alterx/startup.py:49
+#: alterx/startup.py:50
 msgid "                       3: Log errors and warnings (default)"
 msgstr "                       3: Записи ошибок и предупреждений (по-умолчанию)"
 
-#: alterx/startup.py:50
+#: alterx/startup.py:51
 msgid "                       4: Log errors"
 msgstr "                       4: Записи ошибок"
 
-#: alterx/startup.py:51
+#: alterx/startup.py:52
 msgid "                       5: Log critical"
 msgstr "                       5: Критические записи"
 
-#: alterx/startup.py:52
+#: alterx/startup.py:53
 msgid " -l|--lang             Set locale"
 msgstr " -l|--lang             Выбор языка"
 
-#: alterx/startup.py:53
+#: alterx/startup.py:54
 msgid " -v|--verbose          Set verbose output"
 msgstr " -v|--verbose          Установить расширенный вывод лога"
 
-#: alterx/startup.py:99
+#: alterx/startup.py:100
 msgid "AlterX: Config file not found"
 msgstr "AlterX: Конфигурационный файл не найден"
 
-#: alterx/startup.py:100
+#: alterx/startup.py:101
 msgid "There is no option '--ini config_file_path'.\n"
 msgstr "Нет опции '--ini config_file_path'.\n"
 
@@ -1175,6 +1183,14 @@ msgstr "Нажата кнопка остановки программы"
 #: menus/display/delete_view/module.py:44
 msgid "Button delete view clicked"
 msgstr "Нажата кнопка удаления просмотра пути"
+
+#: menus/display/dimensions/module.py:44
+msgid "Button toggle path dimensions clicked"
+msgstr "Нажата кнопка смены видимости размеров"
+
+#: menus/display/path/module.py:44
+msgid "Button toggle path visibility clicked"
+msgstr "Нажата кнопка смены видимости пройденного пути"
 
 #: menus/display/view_p/module.py:44
 msgid "Button set view P clicked"
@@ -1258,35 +1274,35 @@ msgstr "Нажата кнопка подачи тумана, туман акти
 
 #: menus/homing/home_a/module.py:43
 msgid "Command Home A"
-msgstr "Комманда A в ноль"
+msgstr "Команда A в ноль"
 
 #: menus/homing/home_all/module.py:43
 msgid "Command Home ALL"
-msgstr "Комманда ВСЕ в ноль"
+msgstr "Команда ВСЕ в ноль"
 
 #: menus/homing/home_b/module.py:43
 msgid "Command Home B"
-msgstr "Комманда B в ноль"
+msgstr "Команда B в ноль"
 
 #: menus/homing/home_c/module.py:43
 msgid "Command Home C"
-msgstr "Комманда C в ноль"
+msgstr "Команда C в ноль"
 
 #: menus/homing/home_x/module.py:43
 msgid "Command Home X"
-msgstr "Комманда X в ноль"
+msgstr "Команда X в ноль"
 
 #: menus/homing/home_y/module.py:43
 msgid "Command Home Y"
-msgstr "Комманда Y в ноль"
+msgstr "Команда Y в ноль"
 
 #: menus/homing/home_z/module.py:43
 msgid "Command Home Z"
-msgstr "Комманда Z в ноль"
+msgstr "Команда Z в ноль"
 
 #: menus/homing/unhome_all/module.py:44
 msgid "Command Unhome ALL"
-msgstr "Комманда ВСЕ забыть ноль"
+msgstr "Команда ВСЕ забыть ноль"
 
 #: menus/load/delete_file/module.py:53
 msgid "Button filemanager delete clicked"
@@ -1412,6 +1428,10 @@ msgstr "Нажата кнопка поправки выбрать"
 #: menus/offset/zero_g92/module.py:44
 msgid "Button zero g92 clicked"
 msgstr "Нажата кнопка обнулить g92"
+
+#: menus/settings/lim_override/module.py:43
+msgid "Button ignore limits clicked"
+msgstr "Нажата кнопка игнорирования лимитов"
 
 #: menus/settings/next_page/module.py:44
 msgid "Settings page next button clicked"
