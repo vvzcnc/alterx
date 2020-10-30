@@ -39,7 +39,7 @@ class OriginOffsetView(QTableView):
         self.setAlternatingRowColors(True)
         
         self.filename = INFO.parameter_file
-        self.axisletters = ["x", "y", "z", "a", "b", "c", "u", "v", "w"]
+        self.axisletters = ["X", "Y", "Z", "A", "B", "C", "U", "V", "W"]
         self.current_system = "G54"
         self.current_tool = 0
 
@@ -55,12 +55,10 @@ class OriginOffsetView(QTableView):
 
         self.MACHINE_UNIT_CONVERSION_9 = [1.0/25.4]*3+[1]*3+[1.0/25.4]*3
 
-        conversion = {0: "X", 1: "Y", 2: "Z", 3: "A",
-                      4: "B", 5: "C", 6: "U", 7: "V", 8: "W"}
-        for num, let in conversion.items():
+        for num, let in enumerate(self.axisletters):
             if let in INFO.coordinates:
                 continue
-            self.hideColumn(num)
+            self.hideColumn(num+1)
 
         self.reload_offsets()
 
