@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: alterx\n"
-"POT-Creation-Date: 2020-10-28 15:02+0200\n"
-"PO-Revision-Date: 2020-10-28 15:07+0200\n"
+"POT-Creation-Date: 2020-10-30 13:57+0200\n"
+"PO-Revision-Date: 2020-10-30 14:01+0200\n"
 "Last-Translator: uncle-yura <uncle-yura@tuta.io>\n"
 "Language-Team: \n"
 "Language: ru\n"
@@ -14,6 +14,148 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Poedit-SearchPath-0: .\n"
 "X-Poedit-SearchPathExcluded-0: tabs\n"
+
+#: alterx/configs/axis_wizard.cfg:17
+#, python-brace-format
+msgid "AXIS_{0} Step"
+msgstr "AXIS_{0} Шаг"
+
+#: alterx/configs/axis_wizard.cfg:17
+#, python-brace-format
+msgid "Add default stepper HAL configuration for AXIS_{0}({1})"
+msgstr ""
+"Добавить стандартную конфигурацию HAL для шагового привода AXIS_{0}({1})"
+
+#: alterx/configs/axis_wizard.cfg:18
+#, python-brace-format
+msgid "AXIS_{0} Servo"
+msgstr "AXIS_{0} Серво"
+
+#: alterx/configs/axis_wizard.cfg:18
+#, python-brace-format
+msgid "Add default servo HAL configuration for AXIS_{0}({1})"
+msgstr "Добавить стандартную конфигурацию HAL для серво-привода AXIS_{0}({1})"
+
+#: alterx/configs/default_wizard.cfg:15 alterx/gui/halpin_viewer.py:70
+#: alterx/gui/status_viewer.py:46 alterx/gui/status_viewer.py:60
+msgid "Name"
+msgstr "Имя"
+
+#: alterx/configs/default_wizard.cfg:15
+msgid "Enter the name of the machine."
+msgstr "Введите название станка."
+
+#: alterx/configs/default_wizard.cfg:16
+msgid "Version"
+msgstr "Версия"
+
+#: alterx/configs/default_wizard.cfg:16
+msgid "Enter the version of LinuxCNC core."
+msgstr "Введите версию LinuxCNC."
+
+#: alterx/configs/default_wizard.cfg:17
+msgid "Lathe"
+msgstr "Токарный"
+
+#: alterx/configs/default_wizard.cfg:17
+msgid "Is this machine a lathe?"
+msgstr "Это токарный станок?"
+
+#: alterx/configs/default_wizard.cfg:18
+msgid "Base period"
+msgstr "Base period"
+
+#: alterx/configs/default_wizard.cfg:18
+msgid ""
+"Enter task period, in nanoseconds - this is the fastest thread in the "
+"machine."
+msgstr ""
+"Введите длительность цикла в наносекундах, это самый быстрый цикл в станке."
+
+#: alterx/configs/default_wizard.cfg:19
+msgid "Servo period"
+msgstr "Servo period"
+
+#: alterx/configs/default_wizard.cfg:19
+msgid ""
+"Enter \"servo\" task period, in nanoseconds - this is the low-speed thread "
+"in the machine."
+msgstr ""
+"Введите длительность серво-цикла в наносекундах, это цикл низкой скорости "
+"обработки."
+
+#: alterx/configs/default_wizard.cfg:20
+msgid "Axes"
+msgstr "Оси"
+
+#: alterx/configs/default_wizard.cfg:20
+msgid "Enter the number of axes."
+msgstr "Введите количество осей станка."
+
+#: alterx/configs/default_wizard.cfg:21
+msgid "Axis names"
+msgstr "Имена осей"
+
+#: alterx/configs/default_wizard.cfg:21
+msgid "Enter the names of all axes(space separeted)."
+msgstr "Введите имена осей станка (через пробел)."
+
+#: alterx/configs/default_wizard.cfg:22
+msgid "LPT"
+msgstr "LPT"
+
+#: alterx/configs/default_wizard.cfg:22
+msgid "Add configuration for using LPT port on this machine?"
+msgstr "Добавить конфигурацию для использования LPT-порта на этом станке?"
+
+#: alterx/configs/default_wizard.cfg:23
+msgid "HM2"
+msgstr "HM2"
+
+#: alterx/configs/default_wizard.cfg:23
+msgid "Add configuration for using HOSTMOT2 interface on this machine?"
+msgstr ""
+"Добавить конфигурацию для использования HOSTMOT2 интерфейса на этом станке?"
+
+#: alterx/configs/default_wizard.cfg:24
+msgid "HM2_ETH"
+msgstr "HM2_ETH"
+
+#: alterx/configs/default_wizard.cfg:24
+msgid ""
+"Add configuration for using ethernet HOSTMOT2 interface on this machine?"
+msgstr ""
+"Добавить конфигурацию для использования HOSTMOT2 интерфейса через ethernet "
+"на этом станке?"
+
+#: alterx/configs/default_wizard.cfg:25
+msgid "Axis wizard"
+msgstr "Настройка осей"
+
+#: alterx/configs/default_wizard.cfg:25
+msgid "Run axis wizard?"
+msgstr "Запустить помощника настройки осей?"
+
+#: alterx/configs/joint_wizard.cfg:17
+#, python-brace-format
+msgid "JOINT_{0} Step"
+msgstr "JOINT_{0} Шаг"
+
+#: alterx/configs/joint_wizard.cfg:17
+#, python-brace-format
+msgid "Add default stepper HAL configuration for JOINT_{0}({1})"
+msgstr ""
+"Добавить стандартную конфигурацию HAL для шагового привода JOINT_{0}({1})"
+
+#: alterx/configs/joint_wizard.cfg:18
+#, python-brace-format
+msgid "JOINT_{0} Servo"
+msgstr "JOINT_{0} Серво"
+
+#: alterx/configs/joint_wizard.cfg:18
+#, python-brace-format
+msgid "Add default servo HAL configuration for JOINT_{0}({1})"
+msgstr "Добавить стандартную конфигурацию HAL для серво-привода JOINT_{0}({1})"
 
 #: alterx/common/preferences.py:39
 msgid "Read ini-file error: {} "
@@ -277,7 +419,7 @@ msgstr ""
 
 #: alterx/gui/config_editor.py:341
 msgid "Stop wizard"
-msgstr "Остановить помощника"
+msgstr "Остановить"
 
 #: alterx/gui/config_editor.py:382
 msgid "Delete section"
@@ -395,11 +537,6 @@ msgstr "Не удалось сохранить hal-файл, {}"
 #: alterx/gui/halpin_viewer.py:58
 msgid "HAL Pin Viewer"
 msgstr "Просмотр HAL пинов"
-
-#: alterx/gui/halpin_viewer.py:70 alterx/gui/status_viewer.py:46
-#: alterx/gui/status_viewer.py:60
-msgid "Name"
-msgstr "Имя"
 
 #: alterx/gui/halpin_viewer.py:70 alterx/gui/halpin_viewer.py:88
 msgid "Type"
@@ -1094,7 +1231,8 @@ msgstr "                       2: Записи ошибок, предупреж�
 
 #: alterx/startup.py:50
 msgid "                       3: Log errors and warnings (default)"
-msgstr "                       3: Записи ошибок и предупреждений (по-умолчанию)"
+msgstr ""
+"                       3: Записи ошибок и предупреждений (по-умолчанию)"
 
 #: alterx/startup.py:51
 msgid "                       4: Log errors"
@@ -1500,6 +1638,3 @@ msgstr "Нажата кнопка инструмент предыдущий"
 #: menus/tool/right_tool/module.py:44
 msgid "Tool viewer right button clicked"
 msgstr "Нажата кнопка инструмент вправо"
-
-#~ msgid "Enter the name of the machine."
-#~ msgstr "Введите название станка."

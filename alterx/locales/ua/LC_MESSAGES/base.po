@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: alterx\n"
-"POT-Creation-Date: 2020-10-22 11:28+0300\n"
-"PO-Revision-Date: 2020-10-22 11:28+0300\n"
+"POT-Creation-Date: 2020-10-30 14:04+0200\n"
+"PO-Revision-Date: 2020-10-30 14:04+0200\n"
 "Last-Translator: uncle-yura <uncle-yura@tuta.io>\n"
 "Language-Team: \n"
 "Language: uk\n"
@@ -15,11 +15,149 @@ msgstr ""
 "X-Poedit-SearchPath-0: .\n"
 "X-Poedit-SearchPathExcluded-0: tabs\n"
 
-#: alterx/common/preferences.py:57
+#: alterx/configs/axis_wizard.cfg:17
+#, python-brace-format
+msgid "AXIS_{0} Step"
+msgstr ""
+
+#: alterx/configs/axis_wizard.cfg:17
+#, python-brace-format
+msgid "Add default stepper HAL configuration for AXIS_{0}({1})"
+msgstr ""
+
+#: alterx/configs/axis_wizard.cfg:18
+#, python-brace-format
+msgid "AXIS_{0} Servo"
+msgstr ""
+
+#: alterx/configs/axis_wizard.cfg:18
+#, python-brace-format
+msgid "Add default servo HAL configuration for AXIS_{0}({1})"
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:15 alterx/gui/halpin_viewer.py:70
+#: alterx/gui/status_viewer.py:46 alterx/gui/status_viewer.py:60
+msgid "Name"
+msgstr "Ім'я"
+
+#: alterx/configs/default_wizard.cfg:15
+msgid "Enter the name of the machine."
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:16
+msgid "Version"
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:16
+msgid "Enter the version of LinuxCNC core."
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:17
+msgid "Lathe"
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:17
+msgid "Is this machine a lathe?"
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:18
+msgid "Base period"
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:18
+msgid ""
+"Enter task period, in nanoseconds - this is the fastest thread in the "
+"machine."
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:19
+msgid "Servo period"
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:19
+msgid ""
+"Enter \"servo\" task period, in nanoseconds - this is the low-speed thread "
+"in the machine."
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:20
+msgid "Axes"
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:20
+msgid "Enter the number of axes."
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:21
+msgid "Axis names"
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:21
+msgid "Enter the names of all axes(space separeted)."
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:22
+msgid "LPT"
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:22
+msgid "Add configuration for using LPT port on this machine?"
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:23
+msgid "HM2"
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:23
+msgid "Add configuration for using HOSTMOT2 interface on this machine?"
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:24
+msgid "HM2_ETH"
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:24
+msgid ""
+"Add configuration for using ethernet HOSTMOT2 interface on this machine?"
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:25
+msgid "Axis wizard"
+msgstr ""
+
+#: alterx/configs/default_wizard.cfg:25
+msgid "Run axis wizard?"
+msgstr ""
+
+#: alterx/configs/joint_wizard.cfg:17
+#, python-brace-format
+msgid "JOINT_{0} Step"
+msgstr ""
+
+#: alterx/configs/joint_wizard.cfg:17
+#, python-brace-format
+msgid "Add default stepper HAL configuration for JOINT_{0}({1})"
+msgstr ""
+
+#: alterx/configs/joint_wizard.cfg:18
+#, python-brace-format
+msgid "JOINT_{0} Servo"
+msgstr ""
+
+#: alterx/configs/joint_wizard.cfg:18
+#, python-brace-format
+msgid "Add default servo HAL configuration for JOINT_{0}({1})"
+msgstr ""
+
+#: alterx/common/preferences.py:39
+msgid "Read ini-file error: {} "
+msgstr ""
+
+#: alterx/common/preferences.py:70
 msgid "Preferences file is not exist."
 msgstr ""
 
-#: alterx/common/preferences.py:64
+#: alterx/common/preferences.py:77
 msgid "Failed to get preference: {} "
 msgstr ""
 
@@ -358,6 +496,10 @@ msgstr ""
 msgid "Replace: {}"
 msgstr ""
 
+#: alterx/gui/hal_editor.py:85
+msgid "HAL Editor"
+msgstr ""
+
 #: alterx/gui/hal_editor.py:125 alterx/gui/halpin_viewer.py:605
 msgid "Failed to get hal pin list: {}"
 msgstr ""
@@ -381,11 +523,6 @@ msgstr ""
 #: alterx/gui/halpin_viewer.py:58
 msgid "HAL Pin Viewer"
 msgstr ""
-
-#: alterx/gui/halpin_viewer.py:70 alterx/gui/status_viewer.py:46
-#: alterx/gui/status_viewer.py:60
-msgid "Name"
-msgstr "Ім'я"
 
 #: alterx/gui/halpin_viewer.py:70 alterx/gui/halpin_viewer.py:88
 msgid "Type"
@@ -448,7 +585,7 @@ msgstr ""
 msgid "One Shot"
 msgstr ""
 
-#: alterx/gui/halpin_viewer.py:211 alterx/gui/unlock_widget.py:139
+#: alterx/gui/halpin_viewer.py:211 alterx/gui/unlock_widget.py:155
 msgid "Change"
 msgstr ""
 
@@ -757,6 +894,10 @@ msgstr ""
 msgid "Failed to delete parameter: {}"
 msgstr ""
 
+#: alterx/gui/style_editor.py:43
+msgid "Stylesheet Editor"
+msgstr ""
+
 #: alterx/gui/style_editor.py:62
 msgid "Copy and Edit"
 msgstr ""
@@ -941,43 +1082,47 @@ msgstr ""
 msgid "Docs"
 msgstr ""
 
-#: alterx/gui/unlock_widget.py:106
+#: alterx/gui/unlock_widget.py:55
+msgid "Search:"
+msgstr ""
+
+#: alterx/gui/unlock_widget.py:122
 msgid "Unlock settings"
 msgstr ""
 
-#: alterx/gui/unlock_widget.py:108
+#: alterx/gui/unlock_widget.py:124
 msgid "Enter password:"
 msgstr ""
 
-#: alterx/gui/unlock_widget.py:116 alterx/gui/unlock_widget.py:207
+#: alterx/gui/unlock_widget.py:132 alterx/gui/unlock_widget.py:223
 msgid "Unlock"
 msgstr ""
 
-#: alterx/gui/unlock_widget.py:128
+#: alterx/gui/unlock_widget.py:144
 msgid "Lock settings"
 msgstr ""
 
-#: alterx/gui/unlock_widget.py:133
+#: alterx/gui/unlock_widget.py:149
 msgid "New password:"
 msgstr ""
 
-#: alterx/gui/unlock_widget.py:146
+#: alterx/gui/unlock_widget.py:162
 msgid "Load configuration"
 msgstr ""
 
-#: alterx/gui/unlock_widget.py:151
+#: alterx/gui/unlock_widget.py:167
 msgid "Save configuration"
 msgstr ""
 
-#: alterx/gui/unlock_widget.py:208
+#: alterx/gui/unlock_widget.py:224
 msgid "Password changed\n"
 msgstr ""
 
-#: alterx/gui/unlock_widget.py:215
+#: alterx/gui/unlock_widget.py:231
 msgid "Access granted"
 msgstr ""
 
-#: alterx/gui/unlock_widget.py:217
+#: alterx/gui/unlock_widget.py:233
 msgid "Access denied"
 msgstr ""
 
@@ -1014,67 +1159,67 @@ msgstr ""
 msgid "&Cancel"
 msgstr ""
 
-#: alterx/startup.py:38
+#: alterx/startup.py:39
 msgid "AlterX version {}"
 msgstr ""
 
-#: alterx/startup.py:40
+#: alterx/startup.py:41
 msgid "Usage: alterx [OPTIONS]"
 msgstr ""
 
-#: alterx/startup.py:42
+#: alterx/startup.py:43
 msgid "Options:"
 msgstr ""
 
-#: alterx/startup.py:43
+#: alterx/startup.py:44
 msgid " -h|--help             Print this help text"
 msgstr ""
 
-#: alterx/startup.py:44
+#: alterx/startup.py:45
 msgid " -i|--ini              Set config file path"
 msgstr ""
 
-#: alterx/startup.py:45
+#: alterx/startup.py:46
 msgid " -L|--loglevel LVL     Set the log level:"
 msgstr ""
 
-#: alterx/startup.py:46
+#: alterx/startup.py:47
 msgid "                       0: Log nothing"
 msgstr ""
 
-#: alterx/startup.py:47
+#: alterx/startup.py:48
 msgid "                       1: Debug logging"
 msgstr ""
 
-#: alterx/startup.py:48
+#: alterx/startup.py:49
 msgid "                       2: Log errors, warnings and info messages"
 msgstr ""
 
-#: alterx/startup.py:49
+#: alterx/startup.py:50
 msgid "                       3: Log errors and warnings (default)"
 msgstr ""
 
-#: alterx/startup.py:50
+#: alterx/startup.py:51
 msgid "                       4: Log errors"
 msgstr ""
 
-#: alterx/startup.py:51
+#: alterx/startup.py:52
 msgid "                       5: Log critical"
 msgstr ""
 
-#: alterx/startup.py:52
+#: alterx/startup.py:53
 msgid " -l|--lang             Set locale"
 msgstr ""
 
-#: alterx/startup.py:53
+#: alterx/startup.py:54
 msgid " -v|--verbose          Set verbose output"
 msgstr ""
 
-#: alterx/startup.py:99
+#: alterx/startup.py:100
 msgid "AlterX: Config file not found"
 msgstr ""
 
-#: alterx/startup.py:100
+#: alterx/startup.py:101
 msgid "There is no option '--ini config_file_path'.\n"
 msgstr ""
 
@@ -1140,6 +1285,14 @@ msgstr ""
 
 #: menus/display/delete_view/module.py:44
 msgid "Button delete view clicked"
+msgstr ""
+
+#: menus/display/dimensions/module.py:44
+msgid "Button toggle path dimensions clicked"
+msgstr ""
+
+#: menus/display/path/module.py:44
+msgid "Button toggle path visibility clicked"
 msgstr ""
 
 #: menus/display/view_p/module.py:44
@@ -1374,6 +1527,10 @@ msgstr ""
 
 #: menus/offset/zero_g92/module.py:44
 msgid "Button zero g92 clicked"
+msgstr ""
+
+#: menus/settings/lim_override/module.py:43
+msgid "Button ignore limits clicked"
 msgstr ""
 
 #: menus/settings/next_page/module.py:44
