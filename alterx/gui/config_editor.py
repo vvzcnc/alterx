@@ -439,28 +439,33 @@ class ConfigEditor(QWidget):
             if self.config._defaults:
                 fp.write("[%s]\n" % DEFAULTSECT)
                 for (key, value) in self.config._defaults.items():
+                    value = toUnicode(value)
+                    key = toUnicode(key)
                     if '\n' in value:
                         value = value.split('\n')
                     else:
                         value = [value]
                     for v in value:                            
                         if (v is not None) or (self.config._optcre == self.config.OPTCRE):
-                            key = " = ".join((key, str(v)))
-                        fp.write("%s\n" % (key))
+                            data = "{} = {}\n".format(key, v)
+                            fp.write(data.encode('utf-8'))
                 fp.write("\n")
+
             for section in self.config._sections:
                 fp.write("[%s]\n" % section)
                 for (key, value) in self.config._sections[section].items():
+                    value = toUnicode(value)
+                    key = toUnicode(key)
                     if key == "__name__":
                         continue
                     if '\n' in value:
                         value = value.split('\n')
                     else:
                         value = [value]
-                    for v in value:                            
+                    for v in value:    
                         if (v is not None) or (self.config._optcre == self.config.OPTCRE):
-                            k = " = ".join((key, str(v)))
-                        fp.write("%s\n" % (k))
+                            data = "{} = {}\n".format(key, v)
+                            fp.write(data.encode('utf-8'))
                 fp.write("\n")
     
     def fit_to_text(self,widget):
