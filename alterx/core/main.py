@@ -251,7 +251,7 @@ class Main():
 #------ Button callbacks ------#
     def jog_button_callback(self, button):  
         if UPDATER.value("jog_activate"):
-            COMMAND.teleop_enable(1)
+            #COMMAND.teleop_enable(1)
             direction = 0
             if button in (4,6,7,8):
                 direction = -1
@@ -287,17 +287,17 @@ class Main():
             if not UPDATER.value("jog_encoder"):
                 if UPDATER.value("jog_continuous"):
                     if button:
-                        COMMAND.jog(LINUXCNC.JOG_CONTINUOUS,False,selected_axis,speed)
-                    else:
+                        COMMAND.jog(LINUXCNC.JOG_CONTINUOUS,True,selected_axis,speed)
+                    elif STAT.task_state == LINUXCNC.STATE_ON:
                         for a in range(9):
-                            COMMAND.jog(LINUXCNC.JOG_STOP,False,a) 
+                            COMMAND.jog(LINUXCNC.JOG_STOP,True,a) 
                 else:
                     if button:
-                        COMMAND.jog(LINUXCNC.JOG_INCREMENT,False,
+                        COMMAND.jog(LINUXCNC.JOG_INCREMENT,True,
                             selected_axis,speed,UPDATER.value("jog_increment"))
-                    else:
+                    elif STAT.task_state == LINUXCNC.STATE_ON:
                         for a in range(9):
-                            COMMAND.jog(LINUXCNC.JOG_STOP,False,a) 
+                            COMMAND.jog(LINUXCNC.JOG_STOP,True,a) 
             printVerbose(_("LinuxCNC mode {} {} {} {}", direction,selected_axis,speed,button))
 
     def side_button_callback(self, button):

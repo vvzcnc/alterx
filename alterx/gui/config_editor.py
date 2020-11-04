@@ -428,6 +428,7 @@ class ConfigEditor(QWidget):
                 ini = None
             
         if not ini:
+            Notify.Warning(_("INI-file arg is not found."))
             printWarning(_("INI-file arg is not found."))
             return
                   
@@ -467,6 +468,7 @@ class ConfigEditor(QWidget):
                             data = "{} = {}\n".format(key, v)
                             fp.write(data.encode('utf-8'))
                 fp.write("\n")
+        Notify.Info(_("Config file saved."))
     
     def fit_to_text(self,widget):
         height = widget.document().size().height()

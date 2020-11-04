@@ -44,7 +44,7 @@ class MDI(QLineEdit):
             return
 
         COMMAND.mdi(text+'\n')
-        print(text)
+        printVerbose(_("MDI: {}",text))
         try:
             fp = os.path.expanduser(self.mdi_history_file)
             fp = open(fp, 'a')
@@ -93,6 +93,7 @@ class MDIHistory(QWidget):
                 self.line_down()
             elif event.key() == Qt.Key_Return:
                 self.MDI.submit()
+                self.model.appendRow(QStandardItem(self.MDI.text()))
             #else:
             #    self.MDI.setFocus()
                 

@@ -136,6 +136,10 @@ class HalEditor(QWidget):
         self.saveButton.setText(_("Save"))
         self.saveButton.clicked.connect(self.on_saveButton_clicked)
         lay_h1.addWidget(self.saveButton)
+        self.saveAsButton = QPushButton()
+        self.saveAsButton.setText(_("Save as"))
+        self.saveAsButton.clicked.connect(self.on_saveAsButton_clicked)
+        lay_h1.addWidget(self.saveAsButton)
         layout.addLayout(lay_h1)
 
         self.hal_dir = INFO.working_dir
@@ -156,6 +160,8 @@ class HalEditor(QWidget):
                 index = model.appendRow(item)
         except Exception as e:
             printDebug(_("Failed to set hal path,{}",e))
+        self.halCombo.setCurrentIndex(-1)
+        self.halTextEdit.clear()
 
     def selectionChanged(self, i):
         path = self.halCombo.itemData(i, role=Qt.UserRole + 1)
@@ -182,8 +188,34 @@ class HalEditor(QWidget):
             self.loadHalFile(fileName)
 
     def on_saveButton_clicked(self):
+        currentIndex = self.halCombo.currentIndex()
+        if currentIndex > -1:
+            path = self.halCombo.itemData(currentIndex, role=Qt.UserRole + 1)
+            name = self.halCombo.itemData(currentIndex, role=Qt.DisplayRole)
+            fileName = os.path.join(path, name)
+            halText = self.halTextEdit.toPlainText()
+            try:
+                with open(fileName,'w') as file:
+                    file.write(halText)
+                Notify.Info(_("HAL-file saved."))
+            except Exception as e:
+                Notify.Warning(_("Failed to save hal-file"))
+                printWarning(_("Failed to save hal-file, {}",e))
+        else:
+            self.on_saveAsButton_clicked()
+
+
+    def on_saveAsButton_clicked(self):
         dialog = QFileDialog()
-        dialog.setDirectory(self.hal_dir)
+        currentIndex = self.halCombo.currentIndex()
+        if currentIndex > -1:
+            dialog.setDirectory(self.halCombo.itemData(
+                                currentIndex, role=Qt.UserRole + 1))
+            dialog.selectFile(self.halCombo.itemData(
+                                currentIndex, role=Qt.DisplayRole))
+        else:
+            dialog.setDirectory(self.hal_dir)
+        
         dialog.setFilter(dialog.filter()|QDir.Hidden)
         dialog.setDefaultSuffix("hal")
         dialog.setAcceptMode(QFileDialog.AcceptSave)
@@ -195,6 +227,8 @@ class HalEditor(QWidget):
             try:
                 with open(fileName,'w') as file:
                     file.write(halText)
+                Notify.Info(_("HAL-file saved."))
             except Exception as e:
+                Notify.Warning(_("Failed to save hal-file"))
                 printWarning(_("Failed to save hal-file, {}",e))
             self.setPath()
