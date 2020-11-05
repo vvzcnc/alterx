@@ -111,3 +111,6 @@ class DROWidget(QWidget):
 
         dro_layout.addStretch()
         self.setLayout(dro_layout)
+
+    def set_focus(self):
+        UPDATER.emit("update_feed_labels")

@@ -45,6 +45,7 @@ class MDI(QLineEdit):
 
         COMMAND.mdi(text+'\n')
         printVerbose(_("MDI: {}",text))
+        UPDATER.emit("update_feed_labels")
         try:
             fp = os.path.expanduser(self.mdi_history_file)
             fp = open(fp, 'a')
@@ -73,8 +74,6 @@ class MDIHistory(QWidget):
         self.MDI = MDI()
         self.MDI.installEventFilter(self)
         
-        self.set_focus = self.MDI.setFocus
-        
         lay.addWidget(self.list)
         lay.addWidget(self.MDI)
 
@@ -84,6 +83,10 @@ class MDIHistory(QWidget):
 
         UPDATER.add("mdi_run_command")
         UPDATER.signal("mdi_run_command", lambda s: self.run_command())
+
+    def set_focus(self):
+        UPDATER.emit("update_feed_labels")
+        self.MDI.setFocus()
 
     def eventFilter(self, source, event):
         if ( event.type() == QEvent.KeyPress ):
