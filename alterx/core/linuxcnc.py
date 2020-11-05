@@ -123,7 +123,13 @@ class linuxcnc_info():
         else:
             self.joints = [ self.default_axes_list[j] for j in self.coordinates ]
 
+        if (INI.find('TRAJ', 'NO_FORCE_HOMING') or '0').lower() in ('yes', '1', 'true'):
+            self.no_force_homing = True
+        else:
+            self.no_force_homing = False
+
         self.homed_list = [0,]*9
+
         for i in self.joints:
             self.homed_list[i] = 1
 
