@@ -136,7 +136,7 @@ class EditorBase(QTextEdit):
         
     def save_text(self):
         with open(self.filepath, "w") as text_file:
-            text_file.write(self.text())
+            text_file.write(self.toPlainText())
         self.setModified(False)
 
     def replace_text(self, text):
@@ -154,25 +154,19 @@ class GcodeDisplay(EditorBase):
         EditorBase.__init__(self, parent)
         self.last_line = 0
 
+        UPDATER.add("file_reload")
+        UPDATER.signal("file_reload", self.reload_program)
+
         UPDATER.signal("file", self.load_program)
         UPDATER.signal("motion_line", self.highlight_line)
+
+    def reload_program(self, state):
+        self.load_program(self.filepath)
 
     def load_program(self, filename=None):
         self.load_text(filename)
         self.setCursorPosition(0, 0)
         self.setModified(False)
-
-    def load_text(self, filename):
-        if filename:
-            try:
-                fp = os.path.expanduser(filename)
-                self.setText(open(fp).read())
-                self.ensureCursorVisible()
-                self.emit_file(filename, self.lines())
-                return
-            except:
-                printError(_('File path is not valid: {}', filename))
-        self.setText('')
 
     def highlight_line(self, line):
         if ( STAT.interp_state != LINUXCNC.INTERP_IDLE or 
@@ -204,6 +198,7 @@ class GcodeWidget(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
 
         self.editor = GcodeDisplay()
+        self.editor.setObjectName("edit_gcode_widget")
         lay.addWidget(self.editor)
         self.setLayout(lay)
 
@@ -249,6 +244,7 @@ class GcodeEditor(QWidget):
         self.editor = GcodeDisplay(self)
         self.editor.setReadOnly(False)
         self.editor.setModified(False)
+        self.editor.setObjectName("edit_gcode_editor")
         lay.addWidget(self.editor)
 
         gbox = QGroupBox()
@@ -300,7 +296,13 @@ class GcodeEditor(QWidget):
     def save_file(self, path):
         if type(path) is not bool:
             self.editor.filepath = path
-        self.editor.save_text()
+        try:
+            self.editor.save_text()
+        except Exception as e:
+            printError(_('File save failed: {}', filename))
+            Notify.Warning(_("Not saved"))
+        else:
+            Notify.Info(_("Saved"))
 
     def new_file(self):
         self.editor.filepath = None

@@ -8,6 +8,7 @@ from . import select_file
 from . import sel_next
 from . import sel_prev
 from . import delete_file
+from . import reload_file
 
 buttons_order = [
     'home',
@@ -19,6 +20,6 @@ buttons_order = [
     'select_file',
     None,
     'delete_file',
-    None,
+    'reload_file',
     'edit',
 ]

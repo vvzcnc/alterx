@@ -301,6 +301,9 @@ class Main():
             printVerbose(_("LinuxCNC mode {} {} {} {}", direction,selected_axis,speed,button))
 
     def side_button_callback(self, button):
+        if not button.isEnabled():
+            return
+            
         if button.label == "abort":
             self.btn_abort_callback(button)
         elif button.label == "equipment":

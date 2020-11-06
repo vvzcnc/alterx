@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:UTF-8 -*-# -*- coding: utf-8 -*-
 #
-# AlterX GUI - filemanager delete
+# AlterX GUI - file reload
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
@@ -31,34 +31,15 @@ from alterx.core.linuxcnc import UPDATER
 
 class func:
     def __init__(self, button):
-        self.button = button
-        self.delete_confirm = False
-        self.update_image()
-
-    def update_image(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        if os.path.isfile("%s/icon.png" % dir_path):
-            self.button.setIcon(QIcon("%s/icon.png" % dir_path))
-            self.button.setIconSize(QSize(90, 90))
-            self.button.setText("")
-        else:
-            self.button.setStyleSheet("color:black")
 
-    def update(self):
-        if not self.button.hasFocus() and self.delete_confirm:
-            self.delete_confirm = False
-            self.update_image()
+        if os.path.isfile("%s/icon.png" % dir_path):
+            button.setIcon(QIcon("%s/icon.png" % dir_path))
+            button.setIconSize(QSize(90, 90))
+            button.setText("")
+        else:
+            button.setStyleSheet("color:black")
 
     def execute(self):
-        printVerbose(_("Button filemanager delete clicked"))
-
-        if self.delete_confirm:
-            self.delete_confirm = False
-            self.update_image()
-            UPDATER.emit("fileman_delete")
-        else:
-            self.button.setFocus()
-            self.button.setIcon(QIcon())
-            self.button.setStyleSheet("color:black")
-            self.button.setText(_("Are you sure?\nClick to delete."))
-            self.delete_confirm = True
+        printVerbose(_("Button file reload clicked"))
+        UPDATER.emit("file_reload")
