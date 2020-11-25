@@ -232,6 +232,56 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
     def __init__(self, parent=None):
         super(PathViewer, self).__init__(parent)
 
+        self.show_program_boundry = bool()
+        self.show_program_tick = bool()
+        self.show_program_label = bool()
+        self.show_machine_boundry = bool()
+        self.show_machine_tick = bool()
+        self.show_machine_label = bool()
+        self.show_grid = bool()
+
+        showGrid = INI.find("VTK", "GRID_LINES") or ""
+        if showGrid.lower() in ['false', 'off', 'no', '0']:
+            self.show_grid = False
+        else:
+            self.show_grid = True
+            
+        machineBoundry = INI.find("VTK", "MACHINE_BOUNDRY") or "0"
+        if machineBoundry.lower() in ['false', 'off', 'no', '0']:
+            self.show_machine_boundry = False
+        else:
+            self.show_machine_boundry = True
+
+        machineTicks = INI.find("VTK", "MACHINE_TICKS") or "0"
+        if machineTicks.lower() in ['false', 'off', 'no', '0']:
+            self.show_machine_tick = False
+        else:
+            self.show_machine_tick = True
+            
+        machineLabels = INI.find("VTK", "MACHINE_LABELS") or "0"
+        if machineLabels.lower() in ['false', 'off', 'no', '0']:
+            self.show_machine_label = False
+        else:
+            self.show_machine_label = True
+
+        programBoundry = INI.find("VTK", "PROGRAM_BOUNDRY") or "0"
+        if programBoundry.lower() in ['false', 'off', 'no', '0']:
+            self.show_program_boundry = False
+        else:
+            self.show_program_boundry = True
+
+        programTicks = INI.find("VTK", "PROGRAM_TICKS") or "0"
+        if programTicks.lower() in ['false', 'off', 'no', '0']:
+            self.show_program_tick = False
+        else:
+            self.show_program_tick = True
+            
+        programLabel = INI.find("VTK", "PROGRAM_LABELS") or "0"
+        if programLabel.lower() in ['false', 'off', 'no', '0']:
+            self.show_program_label = False
+        else:
+            self.show_program_label = True
+
         self.parent = parent
         self.status = STAT
 
@@ -306,35 +356,6 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.interactor.SetInteractorStyle(None)
         self.interactor.SetRenderWindow(self.renderer_window)
 
-        self.show_machine_boundry = bool()
-        self.show_machine_tick = bool()
-        self.show_machine_label = bool()
-        self.show_grid = bool()
-
-        showGrid = INI.find("VTK", "GRID_LINES") or ""
-        if showGrid.lower() in ['false', 'off', 'no', '0']:
-            self.show_grid = False
-        else:
-            self.show_grid = True
-            
-        machineBoundry = INI.find("VTK", "MACHINE_BOUNDRY") or "0"
-        if machineBoundry.lower() in ['false', 'off', 'no', '0']:
-            self.show_machine_boundry = False
-        else:
-            self.show_machine_boundry = True
-
-        machineTicks = INI.find("VTK", "MACHINE_TICKS") or "0"
-        if machineTicks.lower() in ['false', 'off', 'no', '0']:
-            self.show_machine_tick = False
-        else:
-            self.show_machine_tick = True
-            
-        machineLabels = INI.find("VTK", "MACHINE_LABELS") or "0"
-        if machineLabels.lower() in ['false', 'off', 'no', '0']:
-            self.show_machine_label = False
-        else:
-            self.show_machine_label = True
-
         self.machine = Machine(self, self.axis)
         self.machine_actor = self.machine.get_actor()
         self.machine_actor.SetCamera(self.camera)
@@ -359,12 +380,22 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
 
         self.offset_axes = OrderedDict()
         self.extents = OrderedDict()
-        self.show_program_boundry = bool()
-        self.show_program_tick = bool()
-        self.show_program_label = bool()
 
         self.canon = self.canon_class()
         self.path_actors = self.canon.get_path_actors()
+
+        self.corner_annotation = vtk.vtkCornerAnnotation()
+        self.corner_annotation.SetLinearFontScaleFactor(2)
+        self.corner_annotation.SetNonlinearFontScaleFactor(1)
+        self.corner_annotation.SetMaximumFontSize(24)
+        self.corner_annotation.SetText(2,"")
+        self.corner_annotation.GetTextProperty().SetColor(1,1,1)
+
+        #self.renderer.AddActor(self.tool_actor)
+        self.renderer.AddActor(self.machine_actor)
+        #self.renderer.AddActor(self.axes_actor)
+        self.renderer.AddActor(self.path_cache_actor)
+        self.renderer.AddViewProp(self.corner_annotation)
 
         for origin, actor in self.path_actors.items():
             index = self.origin_map[origin]
@@ -384,23 +415,10 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
 
             self.offset_axes[origin] = axes
             self.extents[origin] = extents_actor
-
+            
             self.renderer.AddActor(axes)
             self.renderer.AddActor(extents_actor)
             self.renderer.AddActor(actor)
-
-        self.corner_annotation = vtk.vtkCornerAnnotation()
-        self.corner_annotation.SetLinearFontScaleFactor(2)
-        self.corner_annotation.SetNonlinearFontScaleFactor(1)
-        self.corner_annotation.SetMaximumFontSize(24)
-        self.corner_annotation.SetText(2,"")
-        self.corner_annotation.GetTextProperty().SetColor(1,1,1)
-
-        self.renderer.AddActor(self.tool_actor)
-        self.renderer.AddActor(self.machine_actor)
-        self.renderer.AddActor(self.axes_actor)
-        self.renderer.AddActor(self.path_cache_actor)
-        self.renderer.AddViewProp(self.corner_annotation)
 
         self.renderer.ResetCamera()
 
@@ -428,24 +446,6 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.interactor.Start()
 
         self.update_dro(getattr(STAT,INFO.axes_list))
-
-        programBoundry = INI.find("VTK", "PROGRAM_BOUNDRY") or "0"
-        if programBoundry.lower() in ['false', 'off', 'no', '0']:
-            self.show_program_boundry = False
-        else:
-            self.show_program_boundry = True
-
-        programTicks = INI.find("VTK", "PROGRAM_TICKS") or "0"
-        if programTicks.lower() in ['false', 'off', 'no', '0']:
-            self.show_program_tick = False
-        else:
-            self.show_program_tick = True
-            
-        programLabel = INI.find("VTK", "PROGRAM_LABELS") or "0"
-        if programLabel.lower() in ['false', 'off', 'no', '0']:
-            self.show_program_label = False
-        else:
-            self.show_program_label = True
 
         UPDATER.signal("file", self.load_program)
         UPDATER.signal("position", self.update_position)
@@ -951,6 +951,7 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.interactor.ReInitialize()
 
     def setCurrentView(self,view):
+        UPDATER.set("display_view", 'N')
         if view.upper() not in ['P', 'X', 'Z', 'Y', 'Y2', 'Z', 'Z2']:
             return
         return getattr(self, 'setView%s' % view.upper())()
