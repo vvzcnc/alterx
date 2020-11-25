@@ -35,6 +35,7 @@ from functools import partial
 from datetime import datetime
 
 import zipfile
+import logging
 
 
 class DocBrowser(QWidget):
@@ -48,6 +49,7 @@ class DocBrowser(QWidget):
         
         tb = QToolBar()
         self.browser = QWebView()
+        self.browser.setObjectName("webview_doc_browser")
         for a in (QWebPage.Back, QWebPage.Forward, QWebPage.Reload):
             tb.addAction(self.browser.pageAction(a))
         vlay.addWidget(tb)
@@ -108,6 +110,33 @@ class DocBrowser(QWidget):
             filepath = os.path.join(self.docs_dir,"404.html")
         self.browser.load(QUrl.fromLocalFile(filepath))
 
+class QTextEditLogger(logging.Handler):
+    def __init__(self,parent=None):
+        logging.Handler.__init__(self)
+        self.widget = QPlainTextEdit()
+        self.widget.setObjectName("plaintext_log_browser")
+        self.widget.setReadOnly(True)
+
+    def emit(self,record):
+        msg = self.format(record)
+        self.widget.appendPlainText(msg)
+
+class LogBrowser(QWidget):
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent)
+        vlay = QVBoxLayout()
+        vlay.setContentsMargins(0, 0, 0, 0)
+        vlay.addWidget(QLabel(_("Logs")))
+        vlay.addWidget(HSeparator())
+
+        logHandler = QTextEditLogger()
+        logHandler.setFormatter(logging.Formatter('%(asctime)s %(levelname)-8s %(name)s: %(message)s'))
+        logging.getLogger().addHandler(logHandler)
+        
+        vlay.addWidget(logHandler.widget)
+        vlay.addStretch() 
+        self.setLayout(vlay)
+        
 
 class UnlockWidget(QWidget):
     def __init__(self, parent=None):
@@ -115,7 +144,11 @@ class UnlockWidget(QWidget):
         parent.blocked = PREF.getpref("blocked", True, bool)
         self.parent = parent
         hlay = QHBoxLayout()
-        hlay.addWidget(DocBrowser(),2)
+        vlaybrowser = QVBoxLayout()
+        hlay.addLayout(vlaybrowser,2)
+
+        vlaybrowser.addWidget(DocBrowser())
+        vlaybrowser.addWidget(LogBrowser())
         
         vlay = QVBoxLayout()
         vlay.setContentsMargins(0, 0, 0, 0)

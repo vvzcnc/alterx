@@ -67,6 +67,10 @@ QListView{
     font-size: 15px;
     }
 
+QPlainTextEdit[objectName^=plaintext] {
+    min-height: 150px;
+}
+
 QPushButton{
     border: 2px solid #555;
     border-radius: 11px;
