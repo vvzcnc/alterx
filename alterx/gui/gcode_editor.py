@@ -154,12 +154,6 @@ class GcodeDisplay(EditorBase):
         EditorBase.__init__(self, parent)
         self.last_line = 0
 
-        UPDATER.add("file_reload")
-        UPDATER.signal("file_reload", self.reload_program)
-
-        UPDATER.signal("file", self.load_program)
-        UPDATER.signal("motion_line", self.highlight_line)
-
     def reload_program(self, state):
         self.load_program(self.filepath)
 
@@ -201,6 +195,12 @@ class GcodeWidget(QWidget):
         self.editor.setObjectName("edit_gcode_widget")
         lay.addWidget(self.editor)
         self.setLayout(lay)
+
+        UPDATER.add("file_reload")
+        UPDATER.signal("file_reload", self.editor.reload_program)
+
+        UPDATER.signal("file", self.editor.load_program)
+        UPDATER.signal("motion_line", self.editor.highlight_line)
 
         gbox = QGroupBox()
         lay.addWidget(gbox)
