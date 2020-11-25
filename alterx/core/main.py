@@ -21,7 +21,7 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-__all__ = ['MAIN']
+__all__ = ["MAIN"]
 
 from alterx.common.locale import _
 from alterx.common.compat import *
@@ -33,6 +33,8 @@ from alterx.gui.util import *
 from functools import partial
 from collections import OrderedDict
 
+from addons import *
+
 class MultiOrderedDict(OrderedDict):
     def __setitem__(self, key, value):
         if isinstance(value, list) and key in self:
@@ -43,16 +45,22 @@ class MultiOrderedDict(OrderedDict):
 class Main():
     #------ Initialize ------#
     def __init__(self):
-        UPDATER.add('update_feed_labels')
-        UPDATER.add('feed_mode')
-        UPDATER.add('diameter_multiplier', 1)
-        UPDATER.add('display_feedrate',-1)
-        UPDATER.add('display_spindlerate',-1)
-        UPDATER.add('display_jog_fast')  
-        UPDATER.add('display_button_binding')
-        UPDATER.add('display_inputs_binding')
-        UPDATER.add('display_encoder_binding')   
-        UPDATER.add('hal_jog_enable')
+        UPDATER.add("update_feed_labels")
+        UPDATER.add("feed_mode")
+        UPDATER.add("diameter_multiplier", 1)
+        UPDATER.add("display_feedrate",-1)
+        UPDATER.add("display_spindlerate",-1)
+        UPDATER.add("display_jog_fast")  
+        UPDATER.add("display_button_binding")
+        UPDATER.add("display_inputs_binding")
+        UPDATER.add("display_encoder_binding")   
+        UPDATER.add("hal_jog_enable")
+        UPDATER.add("hal_run_command")
+        UPDATER.add("hal_pause_command")
+        UPDATER.add("hal_stop_command")
+        UPDATER.add("display_run_command")
+        UPDATER.add("display_pause_command")
+        UPDATER.add("display_stop_command")
 
         UPDATER.signal("display_encoder_binding", self.display_encoder_handler)
         UPDATER.signal("display_inputs_binding", self.display_inputs_handler)
@@ -65,15 +73,21 @@ class Main():
         UPDATER.signal("program_units", self.change_units_handler)
         UPDATER.signal("gcodes", self.gcode_changed)
         UPDATER.signal("hal_jog_enable", self.hal_jog_enable_changed)
-        
+        UPDATER.signal("hal_run_command", self.hal_run_command_handler)
+        UPDATER.signal("hal_pause_command", self.hal_pause_command_handler)
+        UPDATER.signal("hal_stop_command", self.hal_stop_command_handler)
+
         self.keyboard_cmd_list = "0000000"
+
+        self.addons = []
+        self.load_addons()
         if HAL:
             self.halcomp = HAL.component( "alterx" )
 
             self.config = ConfigParser.ConfigParser(
                 dict_type=MultiOrderedDict,allow_no_value=True)
             self.config.optionxform = str
-            ini = os.environ['INI_FILE_NAME']
+            ini = os.environ["INI_FILE_NAME"]
             self.config.read(ini)
             items = self.config.items("DISPLAY")
             for i in items:
@@ -87,25 +101,26 @@ class Main():
             
             for i in range(7):
                 pin = self.halcomp.newpin( "io.output-"+str(i), HAL.HAL_BIT, HAL.HAL_IN )
-                UPDATER.listen("io.output-"+str(i),pin.get)
-                UPDATER.signal("io.output-"+str(i), partial(self.hw_output_state_handler,i))
+                UPDATER.listen("io.output-"+str(i), pin.get)
+                UPDATER.signal("io.output-"+str(i), partial(self.hw_output_state_handler, i))
                 self.halcomp.newpin( "io.input-"+str(i), HAL.HAL_BIT, HAL.HAL_OUT )
                 
             pin = self.halcomp.newpin("hal_run_command", HAL.HAL_BIT, HAL.HAL_IN )
-            UPDATER.listen("hal_run_command",pin.get)
-            UPDATER.signal("hal_run_command", self.hal_run_command_handler)
+            UPDATER.listen("hal_run_command", pin.get)
+
+            pin = self.halcomp.newpin("hal_pause_command", HAL.HAL_BIT, HAL.HAL_IN )
+            UPDATER.listen("hal_pause_command", pin.get)
 
             pin = self.halcomp.newpin("hal_stop_command", HAL.HAL_BIT, HAL.HAL_IN )
-            UPDATER.listen("hal_stop_command",pin.get)
-            UPDATER.signal("hal_stop_command", self.hal_stop_command_handler)
+            UPDATER.listen("hal_stop_command", pin.get)
             
             self.halcomp.ready()
             
         postgui_halfile = INI.find("HAL", "POSTGUI_HALFILE")
         if postgui_halfile:
-            inifile = os.environ['INI_FILE_NAME']
+            inifile = os.environ["INI_FILE_NAME"]
             printInfo(_("LinuxCNC postgui halfile: {}",postgui_halfile))
-            if postgui_halfile.lower().endswith('.tcl'):
+            if postgui_halfile.lower().endswith(".tcl"):
                 res = os.spawnvp(os.P_WAIT, "haltcl", ["haltcl", "-i", inifile, postgui_halfile])
             else:
                 res = os.spawnvp( os.P_WAIT, "halcmd", ["halcmd", "-i", inifile, "-f", postgui_halfile] )
@@ -128,6 +143,15 @@ class Main():
         if signal:
             printVerbose(_("LinuxCNC hal input stop signal activated"))
             COMMAND.abort()
+
+    def hal_pause_command_handler(self, signal):
+        if signal:
+            printVerbose(_("LinuxCNC hal input pause signal activated"))
+            if STAT.task_mode == LINUXCNC.MODE_AUTO:
+                if STAT.interp_state == LINUXCNC.INTERP_PAUSED:
+                    COMMAND.auto(LINUXCNC.AUTO_RESUME)
+                else:
+                    COMMAND.auto(LINUXCNC.AUTO_PAUSE)
 
     def hal_messages_handler(self, message, signal):
         if signal:
@@ -174,16 +198,16 @@ class Main():
             # G96 constant surface speed mode
             # G97 stop constant surface speed control
 
-            if active in ['G93', 'G94', 'G95', 'G96', 'G97']:
-                if active == 'G94':
+            if active in ["G93", "G94", "G95", "G96", "G97"]:
+                if active == "G94":
                     INFO.feed_per_units = _("min")
-                elif active == 'G95':
+                elif active == "G95":
                     INFO.feed_per_units = _("rev")
-                UPDATER.emit('feed_mode', active)
-            elif active == 'G7':
-                UPDATER.emit('diameter_multiplier', 2)
-            elif active == 'G8':
-                UPDATER.emit('diameter_multiplier', 1)
+                UPDATER.emit("feed_mode", active)
+            elif active == "G7":
+                UPDATER.emit("diameter_multiplier", 2)
+            elif active == "G8":
+                UPDATER.emit("diameter_multiplier", 1)
 
     def task_state_handler(self, data):
         if data == LINUXCNC.STATE_ESTOP:
@@ -226,7 +250,7 @@ class Main():
     def load_program_handler(self, data):
         if STAT.task_mode == LINUXCNC.MODE_AUTO:
             UPDATER.emit("screen_auto")
-        printInfo(_('Loaded: {}', data))
+        printInfo(_("Loaded: {}", data))
 
     def change_units_handler(self, data):
         if data == 1:
@@ -245,8 +269,25 @@ class Main():
 
         INFO.units_factor = axis_mul
 
-        UPDATER.emit('update_feed_labels')
-        printInfo(_('Units: {}', INFO.linear_units))
+        UPDATER.emit("update_feed_labels")
+        printInfo(_("Units: {}", INFO.linear_units))
+
+    def load_addons(self):
+        addons_names = []
+        try:
+            addons_names = globals()["addons_order"]
+            if not isinstance(addons_names, list):
+                addons_names = []
+                raise Exception("'addons_order' is not a list")
+        except Exception as e:
+            printError(_("Invalid addons order list, {}", e))
+
+        for addon_number, name in enumerate(addons_names):
+            if "addons.%s" % name in sys.modules.keys():
+                addon = getattr(globals()[name], "module").func()
+                self.addons.append(addon)
+            else:
+                printError(_("No addons with name: addons.{}", name))
 
 #------ Button callbacks ------#
     def jog_button_callback(self, button):  
@@ -269,7 +310,7 @@ class Main():
                 selected_axis = 3
 
             speed = 0
-            if STAT.joint[selected_axis]['jointType'] == 1:
+            if STAT.joint[selected_axis]["jointType"] == 1:
                 if UPDATER.value("display_jog_fast"):
                     speed = direction*float(
                         INI.find("DISPLAY", "MAX_LINEAR_VELOCITY"))/60.0

@@ -271,7 +271,7 @@ class linuxcnc_poll(QTimer):
 
     # Create custom listener in database
     def listen(self, name, method):
-        if name not in self._listener and name not in self.custom_signals:
+        if name not in self._listener:
             self._listener[name] = method
             self.custom_signals[name] = method()
             self.custom_signals_old[name] = method()
@@ -285,6 +285,14 @@ class linuxcnc_poll(QTimer):
             self.custom_signals_old[name] = value
         else:
             printError(_("Failed to add signal. Signal '{}' already exist", name))
+
+    # Manualy set value without genereting signal
+    def set(self, name, value=False):
+        if name in self.custom_signals:
+            self.custom_signals[name] = value
+            self.custom_signals_old[name] = value
+        else:
+            printError(_("Failed to set signal. Signal '{}' doesn't exist", name))
 
     # Add signal to 'one to many' database
     def signal(self, name, handler):
