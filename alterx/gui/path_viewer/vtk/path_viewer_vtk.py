@@ -391,9 +391,9 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.corner_annotation.SetText(2,"")
         self.corner_annotation.GetTextProperty().SetColor(1,1,1)
 
-        #self.renderer.AddActor(self.tool_actor)
+        self.renderer.AddActor(self.tool_actor)
         self.renderer.AddActor(self.machine_actor)
-        #self.renderer.AddActor(self.axes_actor)
+        self.renderer.AddActor(self.axes_actor)
         self.renderer.AddActor(self.path_cache_actor)
         self.renderer.AddViewProp(self.corner_annotation)
 
@@ -847,8 +847,8 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         self.update_render()
 
     def update_g92_offset(self, g92_offset):
-        if str(self.status.task_mode) == "MDI"\
-            or str(self.status.task_mode) == "Auto":
+        if self.status.task_mode == LINUXCNC.MODE_MDI\
+            or str(self.status.task_mode) == LINUXCNC.MODE_AUTO:
 
             self.g92_offset = g92_offset
 

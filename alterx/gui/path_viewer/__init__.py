@@ -21,11 +21,19 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
+from alterx.core.linuxcnc import INFO
+
 try:
-    from .vtk.path_viewer_vtk import PathViewer
+    if INFO.display_path_viewer == "VTK":
+        from .vtk.path_viewer_vtk import PathViewer
+    else:
+        from .gl.path_viewer_gl import PathViewer
 except:
     try:
-        from .gl.path_viewer_gl import PathViewer
+        if INFO.display_path_viewer == "VTK":
+            from .gl.path_viewer_gl import PathViewer
+        else:
+            from .vtk.path_viewer_vtk import PathViewer
     except:
         print("Error: cannot import either PathViewer VTK or GL")
         from .path_viewer import PathViewer

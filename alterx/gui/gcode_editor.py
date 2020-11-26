@@ -161,6 +161,7 @@ class GcodeDisplay(EditorBase):
         self.load_text(filename)
         self.setCursorPosition(0, 0)
         self.setModified(False)
+        self.emit_file(filename,self.lines())
 
     def highlight_line(self, line):
         if ( STAT.interp_state != LINUXCNC.INTERP_IDLE or 

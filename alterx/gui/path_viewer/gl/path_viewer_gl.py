@@ -70,7 +70,8 @@ class PathViewer(QWidget):
         UPDATER.add("display_view")
         UPDATER.add("display_zoomin")
         UPDATER.add("display_zoomout")
-
+        UPDATER.add("display_path")
+        UPDATER.add("display_dimensions")
         self.glWidget = graphics_plot()
         
         mainLayout = QHBoxLayout()
@@ -159,15 +160,18 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
         self.show_dtg = True
         self.grid_size = 0.0
         self.lathe_option = INFO.machine_is_lathe
-        self.show_lathe_radius = True
         self.current_view = ('y' if self.lathe_option else 'p')
+        self.show_lathe_radius = True
         self.foam_option = bool(INI.find("DISPLAY", "FOAM"))
         self.show_offsets = False
         self.show_overlay = False
         self.enable_dro = True
         self.use_default_controls = True
         self.mouse_btn_mode = 0
+        self.cancel_rotate = False
         self.use_gradient_background = False
+        self.gradient_color1 = (0.0, 0.0, 1)
+        self.gradient_color2 = (0.0, 0.0, 0.0)
 
         self.a_axis_wrapped = INI.find("AXIS_A", "WRAPPED_ROTARY")
         self.b_axis_wrapped = INI.find("AXIS_B", "WRAPPED_ROTARY")
@@ -188,11 +192,15 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
         # add a 100ms timer to poll linuxcnc stats
         self.timer = QTimer()
         self.timer.timeout.connect(self.poll)
-        self.timer.start(INFO.display_cycle_time/1000)
+        self.timer.start(float(INI.find("DISPLAY", "PATH_CYCLE_TIME") or '1.0')*1000)
 
         self.Green = QColor.fromCmykF(0.40, 0.0, 1.0, 0.0)
+        self.inhibit_selection = True
 
     def poll(self):   
+        if self.visibleRegion().isEmpty():
+            return
+
         if self.lathe_option:  
             self.show_lathe_radius = False if UPDATER.check("diameter_multiplier") == 2 else True
     
@@ -200,14 +208,24 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
             self.clear_live_plotter()
 
         if UPDATER.check("display_view"):
-            self.current_view = UPDATER.display_view
-            self.set_current_view()
+            if UPDATER.display_view:
+                self.current_view = UPDATER.display_view
+                self.set_current_view()
+                UPDATER.set("display_view", False)
 
         if UPDATER.check("display_zoomin"):
             self.zoomin()
 
         if UPDATER.check("display_zoomout"):
             self.zoomout()
+
+        if UPDATER.check("display_path"):
+            self.show_live_plot = not self.show_live_plot
+            self.updateGL()
+
+        if UPDATER.check("display_dimensions"):
+            self.show_extents_option = not self.show_extents_option
+            self.updateGL()
 
         if self._current_file != STAT.file:
             self.load()
@@ -224,6 +242,10 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
             self.update()
 
         return True
+
+    def showEvent(self, event):
+        super(graphics_plot ,self).showEvent(event)
+        self.set_current_view()
 
     def load(self, filename=None):
         if not filename and STAT.file:
@@ -343,6 +365,7 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
 
     # setup details when window shows
     def realize(self):
+        self.set_current_view()
         self._current_file = None
 
         self.font_base, width, linespace = \
@@ -353,8 +376,6 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
 
         if STAT.file:
             self.load()
-            
-        self.set_current_view()
             
     # gettter / setters
     def get_font_info(self):
@@ -592,66 +613,118 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
             # display something - probably in QtDesigner
             GL.glCallList(self.object)
 
-    # @with_context_swap
+    # replaces glcanoon function
     def redraw_perspective(self):
-
         w = self.winfo_width()
         h = self.winfo_height()
-        GL.glViewport(0, 0, w, h)
+        GL.glViewport(0, 0, w, h) # left corner in pixels
         if self.use_gradient_background:
-            GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-            GL.glMatrixMode(GL.GL_PROJECTION)
-            GL.glMatrixMode(GL.GL_PROJECTION)
+                GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+                ###
+                GL.glMatrixMode(GL.GL_PROJECTION)
+                GL.glLoadIdentity() # switch to identity (origin) matrix
 
-            GL.glPushMatrix()
-            GL.glLoadIdentity()
+                GL.glMatrixMode(GL.GL_MODELVIEW)
+                GL.glPushMatrix()
+                GL.glPushMatrix()
+                GL.glLoadIdentity()
 
-            GL.glMatrixMode(GL.GL_MODELVIEW)
-            GL.glLoadIdentity()
-            GL.glDisable(GL.GL_DEPTH_TEST)
-            GL.glBegin(GL.GL_QUADS)
-            # //blue color
-            GL.glColor3f(0.0, 0.0, 1)
-            GL.glVertex3f(-1.0, -1.0, -1.0)
-            GL.glVertex3f(1.0, -1.0, -1.0)
-            # //black color
-            GL.glColor3f(0.0, 0.0, 0.0)
-            GL.glVertex3f(1.0, 1.0, -1.0)
-            GL.glVertex3f(-1.0, 1.0, -1.0)
+                GL.glDisable(GL.GL_DEPTH_TEST)
+                GL.glBegin(GL.GL_QUADS)
+                #//bottom color
+                color = self.gradient_color1
+                GL.glColor3f(color[0],color[1],color[2])
+                GL.glVertex2f(-1.0, -1.0)
+                GL.glVertex2f(1.0, -1.0)
+                #//top color
+                color = self.gradient_color2
+                GL.glColor3f(color[0],color[1],color[2])
+                GL.glVertex2f(1.0, 1.0)
+                GL.glVertex2f(-1.0, 1.0)
+                GL.glEnd()
+                GL.glEnable(GL.GL_DEPTH_TEST)
 
-            GL.glEnd()
-            GL.glEnable(GL.GL_DEPTH_TEST)
-            GL.glMatrixMode(GL.GL_PROJECTION)
-            GL.glPopMatrix()
-            GL.glMatrixMode(GL.GL_MODELVIEW)
-            GL.glLoadIdentity()
+                GL.glPopMatrix()
+                GL.glPopMatrix()
+
         else:
-            pass
             # Clear the background and depth buffer.
             GL.glClearColor(*(self.colors['back'] + (0,)))
             GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
         GL.glMatrixMode(GL.GL_PROJECTION)
         GL.glLoadIdentity()
-        GLU.gluPerspective(self.fovy,			# The vertical Field of View, in radians: the amount of "zoom".
-                           # Think "camera lens". Usually between 90 (extra wide) and 30 (quite zoomed in)
-                           # Aspect Ratio. Notice that 4/3 == 800/600 screen resolution
-                           float(w)/float(h),
-                           # near clipping plane. Keep as big as possible, or you'll get precision issues.
-                           self.near,
-                           self.far + self.distance)  # Far clipping plane. Keep as little as possible.
-
+        GLU.gluPerspective(self.fovy,               # The vertical Field of View, in radians: the amount of "zoom".
+                                                    # Think "camera lens". Usually between 90 (extra wide) and 30 (quite zoomed in)
+                        float(w)/float(h),          # Aspect Ratio. Notice that 4/3 == 800/600 screen resolution
+                        self.near,                  # near clipping plane. Keep as big as possible, or you'll get precision issues.
+                        self.far + self.distance)   # Far clipping plane. Keep as little as possible.
         GLU.gluLookAt(0, 0, self.distance,  # the position of your camera, in world space
-                      0, 0, 0,              # where you want to look at, in world space
-                      0., 1., 0.)           # probably glm::vec3(0,1,0), but (0,-1,0) would make 
-                                            # you looking upside-down
+            0, 0, 0,                        # where you want to look at, in world space
+            0., 1., 0.)                     # probably glm::vec3(0,1,0), but (0,-1,0) would make you looking upside-down
         GL.glMatrixMode(GL.GL_MODELVIEW)
         GL.glPushMatrix()
         try:
             self.redraw()
         finally:
-            GL.glFlush()                            # Tidy up
-            GL.glPopMatrix()                        # Restore the matrix
+            GL.glFlush()                               # Tidy up
+            GL.glPopMatrix()                   # Restore the matrix
+
+    # replaces glcanoon function
+    def redraw_ortho(self):
+        if not self.initialised: return
+        w = self.winfo_width()
+        h = self.winfo_height()
+        GL.glViewport(0, 0, w, h)
+        if self.use_gradient_background:
+            GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+            GL.glMatrixMode(GL.GL_PROJECTION)
+            GL.glLoadIdentity()
+
+            GL.glMatrixMode(GL.GL_MODELVIEW)
+            GL.glPushMatrix()
+            GL.glPushMatrix()
+            GL.glLoadIdentity()
+
+            GL.glDisable(GL.GL_DEPTH_TEST)
+            GL.glBegin(GL.GL_QUADS)
+            #//bottom color
+            color = self.gradient_color1
+            GL.glColor3f(color[0],color[1],color[2])
+            GL.glVertex2f(-1.0, -1.0)
+            GL.glVertex2f(1.0, -1.0)
+            #//top color
+            color = self.gradient_color2
+            GL.glColor3f(color[0],color[1],color[2])
+            GL.glVertex2f(1.0, 1.0)
+            GL.glVertex2f(-1.0, 1.0)
+            GL.glEnd()
+            GL.glEnable(GL.GL_DEPTH_TEST)
+
+            GL.glPopMatrix()
+            GL.glPopMatrix()
+
+        else:
+            # Clear the background and depth buffer.
+            GL.glClearColor(*(self.colors['back'] + (0,)))
+            GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+
+        GL.glMatrixMode(GL.GL_PROJECTION)
+        GL.glLoadIdentity()
+        ztran = self.distance
+        k = (abs(ztran or 1)) ** .55555
+        l = k * h / w
+        GL.glOrtho(-k, k, -l, l, -1000, 1000.)
+        GLU.gluLookAt(0, 0, 1,
+            0, 0, 0,
+            0., 1., 0.)
+        GL.glMatrixMode(GL.GL_MODELVIEW)
+        GL.glPushMatrix()
+        try:
+            self.redraw()
+        finally:
+            GL.glFlush()                               # Tidy up
+            GL.glPopMatrix()                   # Restore the matrix
 
     # resizes the view to fit the window
     def resizeGL(self, width, height):
@@ -664,6 +737,17 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
         GL.glLoadIdentity()  # reset the model-view matrix
         GL.glOrtho(-0.5, +0.5, +0.5, -0.5, 4.0, 15.0)
         GL.glMatrixMode(GL.GL_MODELVIEW)  # To operate on model-view matrix
+
+
+    ####################################
+    # Property setting functions
+    ####################################
+    def set_alpha_mode(self, state):
+        self.program_alpha = state
+        self.updateGL()
+
+    def set_inhibit_selection(self, state):
+        self.inhibit_selection = state
 
     ####################################
     # view controls
@@ -682,7 +766,7 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
     # Also stop the display from pausing plotting update while searching
     # probably needs a thread - strange that Tkinter and GTK don't suffer...
     def select_fire(self):
-        return
+        if self.inhibit_selection: return
         if not self.select_primed:
             return
         x, y = self.select_primed
@@ -748,78 +832,93 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
     def makeObject(self):
         genList = GL.glGenLists(1)
         GL.glNewList(genList, GL.GL_COMPILE)
-
+  
         GL.glBegin(GL.GL_QUADS)
-
+        factor = 4
         # Make a tee section
-        x1 = +0.06
-        y1 = -0.14
-        x2 = +0.14
-        y2 = -0.06
-        x3 = +0.08
-        y3 = +0.00
-        x4 = +0.30
-        y4 = +0.22
+        x1 = +0.06 * factor
+        y1 = -0.14 * factor
+        x2 = +0.14 * factor
+        y2 = -0.06 * factor
+        x3 = +0.08 * factor
+        y3 = +0.00 * factor
+        x4 = +0.30 * factor
+        y4 = +0.22 * factor
 
         # cross
-        self.quad(x1, y1, x2, y2, y2, x2, y1, x1)
+        self.quad(x1, y1, x2, y2, y2, x2, y1, x1, z= .05, color = self.Green)
         # vertical line
-        self.quad(x3, y3, x4, y4, y4, x4, y3, x3)
+        self.quad(x3, y3, x4, y4, y4, x4, y3, x3, z= .05, color = self.Green)
 
         # cross depth
-        self.extrude(x1, y1, x2, y2)
-        self.extrude(x2, y2, y2, x2)
-        self.extrude(y2, x2, y1, x1)
-        self.extrude(y1, x1, x1, y1)
+        self.extrude(x1, y1, x2, y2, z= .05, color = self.Green)
+        self.extrude(x2, y2, y2, x2, z= .05, color = self.Green)
+        self.extrude(y2, x2, y1, x1, z= .05, color = self.Green)
+        self.extrude(y1, x1, x1, y1, z= .05, color = self.Green)
 
         # vertical depth
-        self.extrude(x3, y3, x4, y4)
-        self.extrude(x4, y4, y4, x4)
-        self.extrude(y4, x4, y3, x3)
-
+        self.extrude(x3, y3, x4, y4, z= .05, color = self.Green)
+        self.extrude(x4, y4, y4, x4, z= .05, color = self.Green)
+        self.extrude(y4, x4, y3, x3, z= .05, color = self.Green)
+  
         NumSectors = 200
-
+  
         # Make a circle
         for i in range(NumSectors):
             angle1 = (i * 2 * math.pi) / NumSectors
-            x5 = 0.30 * math.sin(angle1)
-            y5 = 0.30 * math.cos(angle1)
-            x6 = 0.20 * math.sin(angle1)
-            y6 = 0.20 * math.cos(angle1)
-
+            x5 = 0.30 * math.sin(angle1) * factor
+            y5 = 0.30 * math.cos(angle1) * factor
+            x6 = 0.20 * math.sin(angle1) * factor
+            y6 = 0.20 * math.cos(angle1) * factor
+  
             angle2 = ((i + 1) * 2 * math.pi) / NumSectors
-            x7 = 0.20 * math.sin(angle2)
-            y7 = 0.20 * math.cos(angle2)
-            x8 = 0.30 * math.sin(angle2)
-            y8 = 0.30 * math.cos(angle2)
-
-            self.quad(x5, y5, x6, y6, x7, y7, x8, y8)
-
-            self.extrude(x6, y6, x7, y7)
-            self.extrude(x8, y8, x5, y5)
-
+            x7 = 0.20 * math.sin(angle2) * factor
+            y7 = 0.20 * math.cos(angle2) * factor
+            x8 = 0.30 * math.sin(angle2) * factor
+            y8 = 0.30 * math.cos(angle2) * factor
+  
+            self.quad(x5, y5, x6, y6, x7, y7, x8, y8, z= .05, color = self.Green)
+  
+            self.extrude(x6, y6, x7, y7, z= .05, color = self.Green)
+            self.extrude(x8, y8, x5, y5, z= .05, color = self.Green)
+  
         GL.glEnd()
         GL.glEndList()
-
+  
         return genList
+  
+    def quad(self, x1, y1, x2, y2, x3, y3, x4, y4, z, color):
+        self.qglColor(color)
+  
+        GL.glVertex3d(x1, y1, -z)
+        GL.glVertex3d(x2, y2, -z)
+        GL.glVertex3d(x3, y3, -z)
+        GL.glVertex3d(x4, y4, -z)
+  
+        GL.glVertex3d(x4, y4, +z)
+        GL.glVertex3d(x3, y3, +z)
+        GL.glVertex3d(x2, y2, +z)
+        GL.glVertex3d(x1, y1, +z)
 
-    def quad(self, x1, y1, x2, y2, x3, y3, x4, y4):
-        self.qglColor(self.Green)
+    def lathe_quad(self, x1, x2, x3, x4, z1, z2, z3, z4, color):
+        self.qglColor(color)
+  
+        GL.glVertex3d(x1, 0, z1)
+        GL.glVertex3d(x2, 0, z2)
+        GL.glVertex3d(x3, 0, z3)
+        GL.glVertex3d(x4, 0, z4)
 
-        GL.glVertex3d(x1, y1, -0.05)
-        GL.glVertex3d(x2, y2, -0.05)
-        GL.glVertex3d(x3, y3, -0.05)
-        GL.glVertex3d(x4, y4, -0.05)
+        # defeat back face cull
+        GL.glVertex3d(x4, 0, z4)
+        GL.glVertex3d(x3, 0, z3)
+        GL.glVertex3d(x2, 0, z2)
+        GL.glVertex3d(x1, 0, z1)
 
-        GL.glVertex3d(x4, y4, +0.05)
-        GL.glVertex3d(x3, y3, +0.05)
-        GL.glVertex3d(x2, y2, +0.05)
-        GL.glVertex3d(x1, y1, +0.05)
+    def extrude(self, x1, y1, x2, y2, z, color):
+        self.qglColor(color)
+  
+        GL.glVertex3d(x1, y1, +z)
+        GL.glVertex3d(x2, y2, +z)
+        GL.glVertex3d(x2, y2, -z)
+        GL.glVertex3d(x1, y1, -z)
 
-    def extrude(self, x1, y1, x2, y2):
-        self.qglColor(self.Green.darker(250 + int(100 * x1)))
-
-        GL.glVertex3d(x1, y1, +0.05)
-        GL.glVertex3d(x2, y2, +0.05)
-        GL.glVertex3d(x2, y2, -0.05)
-        GL.glVertex3d(x1, y1, -0.05)

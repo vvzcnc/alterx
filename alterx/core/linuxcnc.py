@@ -161,7 +161,9 @@ class linuxcnc_info():
         self.angular_per_units = _("min")
 
         self.display_cycle_time = float(INI.find("DISPLAY", "CYCLE_TIME") or '0.1')*1000
-        
+
+        self.display_path_viewer = INI.find("DISPLAY", "PATH_VIEWER") or 'VTK'
+
         self.axes_list = "joint" if hasattr(STAT, "joint") else "axis"
 
     def get_offset_table(self):

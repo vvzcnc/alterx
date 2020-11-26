@@ -26,7 +26,7 @@ from alterx.common.compat import *
 from alterx.common import *
 from alterx.gui.util import *
 
-from alterx.core.linuxcnc import COMMAND
+from alterx.core.linuxcnc import *
 
 
 class func:
@@ -45,3 +45,5 @@ class func:
         printVerbose(_("Button macro command {} clicked",2))
 
         COMMAND.mdi("G92 X0 Y0 Z0")
+        UPDATER.emit("update_feed_labels")
+
