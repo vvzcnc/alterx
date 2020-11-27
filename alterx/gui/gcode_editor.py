@@ -137,7 +137,7 @@ class EditorBase(QTextEdit):
     def save_text(self):
         with open(self.filepath, "w") as text_file:
             text_file.write(self.toPlainText())
-        self.setModified(False)
+            self.setModified(False)
 
     def replace_text(self, text):
         self.replace(text)
@@ -300,7 +300,7 @@ class GcodeEditor(QWidget):
         try:
             self.editor.save_text()
         except Exception as e:
-            printError(_('File save failed: {}', filename))
+            printError(_('File save failed: {}', path))
             Notify.Warning(_("Not saved"))
         else:
             Notify.Info(_("Saved"))
