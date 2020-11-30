@@ -154,7 +154,13 @@ class MainWindow(QWidget):
                 UPDATER.add("screen_{}".format(name))
                 UPDATER.signal("screen_{}".format(name), partial(
                     self.activate_screen, (widget, buttons, infoWidget[i])))
-
+                if name in "manual":
+                    UPDATER.signal("screen_{}".format(name),
+                        lambda s:UPDATER.set("jog_screen",1))
+                else:
+                    UPDATER.signal("screen_{}".format(name),
+                        lambda s:UPDATER.set("jog_screen",0))
+                    
             if sideWidget[i][0] is not None:
                 if sideWidget[i][3][3]:
                     sideWidget[i][3][3]=bottom_index

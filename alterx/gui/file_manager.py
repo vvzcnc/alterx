@@ -30,6 +30,7 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
+import shutil
 
 class FileManager(QWidget):
     def __init__(self, parent=None):
@@ -80,11 +81,13 @@ class FileManager(QWidget):
         UPDATER.add("fileman_delete")
         UPDATER.add("fileman_home")
         UPDATER.add("fileman_jump")
+        UPDATER.add("fileman_copy")
 
         UPDATER.signal("fileman_prev", lambda s: self.up())
         UPDATER.signal("fileman_next", lambda s: self.down())
         UPDATER.signal("fileman_select", lambda s: self.load())
         UPDATER.signal("fileman_delete", lambda s: self.deleteSelected())
+        UPDATER.signal("fileman_copy", lambda s: self.copySelected())
         UPDATER.signal(
             "fileman_home", lambda s: self.updateDirectoryView(self.default_path))
         UPDATER.signal(
@@ -98,6 +101,27 @@ class FileManager(QWidget):
                 os.remove(dir_path)
             else:
                 os.rmdir(dir_path)
+        except Exception as e:
+            printError(_("Failed to delete path {}: {}", dir_path, e))
+
+    def copySelected(self):
+        row = self.list.selectionModel().currentIndex()
+        dir_path = self.model.filePath(row)
+        dest_dir = INI.find("DISPLAY","PROGRAM_PREFIX")
+        
+        if not dest_dir:
+            return
+            
+        try:
+            if os.path.isfile(dir_path):
+                try:
+                    shutil.copy(dir_path, dest_dir)
+                except:
+                    pass
+                else:
+                    Notify.Info(_("Copied"))
+            else:
+                Notify.Warning(_("Can't copy DIR"))
         except Exception as e:
             printError(_("Failed to delete path {}: {}", dir_path, e))
 

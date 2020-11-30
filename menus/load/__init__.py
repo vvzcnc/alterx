@@ -9,11 +9,12 @@ from . import sel_next
 from . import sel_prev
 from . import delete_file
 from . import reload_file
+from . import copy_file
 
 buttons_order = [
     'home',
     'jump_to',
-    None,
+    'copy_file',
     'sel_prev',
     'sel_next',
     None,

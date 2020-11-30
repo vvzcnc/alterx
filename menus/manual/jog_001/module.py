@@ -39,7 +39,15 @@ class func:
             button.setText("")
         else:
             button.setStyleSheet("color:black")
-
+            
+        self.button = button
+            
+    def update(self):
+        if UPDATER.value("jog_increment") == 0.01:
+            self.button.setStyleSheet("border:2px solid #32CD32")
+        else:
+            self.button.setStyleSheet("border:2px solid black")
+            
     def execute(self):
         printVerbose(_("Button set JOG 0.01 clicked"))
         UPDATER.emit("jog_increment", 0.01)

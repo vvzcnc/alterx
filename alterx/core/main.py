@@ -61,7 +61,9 @@ class Main():
         UPDATER.add("display_run_command")
         UPDATER.add("display_pause_command")
         UPDATER.add("display_stop_command")
+        UPDATER.add("jog_screen")
 
+        UPDATER.set("jog_screen",1)
         UPDATER.signal("display_encoder_binding", self.display_encoder_handler)
         UPDATER.signal("display_inputs_binding", self.display_inputs_handler)
         UPDATER.signal("display_spindlerate", self.spindlerate_changed)
@@ -291,7 +293,7 @@ class Main():
 
 #------ Button callbacks ------#
     def jog_button_callback(self, button):  
-        if UPDATER.value("jog_activate"):
+        if UPDATER.value("jog_activate") and UPDATER.value("jog_screen"):
             #COMMAND.teleop_enable(1)
             direction = 0
             if button in (4,6,7,8):
@@ -328,23 +330,30 @@ class Main():
             if not UPDATER.value("jog_encoder"):
                 if UPDATER.value("jog_continuous"):
                     if button:
-                        COMMAND.jog(LINUXCNC.JOG_CONTINUOUS,True,selected_axis,speed)
+                        COMMAND.jog(LINUXCNC.JOG_CONTINUOUS,
+                            True if STAT.motion_mode == 1 else False,
+                            selected_axis,speed)
                     elif STAT.task_state == LINUXCNC.STATE_ON:
                         for a in range(9):
-                            COMMAND.jog(LINUXCNC.JOG_STOP,True,a) 
+                            COMMAND.jog(LINUXCNC.JOG_STOP,
+                            True if STAT.motion_mode == 1 else False,
+                            a) 
                 else:
                     if button:
-                        COMMAND.jog(LINUXCNC.JOG_INCREMENT,True,
+                        COMMAND.jog(LINUXCNC.JOG_INCREMENT,
+                            True if STAT.motion_mode == 1 else False,
                             selected_axis,speed,UPDATER.value("jog_increment"))
-                    elif STAT.task_state == LINUXCNC.STATE_ON:
-                        for a in range(9):
-                            COMMAND.jog(LINUXCNC.JOG_STOP,True,a) 
+                    #elif STAT.task_state == LINUXCNC.STATE_ON:
+                    #    for a in range(9):
+                    #        COMMAND.jog(LINUXCNC.JOG_STOP,
+                    #        True if STAT.motion_mode == 1 else False
+                    #        ,a) 
             printVerbose(_("LinuxCNC mode {} {} {} {}", direction,selected_axis,speed,button))
 
     def side_button_callback(self, button):
         if not button.isEnabled():
             return
-            
+        
         if button.label == "abort":
             self.btn_abort_callback(button)
         elif button.label == "equipment":

@@ -34,7 +34,7 @@ from . import interpret
 from . import glcanon
 
 import math
-import gcode
+#import gcode
 import pango
 import time
 import re
@@ -141,6 +141,7 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
         self.lat = 0
         self.minlat = -90
         self.maxlat = 90
+        self.file_reload = UPDATER.value("file_reload")
 
         self._current_file = None
         self.highlight_line = None
@@ -198,6 +199,13 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
         self.inhibit_selection = True
 
     def poll(self):   
+        if self._current_file != STAT.file:
+            self.load()
+            
+        if self.file_reload != UPDATER.value("file_reload"):
+            self.load()
+            self.file_reload = UPDATER.value("file_reload")
+    
         if self.visibleRegion().isEmpty():
             return
 
@@ -226,9 +234,6 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
         if UPDATER.check("display_dimensions"):
             self.show_extents_option = not self.show_extents_option
             self.updateGL()
-
-        if self._current_file != STAT.file:
-            self.load()
 
         self.metric_units = INFO.get_metric()
 
@@ -267,16 +272,35 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
             canon.parameter_file = temp_parameter
             unitcode = "G%d" % (20 + (STAT.linear_units == 1))
             initcode = INI.find("RS274NGC", "RS274NGC_STARTUP_CODE") or ""
+            
+            temp_file = os.path.join(
+                td, os.path.basename(filename))
+                
+            delete_list = ["G4"]
+            with open(filename) as fin, open(temp_file, "w+") as fout:
+                for line in fin:
+                    remove_line = 0
+                    for word in delete_list:
+                        if word in line.upper():
+                            remove_line = 1
+                    if not remove_line:
+                        fout.write(line)
+                        
             result, seq = self.load_preview(
-                filename, canon, unitcode, initcode)
-            if result > gcode.MIN_ERROR:
-                self.report_gcode_error(result, seq, filename)
+                temp_file, canon, unitcode, initcode)
+            if result > GCODE.MIN_ERROR:
+                self.report_gcode_error(result, seq, os.path.basename(filename))
             self.calculate_gcode_properties(canon)
         except Exception as e:
             printError(_("PathViewer load error: {}", e))
             self.gcode_properties = None
         finally:
             shutil.rmtree(td)
+
+    def report_gcode_error(self, result, seq, temp_file):
+        msg = GCODE.strerror(result)
+        printError(_("PathViewer GCode error in file {} line {},{}",temp_file, seq,msg))
+        Notify.Error(_("3D plot, Error in {} line {}\n{}",temp_file, seq,msg))
 
     def calculate_gcode_properties(self, canon):
         def dist((x, y, z), (p, q, r)):

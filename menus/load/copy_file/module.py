@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:UTF-8 -*-# -*- coding: utf-8 -*-
 #
-# AlterX GUI - set JOG 0.1
+# AlterX GUI - filemanager copy
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
@@ -39,15 +39,7 @@ class func:
             button.setText("")
         else:
             button.setStyleSheet("color:black")
-            
-        self.button = button
-            
-    def update(self):
-        if UPDATER.value("jog_increment") == 0.1:
-            self.button.setStyleSheet("border:2px solid #32CD32")
-        else:
-            self.button.setStyleSheet("border:2px solid black")
-            
+
     def execute(self):
-        printVerbose(_("Button set JOG 0.1 clicked"))
-        UPDATER.emit("jog_increment", 0.1)
+        printVerbose(_("Button filemanager copy clicked"))
+        UPDATER.emit("fileman_copy")

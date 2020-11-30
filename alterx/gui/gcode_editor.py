@@ -284,6 +284,7 @@ class GcodeEditor(QWidget):
         UPDATER.add("geditor_set_search")
         UPDATER.add("geditor_set_replace")
 
+        UPDATER.signal("file", self.editor.load_program)
         UPDATER.signal("geditor_save", self.save_file)
         UPDATER.signal("geditor_new", lambda s: self.new_file())
         UPDATER.signal("geditor_undo", lambda s: self.editor.undo())

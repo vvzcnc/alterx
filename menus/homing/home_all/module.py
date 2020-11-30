@@ -42,3 +42,4 @@ class func:
     def execute(self):
         printVerbose(_("Command Home ALL"))
         c.home(-1)
+        c.wait_complete()
