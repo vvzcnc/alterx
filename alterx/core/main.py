@@ -64,6 +64,7 @@ class Main():
         UPDATER.add("jog_screen")
 
         UPDATER.set("jog_screen",1)
+        UPDATER.signal("jog_screen", self.jog_button_stop)
         UPDATER.signal("display_encoder_binding", self.display_encoder_handler)
         UPDATER.signal("display_inputs_binding", self.display_inputs_handler)
         UPDATER.signal("display_spindlerate", self.spindlerate_changed)
@@ -310,6 +311,8 @@ class Main():
                 selected_axis = 2  
             elif button in (1,8):
                 selected_axis = 3
+            else:
+                self.jog_button_stop()
 
             speed = 0
             if STAT.joint[selected_axis]["jointType"] == 1:
@@ -349,6 +352,13 @@ class Main():
                     #        True if STAT.motion_mode == 1 else False
                     #        ,a) 
             printVerbose(_("LinuxCNC mode {} {} {} {}", direction,selected_axis,speed,button))
+
+    def jog_button_stop(self, data=None):  
+        if STAT.task_state == LINUXCNC.STATE_ON:
+            for a in range(9):
+                COMMAND.jog(LINUXCNC.JOG_STOP,
+                True if STAT.motion_mode == 1 else False,
+                a) 
 
     def side_button_callback(self, button):
         if not button.isEnabled():
