@@ -85,9 +85,16 @@ class func(QMainWindow):
         vlay = QVBoxLayout(self.centralwidget)
         vlay.addWidget(AxisWidget())
         layout = QGridLayout()
-        labels = ["B+","Y+","Z+",
-                "X-","0","X+",
-                "Z-","Y-","B-",]
+
+        def safe_get_label(index):
+            if index<len(INFO.coordinates):
+                return INFO.coordinates[index]
+            else:
+                return ' '
+
+        labels = [safe_get_label(3)+"+",safe_get_label(1)+"+",safe_get_label(2)+"+",
+                safe_get_label(0)+"-"," ",safe_get_label(0)+"+",
+                safe_get_label(2)+"-",safe_get_label(1)+"-",safe_get_label(3)+"-",]
 
         for i in range(3):
             for j in range(3):

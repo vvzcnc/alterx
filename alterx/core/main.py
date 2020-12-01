@@ -303,16 +303,18 @@ class Main():
                 direction = 1  
 
             selected_axis = -1            
-            if button in (4,5):
-                selected_axis = 0
-            elif button in (2,7):
-                selected_axis = 1
-            elif button in (3,6):
-                selected_axis = 2  
-            elif button in (1,8):
-                selected_axis = 3
-            else:
-                self.jog_button_stop()
+            if button in (4,5) and len(INFO.coordinates)>0:
+                selected_axis = 0 if STAT.motion_mode == 1 else \
+                    INFO.default_axes_list[INFO.coordinates[0]]
+            elif button in (2,7) and len(INFO.coordinates)>1:
+                selected_axis = 1 if STAT.motion_mode == 1 else \
+                    INFO.default_axes_list[INFO.coordinates[1]]
+            elif button in (3,6) and len(INFO.coordinates)>2:
+                selected_axis = 2 if STAT.motion_mode == 1 else \
+                    INFO.default_axes_list[INFO.coordinates[2]] 
+            elif button in (1,8) and len(INFO.coordinates)>3:
+                selected_axis = 3 if STAT.motion_mode == 1 else \
+                    INFO.default_axes_list[INFO.coordinates[3]]
 
             speed = 0
             if STAT.joint[selected_axis]["jointType"] == 1:
@@ -332,7 +334,7 @@ class Main():
 
             if not UPDATER.value("jog_encoder"):
                 if UPDATER.value("jog_continuous"):
-                    if button:
+                    if button and selected_axis>=0:
                         COMMAND.jog(LINUXCNC.JOG_CONTINUOUS,
                             True if STAT.motion_mode == 1 else False,
                             selected_axis,speed)
