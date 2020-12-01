@@ -22,6 +22,8 @@ from . import interpret
 #from OpenGL.GL import *
 #from OpenGL.GLU import *
 from minigl import *
+from alterx.core.linuxcnc import LINUXCNC as linuxcnc
+
 
 import math
 import glnav
@@ -301,7 +303,7 @@ class GLCanon(interpret.Translated, interpret.ArcsToSegmentsMixin):
             return
         color = self.colors['m1xx']
         self.dwells_append(
-            (self.lineno, color, self.lo[0], self.lo[1], self.lo[2], self.state.plane/10-17))
+            (self.lineno, color, self.lo[0], self.lo[1], self.lo[2], int(self.state.plane/10-17)))
 
     def dwell(self, arg):
         if self.suppress > 0:
@@ -309,7 +311,7 @@ class GLCanon(interpret.Translated, interpret.ArcsToSegmentsMixin):
         self.dwell_time += arg
         color = self.colors['dwell']
         self.dwells_append(
-            (self.lineno, color, self.lo[0], self.lo[1], self.lo[2], self.state.plane/10-17))
+            (self.lineno, color, self.lo[0], self.lo[1], self.lo[2], int(self.state.plane/10-17)))
 
     def highlight(self, lineno, geometry):
         glLineWidth(3)
@@ -1084,10 +1086,24 @@ class GlCanonDraw:
 
     def idx_for_home_or_limit_icon(self, string):
         # parse posstr and return encoded idx
-        if (self.get_joints_mode()
-                and (self.stat.kinematics_type != linuxcnc.KINEMATICS_IDENTITY)
-                ):
-            jnum = int(string.replace(" ", "").split(":")[0])
+
+        # Note: for non-identity kinematics after homing,
+        # axis coordinate letters are displayed and home
+        # or limit conditions are displayed using
+        # allhomedicon and somelimiticon
+
+        # special case for extra joints after homing:
+        # allow display of individual joint limit icons
+        if  ((not self.get_joints_mode())
+             and ("EJ" in string)
+            ):
+            # parse extra joint number:
+            return int(string.replace(" ","").split(":")[0].split("EJ")[1])
+
+        if  (    self.get_joints_mode()
+             and (self.stat.kinematics_type != linuxcnc.KINEMATICS_IDENTITY)
+            ):
+            jnum = int(string.replace(" ","").split(":")[0])
             return jnum
 
         if (("Vel" in string)

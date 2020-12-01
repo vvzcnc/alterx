@@ -28,7 +28,8 @@ try:
         from .vtk.path_viewer_vtk import PathViewer
     else:
         from .gl.path_viewer_gl import PathViewer
-except:
+except Exception as e:
+    print("Error: {}".format(e))
     try:
         if INFO.display_path_viewer == "VTK":
             from .gl.path_viewer_gl import PathViewer

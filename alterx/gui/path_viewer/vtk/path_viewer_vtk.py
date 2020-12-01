@@ -447,7 +447,11 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
 
         self.update_dro(getattr(STAT,INFO.axes_list))
 
+        self.line = None
+        self._last_filename = str()
+
         UPDATER.signal("file", self.load_program)
+        UPDATER.signal("file_reload", self.reload_program)
         UPDATER.signal("position", self.update_position)
         UPDATER.signal("g5x_index", self.update_g5x_index)
         UPDATER.signal("g5x_offset", self.update_g5x_offset)
@@ -477,9 +481,6 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         UPDATER.signal("display_path", lambda s: self.toggleLivePlotVisibility())
         UPDATER.signal("display_dimensions", lambda s: self.toggleProgramDimensions())
 
-        self.line = None
-        self._last_filename = str()
-
         # Add the observers to watch for particular events. These invoke
         # Python functions.
         self.rotating = 0
@@ -490,7 +491,7 @@ class PathViewer(QVTKRenderWindowInteractor,base_backplot.BaseBackPlot):
         
         timer_viewer = QTimer(self)
         timer_viewer.timeout.connect(self.update_render)
-        timer_viewer.start(float(INI.find("VTK", "PATH_CYCLE_TIME") or '1.0')*1000)
+        timer_viewer.start(float(INI.find("DISPLAY", "PATH_CYCLE_TIME") or '1.0')*1000)
 
     def update_dro(self, stat):
         if self.visibleRegion().isEmpty():

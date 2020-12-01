@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# AlterX GUI - path viewer QT
+# AlterX GUI - path viewer QT GL
 #
 # Copyright 2020-2020 uncle-yura uncle-yura@tuta.io
 #
@@ -33,16 +33,22 @@ from . import glnav
 from . import interpret
 from . import glcanon
 
+from functools import partial
+
 import math
-#import gcode
-import pango
 import time
 import re
 import tempfile
 import shutil
-import thread
-import warnings
-import logging
+
+if sys.version_info.major > 2:
+    import gi
+    gi.require_version('Pango', '1.0')
+    from gi.repository import Pango
+    import _thread
+else:
+    import pango
+    import thread as _thread
 
 try:
     from PyQt5.QtOpenGL import QGLWidget
@@ -72,8 +78,25 @@ class PathViewer(QWidget):
         UPDATER.add("display_zoomout")
         UPDATER.add("display_path")
         UPDATER.add("display_dimensions")
-        self.glWidget = graphics_plot()
+        self.glWidget = GCodeGraphics()
         
+        UPDATER.signal('file', self.glWidget.load_program)
+        UPDATER.signal('file_reload', lambda s: self.glWidget.reloadfile(None))
+
+        UPDATER.signal("display_clear", lambda s: self.glWidget.set_view_signal("clear"))
+        UPDATER.signal("display_view",  lambda s: self.glWidget.set_view(s))
+        UPDATER.signal("display_zoomin", lambda s: self.glWidget.set_view_signal("zoom-in"))
+        UPDATER.signal("display_zoomout", lambda s: self.glWidget.set_view_signal("zoom-out"))
+        UPDATER.signal("display_path", 
+            lambda s: self.glWidget.set_view_signal(
+                "liveplot-off" if self.glWidget.show_live_plot else "liveplot-on"))
+        UPDATER.signal("display_dimensions", 
+            lambda s: self.glWidget.set_view_signal(
+                "dimensions-off" if self.glWidget.show_extents_option else "dimensions-on"))
+
+        UPDATER.signal('spindle', lambda s: self.glWidget.set_spindle_speed(s[0]["speed"]))
+        UPDATER.signal('program_units', lambda f: self.glWidget.set_metric_units(f))
+
         mainLayout = QHBoxLayout()
         mainLayout.addWidget(self.glWidget)
         self.setLayout(mainLayout)
@@ -89,59 +112,114 @@ class DummyProgress:
 
 
 class StatCanon(glcanon.GLCanon, interpret.StatMixin):
-    def __init__(self, colors, geometry, lathe_view_option, stat, random):
+    def __init__(self, colors, geometry, lathe_view_option, 
+                    stat, random, text, linecount, progress, arcdivision):
         glcanon.GLCanon.__init__(self, colors, geometry)
         interpret.StatMixin.__init__(self, stat, random)
-        self.progress = DummyProgress()
         self.lathe_view_option = lathe_view_option
+        self.text = text
+        self.linecount = linecount
+        self.progress = progress
+        self.aborted = False
+        self.arcdivision = arcdivision
 
     def is_lathe(self): return self.lathe_view_option
 
     def change_tool(self, pocket):
-        glcanon.GLCanon.change_tool(self, pocket)
-        interpret.StatMixin.change_tool(self, pocket)
+        glcanon.GLCanon.change_tool(self,pocket)
+        interpret.StatMixin.change_tool(self,pocket)
 
-###############################
-# widget for graphics plotting
-###############################
+    # not sure if this is used - copied from AXIS code
+    def do_cancel(self, event):
+        self.aborted = True
+
+    # not sure if this is used - copied from AXIS code
+    def check_abort(self):
+        #root_window.update()
+        if self.aborted: raise KeyboardInterrupt
+
+    def next_line(self, st):
+        glcanon.GLCanon.next_line(self, st)
+        self.progress.update(self.lineno)
+        # not sure if this is used - copied from AXIS code
+        if self.notify:
+            printInfo(_("GL Info {}",self.notify_message))
+            self.notify = 0
 
 
-class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
+class Progress:
+    def __init__(self, phases, total):
+        self.num_phases = phases
+        self.phase = 0
+        self.total = total or 1
+        self.lastcount = 0
+        self.text = None
+
+    def update(self, count, force=0):
+        if force or count - self.lastcount > 400:
+            fraction = (self.phase + count * 1. / self.total) / self.num_phases
+            self.lastcount = count
+            self.emit_percent(int(fraction *100))
+
+    # this is class patched
+    def emit_percent(self, percent):
+        pass
+
+    def nextphase(self, total):
+        self.phase += 1
+        self.total = total or 1
+        self.lastcount = -100
+        self.update(0, True)
+
+    def done(self):
+        self.emit_percent(-1)
+
+    # not sure if this is used - copied from AXIS code
+    def set_text(self, text):
+        if self.text is None:
+            self.text = ".info.progress"
+        else:
+            printInfo(_("GL Info progress: {}", text))
+
+class GraphPlot(QGLWidget,  glcanon.GlCanonDraw, glnav.GlNavBase):
+    percentLoaded = pyqtSignal(int)
     xRotationChanged = pyqtSignal(int)
     yRotationChanged = pyqtSignal(int)
     zRotationChanged = pyqtSignal(int)
-    rotation_vectors = [(1., 0., 0.), (0., 0., 1.)]
+    rotation_vectors = [(1.,0.,0.), (0., 0., 1.)]
 
     def __init__(self, parent=None):
-        QGLWidget.__init__(self, parent)
+        super(GraphPlot,self).__init__(parent)
         glnav.GlNavBase.__init__(self)
 
         def C(s):
             a = self.colors[s + "_alpha"]
             s = self.colors[s]
             return [int(x * 255) for x in s + (a,)]
-        # requires linuxcnc running before laoding this widget
 
+        stat = STAT
+
+        self.inifile = INI
         self.logger = POSLOG(STAT,
-                              C('backplotjog'),
-                              C('backplottraverse'),
-                              C('backplotfeed'),
-                              C('backplotarc'),
-                              C('backplottoolchange'),
-                              C('backplotprobing'),
-                              self.get_geometry()
-                              )
+            C('backplotjog'),
+            C('backplottraverse'),
+            C('backplotfeed'),
+            C('backplotarc'),
+            C('backplottoolchange'),
+            C('backplotprobing'),
+            self.get_geometry()
+        )
         # start tracking linuxcnc position so we can plot it
-        thread.start_new_thread(self.logger.start, (.01,))
-        glcanon.GlCanonDraw.__init__(self, STAT, self.logger)
+        _thread.start_new_thread(self.logger.start, (.01,))
+        glcanon.GlCanonDraw.__init__(self, stat, self.logger)
 
         # set defaults
+        self.current_view = 'p'
         self.fingerprint = ()
         self.select_primed = None
         self.lat = 0
         self.minlat = -90
         self.maxlat = 90
-        self.file_reload = UPDATER.value("file_reload")
 
         self._current_file = None
         self.highlight_line = None
@@ -160,152 +238,127 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
         self.show_tool = True
         self.show_dtg = True
         self.grid_size = 0.0
-        self.lathe_option = INFO.machine_is_lathe
-        self.current_view = ('y' if self.lathe_option else 'p')
-        self.show_lathe_radius = True
-        self.foam_option = bool(INI.find("DISPLAY", "FOAM"))
+        temp = self.inifile.find("DISPLAY", "LATHE")
+        self.lathe_option = bool(temp == "1" or temp == "True" or temp == "true" )
+        self.foam_option = bool(self.inifile.find("DISPLAY", "FOAM"))
         self.show_offsets = False
         self.show_overlay = False
-        self.enable_dro = True
+        self.enable_dro = False
         self.use_default_controls = True
         self.mouse_btn_mode = 0
         self.cancel_rotate = False
         self.use_gradient_background = False
         self.gradient_color1 = (0.0, 0.0, 1)
         self.gradient_color2 = (0.0, 0.0, 0.0)
-
-        self.a_axis_wrapped = INI.find("AXIS_A", "WRAPPED_ROTARY")
-        self.b_axis_wrapped = INI.find("AXIS_B", "WRAPPED_ROTARY")
-        self.c_axis_wrapped = INI.find("AXIS_C", "WRAPPED_ROTARY")
+        self.a_axis_wrapped = self.inifile.find("AXIS_A", "WRAPPED_ROTARY")
+        self.b_axis_wrapped = self.inifile.find("AXIS_B", "WRAPPED_ROTARY")
+        self.c_axis_wrapped = self.inifile.find("AXIS_C", "WRAPPED_ROTARY")
 
         live_axis_count = 0
-        for i, j in enumerate("XYZABCUVW"):
-            if STAT.axis_mask & (1 << i) == 0:
-                continue
+        for i,j in enumerate("XYZABCUVW"):
+            if self.stat.axis_mask & (1<<i) == 0: continue
             live_axis_count += 1
-        self.num_joints = int(INI.find("KINS", "JOINTS") or live_axis_count)
+        self.num_joints = int(self.inifile.find("KINS", "JOINTS") or live_axis_count)
 
         self.object = 0
         self.xRot = 0
         self.yRot = 0
         self.zRot = 0
-
+  
         # add a 100ms timer to poll linuxcnc stats
         self.timer = QTimer()
         self.timer.timeout.connect(self.poll)
-        self.timer.start(float(INI.find("DISPLAY", "PATH_CYCLE_TIME") or '1.0')*1000)
+        self.timer.start(float(INI.find("DISPLAY","PATH_CYCLE_TIME") or '1.0')*1000)
 
         self.Green = QColor.fromCmykF(0.40, 0.0, 1.0, 0.0)
         self.inhibit_selection = True
 
-    def poll(self):   
-        if self._current_file != STAT.file:
-            self.load()
-            
-        if self.file_reload != UPDATER.value("file_reload"):
-            self.load()
-            self.file_reload = UPDATER.value("file_reload")
-    
+    def poll(self):
         if self.visibleRegion().isEmpty():
             return
 
-        if self.lathe_option:  
-            self.show_lathe_radius = False if UPDATER.check("diameter_multiplier") == 2 else True
-    
-        if UPDATER.check("display_clear"):
-            self.clear_live_plotter()
-
-        if UPDATER.check("display_view"):
-            if UPDATER.display_view:
-                self.current_view = UPDATER.display_view
-                self.set_current_view()
-                UPDATER.set("display_view", False)
-
-        if UPDATER.check("display_zoomin"):
-            self.zoomin()
-
-        if UPDATER.check("display_zoomout"):
-            self.zoomout()
-
-        if UPDATER.check("display_path"):
-            self.show_live_plot = not self.show_live_plot
-            self.updateGL()
-
-        if UPDATER.check("display_dimensions"):
-            self.show_extents_option = not self.show_extents_option
-            self.updateGL()
-
-        self.metric_units = INFO.get_metric()
+        s = self.stat
 
         fingerprint = (self.logger.npts, self.soft_limits(),
-                       STAT.actual_position, STAT.joint_actual_position,
-                       STAT.homed, STAT.g5x_offset, STAT.g92_offset, STAT.limit, STAT.tool_in_spindle,
-                       STAT.motion_mode, STAT.current_vel)
+            s.actual_position, s.joint_actual_position,
+            s.homed, s.g5x_offset, s.g92_offset, s.limit, s.tool_in_spindle,
+            s.motion_mode, s.current_vel)
 
         if fingerprint != self.fingerprint:
             self.fingerprint = fingerprint
             self.update()
-
         return True
 
+    # when shown make sure display is set to the default view
     def showEvent(self, event):
-        super(graphics_plot ,self).showEvent(event)
+        super(GraphPlot ,self).showEvent(event)
         self.set_current_view()
 
-    def load(self, filename=None):
-        if not filename and STAT.file:
-            filename = STAT.file
-        elif not filename and not STAT.file:
+    def load(self,filename = None):
+        s = self.stat
+        s.poll()
+        if not filename and s.file:
+            filename = s.file
+        elif not filename and not s.file:
             return
+
+
+        lines = open(filename).readlines()
+        progress = Progress(2, len(lines))
+        progress.emit_percent = self.emit_percent
+
+        code = []
+        i = 0
+        for i, l in enumerate(lines):
+            l = l.expandtabs().replace("\r", "")
+            code.extend(["%6d: " % (i+1), "lineno", l, ""])
+            if i % 1000 == 0:
+                del code[:]
+                progress.update(i)
+        if code:
+            pass
+        progress.nextphase(len(lines))
+
 
         td = tempfile.mkdtemp()
         self._current_file = filename
         try:
-            random = int(INI.find("EMCIO", "RANDOM_TOOLCHANGER") or 0)
-            canon = StatCanon(self.colors, self.get_geometry(),
-                              self.lathe_option, STAT, random)
-            parameter = INFO.parameter_file
-            temp_parameter = os.path.join(
-                td, os.path.basename(parameter))
+            random = int(self.inifile.find("EMCIO", "RANDOM_TOOLCHANGER") or 0)
+            arcdivision = int(self.inifile.find("DISPLAY", "ARCDIVISION") or 64)
+            text = ''
+            canon = StatCanon(self.colors, self.get_geometry(),self.lathe_option, s, text, random, i, progress, arcdivision)
+            parameter = self.inifile.find("RS274NGC", "PARAMETER_FILE")
+            temp_parameter = os.path.join(td, os.path.basename(parameter or "linuxcnc.var"))
             if parameter:
                 shutil.copy(parameter, temp_parameter)
             canon.parameter_file = temp_parameter
-            unitcode = "G%d" % (20 + (STAT.linear_units == 1))
-            initcode = INI.find("RS274NGC", "RS274NGC_STARTUP_CODE") or ""
-            
-            temp_file = os.path.join(
-                td, os.path.basename(filename))
-                
-            delete_list = ["G4"]
-            with open(filename) as fin, open(temp_file, "w+") as fout:
-                for line in fin:
-                    remove_line = 0
-                    for word in delete_list:
-                        if word in line.upper():
-                            remove_line = 1
-                    if not remove_line:
-                        fout.write(line)
-                        
-            result, seq = self.load_preview(
-                temp_file, canon, unitcode, initcode)
+            unitcode = "G%d" % (20 + (s.linear_units == 1))
+            initcode = self.inifile.find("RS274NGC", "RS274NGC_STARTUP_CODE") or ""
+            result, seq = self.load_preview(filename, canon, unitcode, initcode)
             if result > GCODE.MIN_ERROR:
-                self.report_gcode_error(result, seq, os.path.basename(filename))
+                self.report_gcode_error(result, seq, filename)
             self.calculate_gcode_properties(canon)
         except Exception as e:
-            printError(_("PathViewer load error: {}", e))
+            printError(_("PathViewer load error: {}",e))
             self.gcode_properties = None
         finally:
             shutil.rmtree(td)
+            if canon:
+                canon.progress = DummyProgress()
+            try:
+                progress.done()
+            except UnboundLocalError:
+                pass
+        self._redraw()
 
-    def report_gcode_error(self, result, seq, temp_file):
-        msg = GCODE.strerror(result)
-        printError(_("PathViewer GCode error in file {} line {},{}",temp_file, seq,msg))
-        Notify.Error(_("3D plot, Error in {} line {}\n{}",temp_file, seq,msg))
+    def emit_percent(self, percent):
+        self.percentLoaded.emit(percent)
 
     def calculate_gcode_properties(self, canon):
-        def dist((x, y, z), (p, q, r)):
+        def dist(xxx_todo_changeme, xxx_todo_changeme1):
+            (x,y,z) = xxx_todo_changeme
+            (p,q,r) = xxx_todo_changeme1
             return ((x-p)**2 + (y-q)**2 + (z-r)**2) ** .5
-
         def from_internal_units(pos, unit=None):
             if unit is None:
                 unit = self.stat.linear_units
@@ -313,7 +366,6 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
 
             lus = [lu, lu, lu, 1, 1, 1, lu, lu, lu]
             return [a*b for a, b in zip(pos, lus)]
-
         def from_internal_linear_unit(v, unit=None):
             if unit is None:
                 unit = self.stat.linear_units
@@ -323,9 +375,9 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
         props = {}
         loaded_file = self._current_file
         max_speed = float(
-            INI.find("DISPLAY", "MAX_LINEAR_VELOCITY")
-            or INI.find("TRAJ", "MAX_LINEAR_VELOCITY")
-            or INI.find("AXIS_X", "MAX_VELOCITY")
+            self.inifile.find("DISPLAY","MAX_LINEAR_VELOCITY")
+            or self.inifile.find("TRAJ","MAX_LINEAR_VELOCITY")
+            or self.inifile.find("AXIS_X","MAX_VELOCITY")
             or 1)
 
         if not loaded_file:
@@ -334,7 +386,7 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
             ext = os.path.splitext(loaded_file)[1]
             program_filter = None
             if ext:
-                program_filter = INI.find("FILTER", ext[1:])
+                program_filter = self.inifile.find("FILTER", ext[1:])
             name = os.path.basename(loaded_file)
             if program_filter:
                 props['name'] = _("generated from %s") % name
@@ -343,8 +395,7 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
 
             size = os.stat(loaded_file).st_size
             lines = sum(1 for line in open(loaded_file))
-            props['size'] = _("%(size)s bytes\n%(lines)s gcode lines") % {
-                'size': size, 'lines': lines}
+            props['size'] = _("%(size)s bytes\n%(lines)s gcode lines") % {'size': size, 'lines': lines}
 
             if self.metric_units:
                 conv = 1
@@ -356,25 +407,23 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
                 fmt = "%.4f"
 
             mf = max_speed
-            #print canon.traverse[0]
+            #print(canon.traverse[0])
 
             g0 = sum(dist(l[1][:3], l[2][:3]) for l in canon.traverse)
             g1 = (sum(dist(l[1][:3], l[2][:3]) for l in canon.feed) +
-                  sum(dist(l[1][:3], l[2][:3]) for l in canon.arcfeed))
+                sum(dist(l[1][:3], l[2][:3]) for l in canon.arcfeed))
             gt = (sum(dist(l[1][:3], l[2][:3])/min(mf, l[3]) for l in canon.feed) +
-                  sum(dist(l[1][:3], l[2][:3])/min(mf, l[3]) for l in canon.arcfeed) +
-                  sum(dist(l[1][:3], l[2][:3])/mf for l in canon.traverse) +
-                  canon.dwell_time
-                  )
-
-            props['G0'] = "%f %s".replace("%f", fmt) % (
-                from_internal_linear_unit(g0, conv), units)
-            props['gG1'] = "%f %s".replace("%f", fmt) % (
-                from_internal_linear_unit(g1, conv), units)
+                sum(dist(l[1][:3], l[2][:3])/min(mf, l[3])  for l in canon.arcfeed) +
+                sum(dist(l[1][:3], l[2][:3])/mf  for l in canon.traverse) +
+                canon.dwell_time
+                )
+ 
+            props['G0'] = "%f %s".replace("%f", fmt) % (from_internal_linear_unit(g0, conv), units)
+            props['gG1'] = "%f %s".replace("%f", fmt) % (from_internal_linear_unit(g1, conv), units)
             if gt > 120:
                 props['Run'] = _("%.1f Minutes") % (gt/60)
             else:
-                props['Run'] = _("%d Seconds") % (int(gt))
+                props['Run'] = _("%d Ceconds") % (int(gt))
 
             min_extents = from_internal_units(canon.min_extents, conv)
             max_extents = from_internal_units(canon.max_extents, conv)
@@ -382,29 +431,29 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
                 a = min_extents[i]
                 b = max_extents[i]
                 if a != b:
-                    props[c] = _("%(a)f to %(b)f = %(diff)f %(units)s").replace(
-                        "%f", fmt) % {'a': a, 'b': b, 'diff': b-a, 'units': units}
+                    props[c] = _("%(a)f to %(b)f = %(diff)f %(units)s").replace("%f", fmt) % {'a': a, 'b': b, 'diff': b-a, 'units': units}
             props['Units'] = units
         self.gcode_properties = props
 
     # setup details when window shows
     def realize(self):
         self.set_current_view()
+        s = self.stat
+        try:
+            s.poll()
+        except:
+            return
         self._current_file = None
 
-        self.font_base, width, linespace = \
-            glnav.use_pango_font('courier bold 16', 0, 128)
+        self.font_base, width, linespace = glnav.use_pango_font('courier bold 16', 0, 128)
         self.font_linespace = linespace
         self.font_charwidth = width
         glcanon.GlCanonDraw.realize(self)
+        if s.file: self.load()
 
-        if STAT.file:
-            self.load()
-            
     # gettter / setters
     def get_font_info(self):
         return self.font_charwidth, self.font_linespace, self.font_base
-
     def get_program_alpha(self): return self.program_alpha
     def get_joints_mode(self): return self.use_joints_mode
     def get_show_commanded(self): return self.use_commanded
@@ -421,38 +470,31 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
     def get_show_distance_to_go(self): return self.show_dtg
     def get_grid_size(self): return self.grid_size
     def get_show_offsets(self): return self.show_offsets
-
     def get_view(self):
-        view_dict = {'x': 0, 'y': 1, 'y2': 1, 'z': 2, 'z2': 2, 'p': 3}
+        view_dict = {'x':0, 'y':1, 'y2':1, 'z':2, 'z2':2, 'p':3}
         return view_dict.get(self.current_view, 3)
-
     def get_geometry(self):
-        temp = INI.find("DISPLAY", "GEOMETRY")
+        temp = self.inifile.find("DISPLAY", "GEOMETRY")
         if temp:
             _geometry = re.split(" *(-?[XYZABCUVW])", temp.upper())
             self._geometry = "".join(reversed(_geometry))
         else:
             self._geometry = 'XYZ'
         return self._geometry
-
     def is_lathe(self): return self.lathe_option
     def is_foam(self): return self.foam_option
-
     def get_current_tool(self):
         for i in self.stat.tool_table:
             if i[0] == self.stat.tool_in_spindle:
                 return i
-
     def get_highlight_line(self): return self.highlight_line
     def get_a_axis_wrapped(self): return self.a_axis_wrapped
     def get_b_axis_wrapped(self): return self.b_axis_wrapped
     def get_c_axis_wrapped(self): return self.c_axis_wrapped
-
     def set_current_view(self):
         if self.current_view not in ['p', 'x', 'y', 'y2', 'z', 'z2']:
             return
         return getattr(self, 'set_view_%s' % self.current_view)()
-
     def clear_live_plotter(self):
         self.logger.clear()
         self.update()
@@ -466,107 +508,99 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
     # trick - we are not gtk
     def activate(self):
         return
-
     def deactivate(self):
         return
-
     def swapbuffers(self):
         return
     # redirect for conversion from pygtk to pyqt
     # gcannon assumes this function name
-
     def _redraw(self):
         self.updateGL()
 
-    # This overrides glcannon.py method so we can change the DRO
-    def dro_format(self, s, spd, dtg, limit, homed, positions, axisdtg, g5x_offset, g92_offset, tlo_offset):
-        if not self.enable_dro:
-            return limit, homed, [''], ['']
+    # This overrides glcannon.py method so we can change the DRO 
+    def dro_format(self,s,spd,dtg,limit,homed,positions,axisdtg,g5x_offset,g92_offset,tlo_offset):
+            if not self.enable_dro:
+                return limit, homed, [''], ['']
 
-        if self.metric_units:
-            format = "% 6s:% 9.3f"
-            if self.show_dtg:
-                droformat = " " + format + "  DTG %1s:% 9.3f"
-            else:
-                droformat = " " + format
-            offsetformat = "% 5s %1s:% 9.3f  G92 %1s:% 9.3f"
-            rotformat = "% 5s %1s:% 9.3f"
-        else:
-            format = "% 6s:% 9.4f"
-            if self.show_dtg:
-                droformat = " " + format + "  DTG %1s:% 9.4f"
-            else:
-                droformat = " " + format
-            offsetformat = "% 5s %1s:% 9.4f  G92 %1s:% 9.4f"
-            rotformat = "% 5s %1s:% 9.4f"
-        diaformat = " " + format
-
-        posstrs = []
-        droposstrs = []
-        for i in range(9):
-            a = "XYZABCUVW"[i]
-            if s.axis_mask & (1 << i):
-                posstrs.append(format % (a, positions[i]))
+            if self.metric_units:
+                format = "% 6s:% 9.3f"
                 if self.show_dtg:
-                    droposstrs.append(droformat %
-                                      (a, positions[i], a, axisdtg[i]))
+                    droformat = " " + format + "  DTG %1s:% 9.3f"
                 else:
-                    droposstrs.append(droformat % (a, positions[i]))
-        droposstrs.append("")
-
-        for i in range(9):
-            index = s.g5x_index
-            if index < 7:
-                label = "G5%d" % (index+3)
+                    droformat = " " + format
+                offsetformat = "% 5s %1s:% 9.3f  G92 %1s:% 9.3f"
+                rotformat = "% 5s %1s:% 9.3f"
             else:
-                label = "G59.%d" % (index-6)
-
-            a = "XYZABCUVW"[i]
-            if s.axis_mask & (1 << i):
-                droposstrs.append(offsetformat %
-                                  (label, a, g5x_offset[i], a, g92_offset[i]))
-        droposstrs.append(rotformat % (label, 'R', s.rotation_xy))
-
-        droposstrs.append("")
-        for i in range(9):
-            a = "XYZABCUVW"[i]
-            if s.axis_mask & (1 << i):
-                droposstrs.append(rotformat % ("TLO", a, tlo_offset[i]))
-
-        # if its a lathe only show radius or diameter as per property
-        if self.is_lathe():
-            posstrs[0] = ""
-            if self.show_lathe_radius:
-                posstrs.insert(1, format % ("Rad", positions[0]))
-            else:
-                posstrs.insert(1, format % ("Dia", positions[0]*2.0))
-            droposstrs[0] = ""
-            if self.show_dtg:
-                if self.show_lathe_radius:
-                    droposstrs.insert(1, droformat %
-                                      ("Rad", positions[0], "R", axisdtg[0]))
+                format = "% 6s:% 9.4f"
+                if self.show_dtg:
+                    droformat = " " + format + "  DTG %1s:% 9.4f"
                 else:
-                    droposstrs.insert(1, droformat % (
-                        "Dia", positions[0]*2.0, "D", axisdtg[0]*2.0))
-            else:
-                if self.show_lathe_radius:
-                    droposstrs.insert(1, droformat % ("Rad", positions[0]))
-                else:
-                    droposstrs.insert(1, diaformat % ("Dia", positions[0]*2.0))
+                    droformat = " " + format
+                offsetformat = "% 5s %1s:% 9.4f  G92 %1s:% 9.4f"
+                rotformat = "% 5s %1s:% 9.4f"
+            diaformat = " " + format
 
-        if self.show_velocity:
-            posstrs.append(format % ("Vel", spd))
-            pos = 0
+            posstrs = []
+            droposstrs = []
             for i in range(9):
-                if s.axis_mask & (1 << i):
-                    pos += 1
-            if self.is_lathe:
-                pos += 1
-            droposstrs.insert(pos, " " + format % ("Vel", spd))
+                a = "XYZABCUVW"[i]
+                if s.axis_mask & (1<<i):
+                    posstrs.append(format % (a, positions[i]))
+                    if self.show_dtg:
+                        droposstrs.append(droformat % (a, positions[i], a, axisdtg[i]))
+                    else:
+                        droposstrs.append(droformat % (a, positions[i]))
+            droposstrs.append("")
 
-        if self.show_dtg:
-            posstrs.append(format % ("DTG", dtg))
-        return limit, homed, posstrs, droposstrs
+            for i in range(9):
+                index = s.g5x_index
+                if index<7:
+                    label = "G5%d" % (index+3)
+                else:
+                    label = "G59.%d" % (index-6)
+
+                a = "XYZABCUVW"[i]
+                if s.axis_mask & (1<<i):
+                    droposstrs.append(offsetformat % (label, a, g5x_offset[i], a, g92_offset[i]))
+            droposstrs.append(rotformat % (label, 'R', s.rotation_xy))
+
+            droposstrs.append("")
+            for i in range(9):
+                a = "XYZABCUVW"[i]
+                if s.axis_mask & (1<<i):
+                    droposstrs.append(rotformat % ("TLO", a, tlo_offset[i]))
+
+            # if its a lathe only show radius or diameter as per property
+            if self.is_lathe():
+                posstrs[0] = ""
+                if self.show_lathe_radius:
+                    posstrs.insert(1, format % ("Rad", positions[0]))
+                else:
+                    posstrs.insert(1, format % ("Dia", positions[0]*2.0))
+                droposstrs[0] = ""
+                if self.show_dtg:
+                    if self.show_lathe_radius:
+                        droposstrs.insert(1, droformat % ("Rad", positions[0], "R", axisdtg[0]))
+                    else:
+                        droposstrs.insert(1, droformat % ("Dia", positions[0]*2.0, "D", axisdtg[0]*2.0))
+                else:
+                    if self.show_lathe_radius:
+                        droposstrs.insert(1, droformat % ("Rad", positions[0]))
+                    else:
+                        droposstrs.insert(1, diaformat % ("Dia", positions[0]*2.0))
+
+            if self.show_velocity:
+                posstrs.append(format % ("Vel", spd))
+                pos=0
+                for i in range(9):
+                    if s.axis_mask & (1<<i): pos +=1
+                if self.is_lathe:
+                    pos +=1
+                droposstrs.insert(pos, " " + format % ("Vel", spd))
+
+            if self.show_dtg:
+                posstrs.append(format % ("DTG", dtg))
+            return limit, homed, posstrs, droposstrs
 
     def minimumSizeHint(self):
         return QSize(50, 50)
@@ -616,12 +650,13 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
     # redraws the screen aprox every 100ms
     def paintGL(self):
         #GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-        # GL.glLoadIdentity() # reset the model-view matrix
+        #GL.glLoadIdentity() # reset the model-view matrix
         #GL.glTranslated(0.0, 0.0, -10.0)
-        # GL.glRotated(self.xRot / 16.0, 1.0, 0.0, 0.0) # rotate on x
-        # GL.glRotated(self.yRot / 16.0, 0.0, 1.0, 0.0) # rotate on y
-        # GL.glRotated(self.zRot / 16.0, 0.0, 0.0, 1.0) # rotate on z
+        #GL.glRotated(self.xRot / 16.0, 1.0, 0.0, 0.0) # rotate on x
+        #GL.glRotated(self.yRot / 16.0, 0.0, 1.0, 0.0) # rotate on y
+        #GL.glRotated(self.zRot / 16.0, 0.0, 0.0, 1.0) # rotate on z
 
+        
         try:
             if self.perspective:
                 self.redraw_perspective()
@@ -629,48 +664,48 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
                 self.redraw_ortho()
 
         except Exception as e:
-            # print'error',e
+            printError(_("PathViewer paint error: {}",e))
             return
             #genList = GL.glGenLists(1)
-            # self.draw_small_origin(genList)
-            # GL.glCallList(genList)
+            #self.draw_small_origin(genList)
+            #GL.glCallList(genList)
             # display something - probably in QtDesigner
             GL.glCallList(self.object)
 
     # replaces glcanoon function
     def redraw_perspective(self):
+
         w = self.winfo_width()
         h = self.winfo_height()
         GL.glViewport(0, 0, w, h) # left corner in pixels
         if self.use_gradient_background:
-                GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-                ###
-                GL.glMatrixMode(GL.GL_PROJECTION)
-                GL.glLoadIdentity() # switch to identity (origin) matrix
+            GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+            ###
+            GL.glMatrixMode(GL.GL_PROJECTION)
+            GL.glLoadIdentity() # switch to identity (origin) matrix
 
-                GL.glMatrixMode(GL.GL_MODELVIEW)
-                GL.glPushMatrix()
-                GL.glPushMatrix()
-                GL.glLoadIdentity()
+            GL.glMatrixMode(GL.GL_MODELVIEW)
+            GL.glPushMatrix()
+            GL.glPushMatrix()
+            GL.glLoadIdentity()
 
-                GL.glDisable(GL.GL_DEPTH_TEST)
-                GL.glBegin(GL.GL_QUADS)
-                #//bottom color
-                color = self.gradient_color1
-                GL.glColor3f(color[0],color[1],color[2])
-                GL.glVertex2f(-1.0, -1.0)
-                GL.glVertex2f(1.0, -1.0)
-                #//top color
-                color = self.gradient_color2
-                GL.glColor3f(color[0],color[1],color[2])
-                GL.glVertex2f(1.0, 1.0)
-                GL.glVertex2f(-1.0, 1.0)
-                GL.glEnd()
-                GL.glEnable(GL.GL_DEPTH_TEST)
+            GL.glDisable(GL.GL_DEPTH_TEST)
+            GL.glBegin(GL.GL_QUADS)
+            #//bottom color
+            color = self.gradient_color1
+            GL.glColor3f(color[0],color[1],color[2])
+            GL.glVertex2f(-1.0, -1.0)
+            GL.glVertex2f(1.0, -1.0)
+            #//top color
+            color = self.gradient_color2
+            GL.glColor3f(color[0],color[1],color[2])
+            GL.glVertex2f(1.0, 1.0)
+            GL.glVertex2f(-1.0, 1.0)
+            GL.glEnd()
+            GL.glEnable(GL.GL_DEPTH_TEST)
 
-                GL.glPopMatrix()
-                GL.glPopMatrix()
-
+            GL.glPopMatrix()
+            GL.glPopMatrix()
         else:
             # Clear the background and depth buffer.
             GL.glClearColor(*(self.colors['back'] + (0,)))
@@ -756,12 +791,10 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
         if side < 0:
             return
         GL.glViewport((width - side) // 2, (height - side) // 2, side, side)
-        # To operate on projection-view matrix
-        GL.glMatrixMode(GL.GL_PROJECTION)
-        GL.glLoadIdentity()  # reset the model-view matrix
+        GL.glMatrixMode(GL.GL_PROJECTION) # To operate on projection-view matrix
+        GL.glLoadIdentity() # reset the model-view matrix
         GL.glOrtho(-0.5, +0.5, +0.5, -0.5, 4.0, 15.0)
-        GL.glMatrixMode(GL.GL_MODELVIEW)  # To operate on model-view matrix
-
+        GL.glMatrixMode(GL.GL_MODELVIEW) # To operate on model-view matrix
 
     ####################################
     # Property setting functions
@@ -780,8 +813,7 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
         if self.select_primed:
             primedx, primedy = self.select_primed
             distance = max(abs(x - primedx), abs(y - primedy))
-            if distance > 8:
-                self.select_cancel()
+            if distance > 8: self.select_cancel()
 
     def select_prime(self, x, y):
         self.select_primed = x, y
@@ -791,8 +823,7 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
     # probably needs a thread - strange that Tkinter and GTK don't suffer...
     def select_fire(self):
         if self.inhibit_selection: return
-        if not self.select_primed:
-            return
+        if not self.select_primed: return
         x, y = self.select_primed
         self.select_primed = None
         self.select(x, y)
@@ -812,7 +843,7 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
     def mousePressEvent(self, event):
         if (event.buttons() & Qt.LeftButton):
             self.select_prime(event.pos().x(), event.pos().y())
-            #print self.winfo_width()/2 - event.pos().x(), self.winfo_height()/2 - event.pos().y()
+            #print( self.winfo_width()/2 - event.pos().x(), self.winfo_height()/2 - event.pos().y())
         self.recordMouse(event.pos().x(), event.pos().y())
         self.startZoom(event.pos().y())
 
@@ -824,7 +855,7 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
 
     def mouseDoubleClickEvent(self, event):
         if event.button() & Qt.RightButton:
-            self.clear_live_plotter()
+            self.logger.clear()
 
     def mouseMoveEvent(self, event):
         # move
@@ -832,23 +863,22 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
             self.translateOrRotate(event.pos().x(), event.pos().y())
         # rotate
         elif event.buttons() & Qt.RightButton:
-            self.set_prime(event.pos().x(), event.pos().y())
-            self.rotateOrTranslate(event.pos().x(), event.pos().y())
+            if not self.cancel_rotate:
+                self.set_prime(event.pos().x(), event.pos().y())
+                self.rotateOrTranslate(event.pos().x(), event.pos().y())
         # zoom
         elif event.buttons() & Qt.MiddleButton:
             self.continueZoom(event.pos().y())
 
     def user_plot(self):
         pass
-        # GL.glCallList(self.object)
+        #GL.glCallList(self.object)
 
-    def panView(self, vertical=0, horizontal=0):
-        self.translateOrRotate(self.xmouse + vertical,
-                               self.ymouse + horizontal)
+    def panView(self,vertical=0,horizontal=0):
+        self.translateOrRotate(self.xmouse + vertical, self.ymouse + horizontal)
 
-    def rotateView(self, vertical=0, horizontal=0):
-        self.rotateOrTranslate(self.xmouse + vertical,
-                               self.ymouse + horizontal)
+    def rotateView(self,vertical=0,horizontal=0):
+        self.rotateOrTranslate(self.xmouse + vertical, self.ymouse + horizontal)
 
     ############################################################
     # display for when linuxcnc isn't runnimg - forQTDesigner
@@ -946,3 +976,259 @@ class graphics_plot(QGLWidget, glcanon.GlCanonDraw, glnav.GlNavBase):
         GL.glVertex3d(x2, y2, -z)
         GL.glVertex3d(x1, y1, -z)
 
+class  GCodeGraphics(GraphPlot):
+    def __init__(self, parent=None):
+        super( GCodeGraphics, self).__init__(parent)
+
+        self.colors['overlay_background'] = (0.0, 0.0, 0.0) 
+        self._overlayColor = QColor(0, 0, 0, 0)
+
+        self.colors['back'] = (0.0, 0.0, 0.0) 
+        self._backgroundColor = QColor(0, 0, 0.75, 150)
+
+        self.use_gradient_background = False
+        # color1 is the bottom color that blends up to color2
+        self.gradient_color1 = (0.,0,.5)
+        self.gradient_color2 = (0,.0, 0)
+
+        self.show_overlay = False  # no DRO or DRO overlay
+        self._reload_filename = None
+
+        self._view_incr = 20
+        self.inhibit_selection = False
+
+    def set_view_signal(self, view, args={}):
+        v = view.lower()
+        if v == 'clear':
+            self.logger.clear()
+        elif v == 'zoom-in':
+            self.zoomin()
+        elif v == 'zoom-out':
+            self.zoomout()
+        elif v == 'pan-down':
+            self.recordMouse(0,0)
+            self.translateOrRotate(0,self._view_incr)
+        elif v == 'pan-up':
+            self.recordMouse(0,0)
+            self.translateOrRotate(0,-self._view_incr)
+        elif v == 'pan-right':
+            self.recordMouse(0,0)
+            self.translateOrRotate(self._view_incr,0)
+        elif v == 'pan-left':
+            self.recordMouse(0,0)
+            self.translateOrRotate(-self._view_incr,0)
+        elif v == 'rotate-ccw':
+            self.recordMouse(0,0)
+            self.rotateOrTranslate(self._view_incr,0)
+        elif v == 'rotate-cw':
+            self.recordMouse(0,0)
+            self.rotateOrTranslate(-self._view_incr,0)
+        elif v == 'rotate-up':
+            self.recordMouse(0,0)
+            self.rotateOrTranslate(0,self._view_incr)
+        elif v == 'rotate-down':
+            self.recordMouse(0,0)
+            self.rotateOrTranslate(0,-self._view_incr)
+        elif v == 'overlay-offsets-on':
+            self.setShowOffsets(True)
+        elif v == 'overlay-offsets-off':
+            self.setShowOffsets(False)
+        elif v == 'overlay-dro-on':
+            self.setdro(True)
+        elif v == 'overlay-dro-off':
+            self.setdro(False)
+        elif v == 'pan-view':
+            self.panView(args.get('X'),args.get('Y'))
+        elif v == 'rotate-view':
+            self.rotateView(args.get('X'),args.get('Y'))
+        elif v == 'grid-size':
+            self.grid_size = args.get('SIZE')
+            self.updateGL()
+        elif v == 'alpha-mode-on':
+            self.set_alpha_mode(True)
+        elif v == 'alpha-mode-off':
+            self.set_alpha_mode(False)
+        elif v == 'inhibit-selection-on':
+            self.inhibit_selection = True
+        elif v == 'inhibit-selection-off':
+            self.inhibit_selection = False
+        elif v == 'dimensions-on':
+            self.show_extents_option = True
+            self.updateGL()
+        elif v == 'dimensions-off':
+            self.show_extents_option = False
+            self.updateGL()
+        elif v == 'liveplot-on':
+            self.show_live_plot = True
+            self.updateGL()
+        elif v == 'liveplot-off':
+            self.show_live_plot = False
+            self.updateGL()
+        else:
+            self.set_view(v)
+
+    def load_program(self, fname):
+        printDebug(_("PathViewer load: {}", fname))
+        self._reload_filename = fname
+        self.load(fname)
+        #STATUS.emit('graphics-gcode-properties',self.gcode_properties)
+        # reset the current view to standard calculated zoom and position
+        self.set_current_view()
+
+    def set_metric_units(self, state):
+        self.metric_units = state
+        self.updateGL()
+
+    def set_spindle_speed(self, rate):
+        if rate < 1: rate = 1
+        self.spindle_speed = rate
+
+    def set_view(self, value):
+        view = str(value).lower()
+        if self.lathe_option:
+            if view not in ['p', 'y', 'y2']:
+                return False
+        elif view not in ['p', 'x', 'y', 'z', 'z2']:
+            return False
+        self.current_view = view
+        if self.initialised:
+            self.set_current_view()
+
+    def reloadfile(self, w):
+        printDebug(_("PathViewer reload: {}",self._reload_filename))
+        try:
+            self.load(self._reload_filename)
+            #STATUS.emit('graphics-gcode-properties',self.gcode_properties)
+        except Exception as e:
+            printError(_("PathViewer reload {} error: {}", self._reload_filename, e))
+            pass
+
+
+    ####################################################
+    # functions that override qt5_graphics
+    ####################################################
+    def report_gcode_error(self, result, seq, filename):
+        error_str = GCODE.strerror(result)
+        Notify.Error(_("3D plot, Error in {} line {}\n{}",
+                        os.path.basename(filename),str(seq),error_str))
+        printError(_("3D plot, Error in {} line {}\n{}",
+                        os.path.basename(filename),str(seq),error_str))
+
+    # Override qt5_graphics / glcannon.py function so we can emit a GObject signal
+    def update_highlight_variable(self, line):
+        self.highlight_line = line
+        if line is None:
+            line = -1
+        #STATUS.emit('graphics-line-selected', line)
+
+    def select_fire(self):
+        if self.inhibit_selection: return
+        if STAT.interp_state != LINUXCNC.INTERP_IDLE: return
+        if not self.select_primed: return
+        x, y = self.select_primed
+        self.select_primed = None
+        self.select(x, y)
+
+    # override user plot -One could add gl commands to plot static objects here
+    def user_plot(self):
+        return
+
+    def emit_percent(self, f):
+        super( GCodeGraphics, self).emit_percent(f)
+        #STATUS.emit('graphics-loading-progress',f)
+
+    #########################################################################
+    # This is how designer can interact with our widget properties.
+    # property getter/setters
+    #########################################################################
+
+    # VIEW
+    def setview(self, view):
+        self.current_view = view
+        self.set_view(view)
+    def getview(self):
+        return self.current_view
+    def resetview(self):
+        self.set_view('p')
+    _view = pyqtProperty(str, getview, setview, resetview)
+
+    # DRO
+    def setdro(self, state):
+        self.enable_dro = state
+        self.updateGL()
+    def getdro(self):
+        return self.enable_dro
+    _dro = pyqtProperty(bool, getdro, setdro)
+
+    # DTG
+    def setdtg(self, state):
+        self.show_dtg = state
+        self.updateGL()
+    def getdtg(self):
+        return self.show_dtg
+    _dtg = pyqtProperty(bool, getdtg, setdtg)
+
+    # METRIC
+    def setmetric(self, state):
+        self.metric_units = state
+        self.updateGL()
+    def getmetric(self):
+        return self.metric_units
+    _metric = pyqtProperty(bool, getmetric, setmetric)
+
+    # overlay
+    def setoverlay(self, overlay):
+        self.show_overlay = overlay
+        self.updateGL()
+    def getoverlay(self):
+        return self.show_overlay
+    def resetoverlay(self):
+        self.show_overlay(False)
+    _overlay = pyqtProperty(bool, getoverlay, setoverlay, resetoverlay)
+
+    # show Offsets
+    def setShowOffsets(self, state):
+        self.show_offsets = state
+        self.updateGL()
+    def getShowOffsets(self):
+        return self.show_offsets
+    _offsets = pyqtProperty(bool, getShowOffsets, setShowOffsets)
+
+    def getOverlayColor(self):
+        return self._overlayColor
+    def setOverlayColor(self, value):
+        self._overlayColor = value
+        self.colors['overlay_background'] = (value.redF(), value.greenF(), 
+                                                value.blueF())
+        self.updateGL()
+    def resetOverlayColor(self):
+        self._overlayColor = QColor(0, 0, .75, 150)
+    overlay_color = pyqtProperty(QColor, getOverlayColor, setOverlayColor, 
+        resetOverlayColor)
+
+    def getBackgroundColor(self):
+        return self._backgroundColor
+    def setBackgroundColor(self, value):
+        self._backgroundColor = value
+        #print( value.getRgbF())
+        self.colors['back'] = (value.redF(), value.greenF(), value.blueF())
+        self.gradient_color1 = (value.redF(), value.greenF(), value.blueF())
+        self.updateGL()
+    def resetBackgroundColor(self):
+        self._backgroundColor = QColor(0, 0, 0, 0)
+        self.gradient_color1 = QColor(0, 0, 0, 0)
+        value = QColor(0, 0, 0, 0)
+        self.gradient_color1 = (value.redF(), value.greenF(), value.blueF())
+        self.colors['back'] = (value.redF(), value.greenF(), value.blueF())
+        self.updateGL()
+    background_color = pyqtProperty(QColor, getBackgroundColor, 
+        setBackgroundColor, resetBackgroundColor)
+
+    # use gradient background
+    def setGradientBackground(self, state):
+        self.use_gradient_background = state
+        self.updateGL()
+    def getGradientBackground(self):
+        return self.use_gradient_background
+    _use_gradient_background = pyqtProperty(bool, getGradientBackground,
+        setGradientBackground)
