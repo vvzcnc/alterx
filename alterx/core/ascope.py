@@ -41,6 +41,7 @@ class AScope():
     OSC_RUN = 5
     OSC_CHECK = 6
     OSC_GET = 7
+    OSC_DIV = 8
 
     SAMPLE_IDLE = 0
     SAMPLE_RUN = 1

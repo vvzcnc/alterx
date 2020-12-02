@@ -319,6 +319,11 @@ void connection_handler(void *args)
                 ta->trigger.type = ta->request.type;
                 ta->trigger.pin = ta->request.value.u;
             }
+            else if( ta->request.cmd == OSC_DIV )
+            {
+                ta->trigger.sample_divider = ta->request.type;
+                ta->trigger.counter_divider = 0;
+            }
             else if( ta->request.cmd == OSC_RUN )
             {
                 ta->pointer = 0;
@@ -415,6 +420,16 @@ void rtapi_app_exit(void)
 
 static void sample(void *arg, long period)
 {
+	if( args->trigger.counter_divider < args->trigger.sample_divider)
+	{
+		args->trigger.counter_divider++;
+		return;
+	}
+	else
+	{
+		args->trigger.counter_divider = 0;
+	}
+
     if( args->pointer < samples && args->trigger.cmd == SAMPLE_RUN )
     {
         for( int i=0; i < channels; i++ )

@@ -44,7 +44,7 @@
 #define SHMPTR(offset)  ( (void *)( hal_shmem_base + (offset) ) )
 #define SHMOFF(ptr)     ( ((char *)(ptr)) - hal_shmem_base )
                        
-#define SHMEM_KEY 0x27267382
+#define SHMEM_KEY 0x27267385
                        
 typedef union {
     hal_bit_t b;
@@ -145,7 +145,8 @@ enum CMD {
     OSC_TRIG,
     OSC_RUN,
     OSC_CHECK,
-    OSC_GET
+    OSC_GET,
+    OSC_DIV
 };
 
 enum TRIG {
@@ -187,6 +188,8 @@ typedef struct {
     int pin;
     float value;
     data_t last;
+    unsigned int sample_divider:8;
+    unsigned int counter_divider:8;
 } trigger_t;
 
 typedef struct {

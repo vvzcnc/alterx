@@ -30,6 +30,7 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.ascope import AScope as osc
 from alterx.core.remote import RemoteControl as remote
+from alterx.core.linuxcnc import *
 
 import pyqtgraph
 
@@ -83,12 +84,14 @@ class HalPinWidget(QWidget):
         self.cmd_history_index = 0
         self.watched_list = QTableWidget()
         self.watched_list.setObjectName("table_halpin_widget")
-        self.watched_list.setColumnCount(7)
+        self.watched_list.setColumnCount(9)
         self.watched_list.setHorizontalHeaderLabels( [ _("Osc."), _("Pin"), 
-                _("Type"), _("Value"), _("Addr."), _("Dir."), _("HAL type") ] )
+                _("Type"), _("Value"), _("Addr."), _("Dir."), _("HAL type"), _("Min"), _("Max")  ] )
         self.watched_list.hideColumn(4)
         self.watched_list.hideColumn(5)
         self.watched_list.hideColumn(6)
+        self.watched_list.hideColumn(7)
+        self.watched_list.hideColumn(8)
         self.watched_list.setSelectionMode(QTableView.SingleSelection)
         self.watched_list.setSelectionBehavior(QTableView.SelectRows)
         self.watched_list.cellChanged.connect(self.on_table_changed)
@@ -181,17 +184,17 @@ class HalPinWidget(QWidget):
         self.shot_mode = 0
         oswidget = QWidget()
         oslay = QHBoxLayout()
-        osc_auto = QRadioButton()
-        osc_auto.mode = 0
-        osc_auto.setText(_("Auto"))
-        osc_auto.setChecked(True)
-        osc_auto.toggled.connect(self.osc_mode_changed)
-        oslay.addWidget(osc_auto)
-        osc_shot = QRadioButton()
-        osc_shot.mode = 1
-        osc_shot.setText(_("One Shot"))
-        osc_shot.toggled.connect(self.osc_mode_changed)
-        oslay.addWidget(osc_shot)
+        self.osc_auto = QRadioButton()
+        self.osc_auto.mode = 0
+        self.osc_auto.setText(_("Auto"))
+        self.osc_auto.setChecked(True)
+        self.osc_auto.toggled.connect(self.osc_mode_changed)
+        oslay.addWidget(self.osc_auto)
+        self.osc_shot = QRadioButton()
+        self.osc_shot.mode = 1
+        self.osc_shot.setText(_("One Shot"))
+        self.osc_shot.toggled.connect(self.osc_mode_changed)
+        oslay.addWidget(self.osc_shot)
         oswidget.setLayout(oslay)
         controllay.addWidget(oswidget)
         
@@ -200,27 +203,27 @@ class HalPinWidget(QWidget):
         self.trigger_mode = osc.SAMPLE_RUN
         trigwidget = QWidget()
         triglay = QVBoxLayout()
-        trig_none = QRadioButton()
-        trig_none.trig = osc.SAMPLE_RUN
-        trig_none.setText(_("None"))
-        trig_none.setChecked(True)
-        trig_none.toggled.connect(self.osc_trig_changed)
-        triglay.addWidget(trig_none)
-        trig_change = QRadioButton()
-        trig_change.trig = osc.SAMPLE_CHANGE
-        trig_change.setText(_("Change"))
-        trig_change.toggled.connect(self.osc_trig_changed)
-        triglay.addWidget(trig_change)
-        trig_high = QRadioButton()
-        trig_high.trig = osc.SAMPLE_HIGH
-        trig_high.setText(_("High"))
-        trig_high.toggled.connect(self.osc_trig_changed)
-        triglay.addWidget(trig_high)
-        trig_low = QRadioButton()
-        trig_low.setText(_("Low"))
-        trig_low.trig = osc.SAMPLE_LOW
-        trig_low.toggled.connect(self.osc_trig_changed)
-        triglay.addWidget(trig_low)
+        self.trig_none = QRadioButton()
+        self.trig_none.trig = osc.SAMPLE_RUN
+        self.trig_none.setText(_("None"))
+        self.trig_none.setChecked(True)
+        self.trig_none.toggled.connect(self.osc_trig_changed)
+        triglay.addWidget(self.trig_none)
+        self.trig_change = QRadioButton()
+        self.trig_change.trig = osc.SAMPLE_CHANGE
+        self.trig_change.setText(_("Change"))
+        self.trig_change.toggled.connect(self.osc_trig_changed)
+        triglay.addWidget(self.trig_change)
+        self.trig_high = QRadioButton()
+        self.trig_high.trig = osc.SAMPLE_HIGH
+        self.trig_high.setText(_("High"))
+        self.trig_high.toggled.connect(self.osc_trig_changed)
+        triglay.addWidget(self.trig_high)
+        self.trig_low = QRadioButton()
+        self.trig_low.setText(_("Low"))
+        self.trig_low.trig = osc.SAMPLE_LOW
+        self.trig_low.toggled.connect(self.osc_trig_changed)
+        triglay.addWidget(self.trig_low)
         trigwidget.setLayout(triglay)
         controllay.addWidget(trigwidget)
         
@@ -240,6 +243,16 @@ class HalPinWidget(QWidget):
         controllay.addWidget(self.trig_edit)
 
         controllay.addWidget(HSeparator())
+        
+        controllay.addWidget(QLabel(_("Divider value:")))
+        self.div_edit = QSpinBox()
+        self.div_edit.setMaximum(250)
+        self.div_edit.setMinimum(1)
+        self.div_edit.setValue(1)
+        self.div_edit.valueChanged.connect(self.divider_value_changed)
+        controllay.addWidget(self.div_edit)
+        
+        controllay.addWidget(HSeparator())
 
         self.info_label = QLabel()
         controllay.addWidget(self.info_label)
@@ -253,6 +266,46 @@ class HalPinWidget(QWidget):
         controllay.addStretch()
         osclay.addLayout(controllay,2)
         tabs.addTab(oscilloscope,_("Oscilloscope"))
+        
+        presets = QWidget()
+        preset_vlay = QVBoxLayout()
+        preset_btns = QHBoxLayout()
+        
+        preset_load = QPushButton()
+        preset_load.setText(_("Load"))
+        preset_load.clicked.connect(self.on_preset_load_clicked)
+        preset_btns.addWidget(preset_load)
+        
+        preset_save = QPushButton()
+        preset_save.setText(_("Save"))
+        preset_save.clicked.connect(self.on_preset_save_clicked)
+        preset_btns.addWidget(preset_save)
+        
+        preset_delete = QPushButton()
+        preset_delete.setText(_("Delete"))
+        preset_delete.clicked.connect(self.on_preset_delete_clicked)
+        preset_btns.addWidget(preset_delete)
+    
+        preset_vlay.addLayout(preset_btns)
+
+        self.preset_name = QLineEdit()
+        preset_vlay.addWidget(self.preset_name)
+        
+        self.preset_list = QListWidget()
+        self.preset_list.currentRowChanged.connect(self.preset_selected_changed)
+        preset_vlay.addWidget(self.preset_list)
+       
+        #preset_vlay.addStretch()
+        presets.setLayout(preset_vlay)
+        tabs.addTab(presets,_("Presets"))
+       
+        self.preset_dir = INI.find("DISPLAY","OSC_PRESET_DIR") or "preset"
+        try:
+            for f in os.listdir(self.preset_dir):
+                if f.lower().endswith('.ops'):
+                    self.preset_list.addItem(f)
+        except:
+            pass
        
         self.clear_plot()
         self.load_data()
@@ -265,6 +318,110 @@ class HalPinWidget(QWidget):
         timer_osc.timeout.connect(self.plot_update_data)
         timer_osc.start(1000)
 
+    def preset_selected_changed(self):
+        item = self.preset_list.currentItem()
+        if item:
+            fname = item.text()
+            self.preset_name.setText(fname)
+
+    def on_preset_delete_clicked(self):
+        item = self.preset_list.currentItem()
+        if item:
+            fname = item.text()
+            if fname:
+                if os.path.exists(os.path.join(self.preset_dir,fname)):
+                    os.remove(os.path.join(self.preset_dir,fname))
+                    self.preset_name.setText('')
+                    self.preset_list.takeItem(self.preset_list.row(item))
+                
+    def clear_watched_list(self):
+        for r in reversed(range(self.watched_list.rowCount())):
+            self.watched_list.removeRow(r)
+                
+    def on_preset_load_clicked(self):
+        fname = self.preset_list.currentItem().text()
+        with open(os.path.join(self.preset_dir,fname)) as fin:
+            self.clear_watched_list()
+            try:
+                index = 0
+                for line in fin:
+                    params = line.split(' ')
+                    
+                    item = self.find_item(params[1],self.tree)
+                    if item:
+                        self.on_tree_doubleclick(item, None, row=index)
+                        
+                        self.watched_list.item(index,0).setCheckState(int(params[0]))
+                            
+                        self.trig_edit.setText(params[2])
+                        
+                        self.div_edit.setValue(int(params[3]))
+
+                        if int(params[4]) == 0:
+                            self.osc_auto.setChecked(True)
+                        else:
+                            self.osc_shot.setChecked(True)
+                        
+                        if int(params[5]) == osc.SAMPLE_RUN:
+                            self.trig_none.setChecked(True)
+                        if int(params[5]) == osc.SAMPLE_CHANGE:
+                            self.trig_change.setChecked(True)
+                        if int(params[5]) == osc.SAMPLE_HIGH:
+                            self.trig_high.setChecked(True)
+                        if int(params[5]) == osc.SAMPLE_LOW:
+                            self.trig_low.setChecked(True)
+                        
+                        self.trig_combo.setCurrentIndex(int(params[6]))
+                        
+                        if params[7]:
+                            self.watched_list.setItem(index,7,QTableWidgetItem(params[7]))
+                        if params[8]:
+                            self.watched_list.setItem(index,8,QTableWidgetItem(params[8]))
+                        
+                        index += 1
+                        
+            except Exception as e:
+                print(e)
+                self.clear_watched_list()
+         
+         
+    def on_preset_save_clicked(self):
+        fname = self.preset_name.text()
+        if fname:
+            if not fname.endswith(".ops"):
+                fname += ".ops"
+            
+            if not os.path.isdir(self.preset_dir):
+                os.mkdir(self.preset_dir)
+            
+            with open(os.path.join(self.preset_dir,fname),"w+") as fout:
+                for r in range(self.watched_list.rowCount()):
+                    min = self.watched_list.item(r,7)
+                    max = self.watched_list.item(r,8)
+                    min = min.text() if min else ''
+                    max = max.text() if max else ''
+                    line = ' '.join(
+                        (str(self.watched_list.item(r,0).checkState()),
+                         self.watched_list.item(r,1).text(), 
+                         self.trig_edit.text(),self.div_edit.text(),
+                         str(self.shot_mode),
+                         str(self.trigger_mode),
+                         str(self.trig_combo.currentIndex()),
+                         min, max,'\n'))
+                    fout.write(line)
+
+            if os.path.exists(os.path.join(self.preset_dir,fname)):
+                presets = self.preset_list.findItems(fname,Qt.MatchExactly)
+                if len(presets) == 0:
+                    self.preset_list.addItem(fname)
+
+    def divider_value_changed(self):
+        try:
+            div = self.div_edit.value()-1
+            osc.send_packet(self.control,osc.OSC_DIV,div,0)
+        except:
+            pass
+		
     def trigger_value_changed(self):
         try:
             self.tLine.setPos(float(self.trig_edit.text()))
@@ -304,7 +461,7 @@ class HalPinWidget(QWidget):
 
     def eventFilter(self, source, event):
         if ( event.type() == QEvent.KeyPress and
-            source is self.item_value ):
+                source is self.item_value ):
 
             if event.key() == Qt.Key_Up and self.cmd_history:
                 if self.cmd_history_index > 0:
@@ -318,7 +475,7 @@ class HalPinWidget(QWidget):
                 self.on_change_clicked()
 
         elif ( event.type() == QEvent.MouseMove and
-            source is self.graphWidget.viewport() ):
+                source is self.graphWidget.viewport() ):
             pos = event.pos()
             text = ""
             if self.graphWidget.sceneBoundingRect().contains(pos):
@@ -340,17 +497,40 @@ class HalPinWidget(QWidget):
                             self.hLine.setPos(min(self.data[key][1]))    
                     
                     num = int(mousePoint.x())
-                    if num >= 0 and num < len(self.data[key][1]) and i==0:
+                    if num >= 0 and num < len(self.data[key][1]):
                         text += "%d:%.1f\n"%(i,self.data[key][1][num])
                         self.vLine.setPos(mousePoint.x())
                 if text != "":
                     self.value_label.setText(text)     
                     
         elif ( event.type() == QEvent.MouseButtonDblClick and 
-            source is self.graphWidget.viewport() ):
+                source is self.graphWidget.viewport() ):
             self.trig_edit.setText(str(self.hLine.value()))
             self.tLine.setPos(self.hLine.value())
 
+        elif ( event.type() == QEvent.MouseButtonRelease and 
+                source is self.graphWidget.viewport() ):
+            index = 0
+            if len(self.plots) > 1:
+                for r in range(self.watched_list.rowCount()):    
+                    if self.watched_list.item(r,0).checkState():
+                        view = self.plots[index+1]
+                        self.watched_list.setItem(r,7,QTableWidgetItem(str(view.viewRange()[1][0])))
+                        self.watched_list.setItem(r,8,QTableWidgetItem(str(view.viewRange()[1][1])))
+                        index +=1
+            
+        elif ( event.type() == QEvent.Wheel and 
+                source is self.graphWidget.viewport() ):
+            self.graphWidget.wheelEvent(event)
+            index = 0
+            for r in range(self.watched_list.rowCount()):    
+                if self.watched_list.item(r,0).checkState():
+                    view = self.plots[index+1]
+                    self.watched_list.setItem(r,7,QTableWidgetItem(str(view.viewRange()[1][0])))
+                    self.watched_list.setItem(r,8,QTableWidgetItem(str(view.viewRange()[1][1])))
+                    index +=1
+            return True
+            
         return QWidget.eventFilter(self, source, event)
 
     def plot_update_data(self):
@@ -421,8 +601,8 @@ class HalPinWidget(QWidget):
                 self.data[watchedlist[int(channel)]][0].append( l )
                 self.data[watchedlist[int(channel)]][1].append( float( value ) ) 
                 
-            self.info_label.setText("S:{} T:{:.2f}ms".format(samples,   
-                                                            thread/1000000 ) )                  
+            self.info_label.setText("S:{} T:{:.2f}ms".format(samples/len(watchedlist),   
+                                                            (thread/1000000)*self.div_edit.value() ) )                  
             index_x = []
             label_x = []
             for i,l in enumerate( self.data[ watchedlist[0] ][0] ):
@@ -432,14 +612,25 @@ class HalPinWidget(QWidget):
             ticks = [ label[::100], label ]
             self.axis_x.setTicks(ticks)
 
+            osc_list = [(self.watched_list.item(r,7),self.watched_list.item(r,8)) \
+                        for r in range(self.watched_list.rowCount()) \
+                            if self.watched_list.item(r,0).checkState()]
+
             for i,key in enumerate(self.data):
                 axis = pyqtgraph.AxisItem('right')
                 axis.tickFont = QFont("Helvetica",pointSize = 13,weight = 1,
                                             italic = False)
+                       
                 view = pyqtgraph.ViewBox()
                 self.plots[0].layout.addItem(axis,2, i+3)
                 self.plots[0].scene().addItem(view)
                 axis.linkToView(view)
+                
+                if osc_list[i][0] and osc_list[i][1]:
+                    min = float(osc_list[i][0].text())
+                    max = float(osc_list[i][1].text())
+                    view.setRange(yRange=(min,max),padding=0)
+                                
                 view.setXLink(self.plots[0])
                 self.plots.append(view)
                 axis.setLabel(key,**{'color': color[i], 'font-size': '16pt'})
@@ -452,7 +643,7 @@ class HalPinWidget(QWidget):
                 if trigger >= 0 and trigger == i:
                     self.plots[i+1].addItem(self.hLine)
                     self.plots[i+1].addItem(self.tLine)
-                
+                    
             self.updateViews()
 
     def updateViews(self):
@@ -507,6 +698,24 @@ class HalPinWidget(QWidget):
 
     def on_update_clicked(self):
         self.load_data()
+            
+    def find_item(self,pin,parent):
+        if '.' in pin:
+            items = pin.split('.')
+            childs = parent.findItems(items[len(items)-1],Qt.MatchExactly | Qt.MatchRecursive)
+            for child in childs:
+                path = ""
+                item = child
+                while item is not None:
+                    path = str(item.text(0)) + '.' + path
+                    item = item.parent()
+                
+                if pin in path:
+                    return child
+        else:
+            childs = parent.findItems(pin,Qt.MatchExactly)
+            if len(childs)>0:
+                return child[0]
 
     @pyqtSlot(str)
     def item_answer_set_text(self,data):
@@ -551,7 +760,7 @@ class HalPinWidget(QWidget):
                         else:
                             self.watched_list.setItem(r,3,QTableWidgetItem(data))
 
-    def on_tree_doubleclick(self,item,column):
+    def on_tree_doubleclick(self,item,column,row=0):
         if item.text(1):
             pin = item.text(0)
             pin_type = item.text(1)
@@ -561,17 +770,17 @@ class HalPinWidget(QWidget):
             while item.parent():
                 item = item.parent()
                 pin = item.text(0)+'.'+pin
-            self.watched_list.insertRow(0)
+            self.watched_list.insertRow(row)
             checkItem = QTableWidgetItem()
             checkItem.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
             checkItem.setCheckState(Qt.Unchecked)  
-            self.watched_list.setItem(0,0,checkItem)
-            self.watched_list.setItem(0,1,QTableWidgetItem(pin))
-            self.watched_list.setItem(0,2,QTableWidgetItem(pin_type))
-            self.watched_list.setItem(0,3,QTableWidgetItem("..."))
-            self.watched_list.setItem(0,4,QTableWidgetItem(pin_addr))
-            self.watched_list.setItem(0,5,QTableWidgetItem(pin_dir))
-            self.watched_list.setItem(0,6,QTableWidgetItem(hal_type))
+            self.watched_list.setItem(row,0,checkItem)
+            self.watched_list.setItem(row,1,QTableWidgetItem(pin))
+            self.watched_list.setItem(row,2,QTableWidgetItem(pin_type))
+            self.watched_list.setItem(row,3,QTableWidgetItem("..."))
+            self.watched_list.setItem(row,4,QTableWidgetItem(pin_addr))
+            self.watched_list.setItem(row,5,QTableWidgetItem(pin_dir))
+            self.watched_list.setItem(row,6,QTableWidgetItem(hal_type))
 
     def load_data(self):
         self.tree.clear()
