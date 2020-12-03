@@ -25,6 +25,8 @@ import contextlib
 import os
 import sys
 
+from collections import OrderedDict
+
 __all__ = [
     "sys",
     "os",
@@ -34,7 +36,15 @@ __all__ = [
     "osIsLinux",
     "ConfigParser",
     "toUnicode",
+    "MultiOrderedDict",
 ]
+
+class MultiOrderedDict(OrderedDict):
+    def __setitem__(self, key, value):
+        if isinstance(value, list) and key in self:
+            self[key].extend(value)
+        else:
+            OrderedDict.__setitem__(self, key, value)
 
 # Convenient operating system identifiers
 if os.name == "java":

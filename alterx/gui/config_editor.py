@@ -31,7 +31,6 @@ from alterx.gui.util import *
 from alterx.core.linuxcnc import *
 
 from functools import partial
-from collections import OrderedDict
 from shutil import copyfile
 
 class WizardWidget(QWidget):
@@ -130,13 +129,6 @@ class WizardWidget(QWidget):
             except:
                 last = ''
             self.parser.set(section,option,value.format(last,self.edit.text()))   
-
-class MultiOrderedDict(OrderedDict):
-    def __setitem__(self, key, value):
-        if isinstance(value, list) and key in self:
-            self[key].extend(value)
-        else:
-            OrderedDict.__setitem__(self, key, value)
 
 class ConfigEditor(QWidget):
     def __init__(self, parent=None):
@@ -468,7 +460,7 @@ class ConfigEditor(QWidget):
                             data = "{} = {}\n".format(key, v)
                             fp.write(data.encode('utf-8'))
                 fp.write("\n")
-        Notify.Info(_("Config file saved."))
+            Notify.Info(_("Config file saved."))
     
     def fit_to_text(self,widget):
         height = widget.document().size().height()

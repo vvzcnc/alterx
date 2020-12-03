@@ -1,9 +1,5 @@
 # TODO list
 
-## Settings widget:
-
-* PID calibrate widget
-    
 ## Config wizard:
 
 * lpt config

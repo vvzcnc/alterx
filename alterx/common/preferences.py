@@ -55,7 +55,13 @@ class Preferences(ConfigParser.ConfigParser):
             repr: lambda section, option: eval(self.get(section, option)),
         }
 
-        self.ini = Config(os.environ['INI_FILE_NAME'])
+        inifile = None
+        try:
+            inifile = os.environ['INI_FILE_NAME']
+        except:
+            pass
+
+        self.ini = Config(inifile)
         path = self.ini.find("DISPLAY", "PREFERENCE_FILE_PATH") or 'preferences.var'
 
         self.fn = os.path.expanduser(path)

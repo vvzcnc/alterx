@@ -30,25 +30,45 @@ from alterx.common import *
 from alterx.gui.util import *
 from alterx.core.ascope import AScope as osc
 from alterx.core.remote import RemoteControl as remote
-from alterx.core.linuxcnc import *
+
+from functools import partial
 
 import pyqtgraph
+import re
 
+option_list = [
+    "SCALE_GAIN",
+    "SCALE_OFFSET",
+    "P",
+    "I",
+    "D",
+    "BIAS",
+    "FF0",
+    "FF1",
+    "FF2",
+    "DEADBAND",
+    "MAX_OUTPUT",
+    "SCALE_MAX",
+    "OUTPUT_MIN_LIMIT",
+    "OUTPUT_MAX_LIMIT",
+    "ENCODER_SCALE",
+]
 
 class ReceiveThread(QThread):
     message = pyqtSignal(str)
     
-    def __init__(self,parent):
+    def __init__(self,cmds):
         QThread.__init__(self, parent=None)
-        self.parent = parent
+        self.cmds = cmds
         
     def run(self):
-        try:
-            data = remote.send_packet("halcmd "+self.parent.item_value.text())
-        except Exception as e:
-            data = u"#:"
+        for cmd in self.cmds:
+            try:
+                data = remote.send_packet("halcmd "+cmd)
+            except Exception as e:
+                data = u"#:"
 
-        self.message.emit(data)
+            self.message.emit(data)
 
 
 class HalPinWidget(QWidget):
@@ -299,7 +319,53 @@ class HalPinWidget(QWidget):
         presets.setLayout(preset_vlay)
         tabs.addTab(presets,_("Presets"))
        
-        self.preset_dir = INI.find("DISPLAY","OSC_PRESET_DIR") or "preset"
+        pid_tuning = QWidget()
+        pid_vlay = QVBoxLayout()
+        
+        pid_btn_lay = QHBoxLayout()
+        pid_test = QPushButton(_("Test"))
+        pid_test.clicked.connect(self.on_pid_test_clicked)
+        pid_btn_lay.addWidget(pid_test)
+        
+        pid_cancel = QPushButton(_("Cancel"))
+        pid_cancel.clicked.connect(self.on_pid_cancel_clicked)
+        pid_btn_lay.addWidget(pid_cancel)
+        
+        pid_save = QPushButton(_("Save"))
+        pid_save.clicked.connect(self.on_pid_save_clicked)
+        pid_btn_lay.addWidget(pid_save)
+        
+        pid_vlay.addLayout(pid_btn_lay)
+        self.pid_joint_tabs = QTabWidget()
+        pid_vlay.addWidget(self.pid_joint_tabs)
+        
+        try:
+            self.ini = os.environ['INI_FILE_NAME']
+        except Exception as e:
+            self.ini = None
+            printError(_("AlterX: Config file not found"))
+
+        self.config = ConfigParser.ConfigParser(dict_type=MultiOrderedDict,
+            allow_no_value=True)
+        self.config.optionxform = str
+
+        self.new_config = ConfigParser.ConfigParser(dict_type=MultiOrderedDict,
+            allow_no_value=True)
+        self.new_config.optionxform = str
+
+        if self.ini:
+            self.config.read(self.ini)
+
+        self.load_pid_config()
+
+        pid_tuning.setLayout(pid_vlay)
+        tabs.addTab(pid_tuning,_("PID"))
+
+        try:
+            self.preset_dir = self.config.get("DISPLAY","OSC_PRESET_DIR")
+        except:
+            self.preset_dir = None
+
         try:
             for f in os.listdir(self.preset_dir):
                 if f.lower().endswith('.ops'):
@@ -318,6 +384,130 @@ class HalPinWidget(QWidget):
         timer_osc.timeout.connect(self.plot_update_data)
         timer_osc.start(1000)
 
+    def load_pid_config(self):
+        if self.pid_joint_tabs.count() > 0:
+            for i in reversed(range(self.pid_joint_tabs.count())):
+                try:
+                    self.pid_joint_tabs.widget(i).deleteLater()
+                    self.pid_joint_tabs.removeTab(i)
+                except Exception as e:
+                    printDebug(_("Delete pid tab exception: {}",e))
+
+        for s in sorted(filter(lambda x: "JOINT_" in x,
+                self.config.sections())):
+
+            if s not in self.new_config.sections():
+                self.new_config.add_section(s)
+
+            jscroll = QScrollArea()
+            jscroll.setWidgetResizable(True)
+            jwidget = QWidget()
+            jscroll.setWidget(jwidget)
+
+            jvlay = QVBoxLayout()
+            jwidget.setLayout(jvlay)
+            
+            for o in sorted(filter(lambda x: x in option_list,
+                    self.config.options(s))):
+                jhlay = QHBoxLayout()
+                jlabel = QLabel(o)
+                jlabel.setObjectName("lbl_pid_editor_{}_{}".format(s,o))
+                jhlay.addWidget(jlabel,2)
+                jedit = QLineEdit()
+                jedit.setText(self.config.get(s,o))
+                jedit.setObjectName("edit_pid_editor_{}_{}".format(s,o))
+                jedit.textChanged.connect(partial(self.pid_editing_finished,
+                    s,o,jedit))
+                jhlay.addWidget(jedit,4)
+                jvlay.addLayout(jhlay)
+                
+            jvlay.addStretch()
+            self.pid_joint_tabs.addTab(jscroll,s)
+
+    def pid_editing_finished(self,section,option,widget):
+        self.new_config.set(section,option,widget.text())
+        #printDebug(_("PID Option changed: {} {} {}",section,option,widget.text()))
+
+    def on_pid_save_clicked(self):
+        for s in self.new_config.sections():
+            for o in self.new_config.options(s):
+                printDebug(_("PID Option [{}]{} changed: {} => {}", s, o, 
+                    self.config.get(s,o), self.new_config.get(s,o)))
+                self.config.set(s,o,self.new_config.get(s,o))
+
+        with open(self.ini, "w") as fp:
+            if self.config._defaults:
+                fp.write("[%s]\n" % DEFAULTSECT)
+                for (key, value) in self.config._defaults.items():
+                    value = toUnicode(value)
+                    key = toUnicode(key)
+                    if '\n' in value:
+                        value = value.split('\n')
+                    else:
+                        value = [value]
+                    for v in value:                            
+                        if (v is not None) or (self.config._optcre == self.config.OPTCRE):
+                            data = "{} = {}\n".format(key, v)
+                            fp.write(data.encode('utf-8'))
+                fp.write("\n")
+
+            for section in self.config._sections:
+                fp.write("[%s]\n" % section)
+                for (key, value) in self.config._sections[section].items():
+                    value = toUnicode(value)
+                    key = toUnicode(key)
+                    if key == "__name__":
+                        continue
+                    if '\n' in value:
+                        value = value.split('\n')
+                    else:
+                        value = [value]
+                    for v in value:    
+                        if (v is not None) or (self.config._optcre == self.config.OPTCRE):
+                            data = "{} = {}\n".format(key, v)
+                            fp.write(data.encode('utf-8'))
+                fp.write("\n")
+            printInfo(_("Config file saved."))
+
+
+    def on_pid_cancel_clicked(self):
+        self.load_pid_config()
+
+    def on_pid_test_clicked(self):
+        try:
+            hal_files = self.config.get("HAL","HALFILE")
+        except:
+            hal_files = []
+
+        if hal_files:
+            hal_files = hal_files.split('\n')
+
+        cmds = []
+        for hal in hal_files:
+            with open(hal) as f:
+                for line in f:
+                    for s in filter(lambda x: "JOINT_" in x,
+                            self.new_config.sections()):
+                        for o in filter(lambda x: x in option_list,
+                                self.new_config.options(s)):
+                            sstr = "[{}]{}".format(s,o)
+                            pos = line.find(sstr)
+
+                            if ( pos >= 0 and
+                                    len(line) > pos+len(sstr) and
+                                    not line[pos+len(sstr)].isalpha() ):
+
+                                msg = line.replace("[{}]{}".format(s,o),self.config.get(s,o))
+                                msg = re.sub(r"[\n\t]*","", msg)
+                                msg = re.sub(r" +"," ", msg)
+                                cmds.append(msg)
+
+        if cmds:
+            self.thread = ReceiveThread(cmds)
+            self.thread.message.connect(lambda s: printInfo(s if s else "PID CMD OK"))
+            self.thread.start()
+        
+                                
     def preset_selected_changed(self):
         item = self.preset_list.currentItem()
         if item:
@@ -339,7 +529,11 @@ class HalPinWidget(QWidget):
             self.watched_list.removeRow(r)
                 
     def on_preset_load_clicked(self):
-        fname = self.preset_list.currentItem().text()
+        item = self.preset_list.currentItem()
+        if not item:
+            return
+
+        fname = item.text()
         with open(os.path.join(self.preset_dir,fname)) as fin:
             self.clear_watched_list()
             try:
@@ -383,7 +577,6 @@ class HalPinWidget(QWidget):
             except Exception as e:
                 print(e)
                 self.clear_watched_list()
-         
          
     def on_preset_save_clicked(self):
         fname = self.preset_name.text()
@@ -723,7 +916,7 @@ class HalPinWidget(QWidget):
 
     def on_change_clicked(self):
         self.item_answer.setText("#:")
-        self.thread = ReceiveThread(self)
+        self.thread = ReceiveThread([self.item_value.text()])
         self.thread.message.connect(self.item_answer_set_text)
         self.thread.start()
         
