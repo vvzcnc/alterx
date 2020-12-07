@@ -497,7 +497,8 @@ class HalPinWidget(QWidget):
                                     len(line) > pos+len(sstr) and
                                     not line[pos+len(sstr)].isalpha() ):
 
-                                msg = line.replace("[{}]{}".format(s,o),self.config.get(s,o))
+                                msg = line.replace("[{}]{}".format(s,o),
+                                    self.new_config.get(s,o))
                                 msg = re.sub(r"[\n\t]*","", msg)
                                 msg = re.sub(r" +"," ", msg)
                                 cmds.append(msg)
