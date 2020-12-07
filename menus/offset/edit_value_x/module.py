@@ -66,6 +66,6 @@ class func:
         else:
             printVerbose(_("Offset viewer edit X clicked"))
             self.edit_lifetime = 5
-            self.edit.setText("")
+            self.edit.setText(str(STAT.actual_position[0]))
             self.edit.setVisible(True)
             self.edit.setFocus()

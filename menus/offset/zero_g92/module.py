@@ -44,3 +44,4 @@ class func:
         printVerbose(_("Button zero g92 clicked"))
         if STAT.task_mode == LINUXCNC.MODE_MDI:
             COMMAND.mdi("G92.2")
+            UPDATER.emit("reload_offsets")

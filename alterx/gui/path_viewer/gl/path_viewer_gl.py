@@ -210,7 +210,7 @@ class GraphPlot(QGLWidget,  glcanon.GlCanonDraw, glnav.GlNavBase):
             self.get_geometry()
         )
         # start tracking linuxcnc position so we can plot it
-        _thread.start_new_thread(self.logger.start, (.01,))
+        _thread.start_new_thread(self.logger.start, (float(INI.find("DISPLAY","PATH_CYCLE_TIME") or '1.0'),))
         glcanon.GlCanonDraw.__init__(self, stat, self.logger)
 
         # set defaults

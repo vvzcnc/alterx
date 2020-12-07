@@ -208,9 +208,9 @@ class OriginOffsetView(QTableView):
         g54, g55, g56, g57, g58, g59, g59_1, g59_2, g59_3 = self.read_file()
         if g54 is None:
             return
-
-        # Fake linuxcnc is not producing lists        
-        if not isinstance(STAT.actual_position, list): 
+        
+        # Fake linuxcnc is not producing lists     
+        if not isinstance(STAT.actual_position, (list,tuple)): 
             header = self.horizontalHeader()
             header.setSectionResizeMode(QHeaderView.ResizeToContents)
             header.setSectionResizeMode(10,QHeaderView.Stretch)
@@ -340,21 +340,21 @@ class OriginOffsetView(QTableView):
             if STAT.task_mode == LINUXCNC.MODE_MDI:
                 if row == 0:  # current Origin
                     COMMAND.mdi("G10 L2 P0 %s %10.4f" %
-                                (self.axisletters[col], qualified))
+                                (self.axisletters[col-1], qualified))
                 elif row == 1:  # rotational
                     if col == 2:  # Z axis only
                         COMMAND.mdi("G10 L2 P0 R %10.4f" % (qualified))
                 elif row == 2:  # G92 offset
                     COMMAND.mdi("G92 %s %10.4f" %
-                                (self.axisletters[col], qualified))
+                                (self.axisletters[col-1], qualified))
                 elif row == 3:  # Tool
                     if not self.current_tool == 0:
                         COMMAND.mdi("G10 L1 P%d %s %10.4f" % (
-                            self.current_tool, self.axisletters[col], qualified))
+                            self.current_tool, self.axisletters[col-1], qualified))
                         COMMAND.mdi("G43")
                 else:
                     COMMAND.mdi("G10 L2 P%d %s %10.4f" %
-                                (row-3, self.axisletters[col], qualified))
+                                (row-3, self.axisletters[col-1], qualified))
         except Exception as e:
             printError(_("Offsetpage widget error: MDI call error, {}", e))
             self.reload_offsets()
