@@ -181,9 +181,15 @@ class Main():
         UPDATER.emit("keyboard_set_output_state",self.keyboard_cmd_list)
 
     def spindlerate_changed(self, value):
-		COMMAND.spindleoverride(value/100.0*INFO.max_spindle_override)
+        if (INI.find('DISPLAY', 'INVERT_R_SPINDLE') or '0').lower() in ('yes', '1', 'true'):
+            value = 100 - value
+
+        COMMAND.spindleoverride(value/100.0*INFO.max_spindle_override)
 
     def feedrate_changed(self, value):
+        if (INI.find('DISPLAY', 'INVERT_R_FEED') or '0').lower() in ('yes', '1', 'true'):
+            value = 100 - value
+
         COMMAND.feedrate(value/100.0*INFO.max_feed_override)
         COMMAND.rapidrate(value/100.0*INFO.max_feed_override)
         UPDATER.emit("jog_speed",value/100.0)
