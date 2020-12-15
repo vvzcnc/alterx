@@ -140,14 +140,11 @@ class EditorBase(QTextEdit):
             self.setModified(False)
 
     def replace_text(self, text):
-        self.replace(text)
+        self.textCursor().insertText(text)
 
-    def search(self, text, re=False, case=False, word=False, wrap=False, fwd=True):
-        self.findFirst(text, re, case, word, wrap, fwd)
-
-    def search_next(self):
-        self.findNext()
-
+    def search_text(self, text):
+        if not self.find(text):
+            self.moveCursor(QTextCursor.Start)
 
 class GcodeDisplay(EditorBase):
     def __init__(self, parent=None):
@@ -289,7 +286,8 @@ class GcodeEditor(QWidget):
         UPDATER.signal("geditor_new", lambda s: self.new_file())
         UPDATER.signal("geditor_undo", lambda s: self.editor.undo())
         UPDATER.signal("geditor_redo", lambda s: self.editor.redo())
-        UPDATER.signal("geditor_search", lambda s: self.editor.search_next())
+        UPDATER.signal("geditor_search", 
+                        lambda s: self.editor.search_text(self.search))
         UPDATER.signal("geditor_replace",
                         lambda s: self.editor.replace_text(self.replace))
         UPDATER.signal("geditor_set_search", self.set_search)
@@ -314,7 +312,6 @@ class GcodeEditor(QWidget):
     def set_search(self, text):
         self.search = text
         self.search_label.setText(_("Search: {}", self.search))
-        self.editor.search(self.search)
 
     def set_replace(self, text):
         self.replace = text

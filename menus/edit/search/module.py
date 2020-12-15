@@ -42,4 +42,4 @@ class func:
 
     def execute(self):
         printVerbose(_("Button geditor find clicked"))
-        UPDATER.emit("geditor_find")
+        UPDATER.emit("geditor_search")
