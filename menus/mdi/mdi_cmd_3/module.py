@@ -34,6 +34,7 @@ class func:
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         UPDATER.signal("dout", self.update_status)
+        UPDATER.signal("interp_state", self.interpreter_status)
 
         if os.path.isfile("%s/icon.png" % dir_path):
             button.setIcon(QIcon("%s/icon.png" % dir_path))
@@ -44,6 +45,18 @@ class func:
             button.setText("Laser\nOFF")
 
         self.button = button
+
+    def interpreter_status(self,status):
+        if status == LINUXCNC.INTERP_IDLE:
+            if STAT.task_mode == LINUXCNC.MODE_AUTO:
+                COMMAND.mode(LINUXCNC.MODE_MDI)
+                COMMAND.wait_complete()
+                COMMAND.set_digital_output(0,0)
+                COMMAND.wait_complete()
+                COMMAND.mode(LINUXCNC.MODE_AUTO)
+            else:
+                COMMAND.set_digital_output(0,0)
+                COMMAND.wait_complete()
 
     def update_status(self, status):
         if status[0]:
