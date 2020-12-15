@@ -35,7 +35,9 @@ class func:
         self.edit = QLineEdit()
         self.edit.setObjectName("edit_in_button_edit_z")
         self.edit.setVisible(False)
-        self.edit.setValidator(QDoubleValidator())
+        validator = QDoubleValidator()
+        validator.setLocale(QLocale(QLocale.English))
+        self.edit.setValidator(validator)
         edit_layout = QVBoxLayout(self.button)
         edit_layout.addWidget(self.edit)
         self.edit_lifetime = 0
