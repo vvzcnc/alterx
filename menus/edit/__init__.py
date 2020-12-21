@@ -4,6 +4,7 @@
 from . import new_file
 from . import redo
 from . import replace
+from . import replace_all
 from . import save
 from . import save_as
 from . import search
@@ -18,8 +19,8 @@ buttons_order = [
     None,
     'undo',
     'redo',
-    None,
     'replace',
+    'replace_all',
     'set_replace',
     'search',
     'set_search',
