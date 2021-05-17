@@ -58,7 +58,7 @@ def listener_process(log, key, led, board):
                 break
         
             hash = crcmod.predefined.mkPredefinedCrcFun('crc-8-maxim')
-            ser = serial.Serial(port=board,timeout=0.01,write_timeout=0.01)
+            ser = serial.Serial(port=board,timeout=0.03,write_timeout=0.03)
 
             def bool_list_to_byte(list):
                 num=0
@@ -72,20 +72,24 @@ def listener_process(log, key, led, board):
 
             cmd=b"\xAB\xCD"+cmd+struct.pack("B",hash(cmd))+b"\xDC\xBA"
             ser.write(cmd)
-            answer = bytearray(ser.read_until("\x0D\x0A"))
+            answer = bytearray(ser.read_until(b"\x0D\x0A"))
 
-            if len(answer) == 11:
-                crc_r = struct.unpack("B",answer[8:9])[0]
-                crc = hash(str(answer[:8]))
+            if len(answer) == 15:
+                crc_r = struct.unpack("B",answer[12:13])[0]
+                crc = hash(str(answer[:12]))
                 if crc == crc_r:
                     spindle = struct.unpack("<H",answer[:2])[0]
                     feedrate = struct.unpack("<H",answer[2:4])[0]
-                    encoder = struct.unpack("<H",answer[4:6])[0]
-                    button = struct.unpack("B",answer[6:7])[0]
-                    inputs = struct.unpack("B",answer[7:8])[0]
+                    rapidrate = struct.unpack("<H",answer[4:6])[0]
+                    temperature = struct.unpack("<H",answer[6:8])[0]
+                    encoder = struct.unpack("<H",answer[8:10])[0]
+                    button = struct.unpack("B",answer[10:11])[0]
+                    inputs = struct.unpack("B",answer[11:12])[0]
                     
                     keys["spindlerate"] = spindle/40.0
                     keys["feedrate"] = feedrate/40.0
+                    keys["rapidrate"] = rapidrate/40.0
+                    keys["temperature"] = temperature/40.0
                     keys["encoder"] = encoder
                     
                     def int_to_bool_list(num):
@@ -139,7 +143,7 @@ class keyboardListener():
         keyboard_cmd_list = [False,False,False,False,False,False,False,False]
         
         while True:
-            time.sleep(0.01)
+            time.sleep(0.05)
             try:
                 if not output.empty():
                     keyboard_cmd_list = output.get()
@@ -165,6 +169,16 @@ class keyboardListener():
                             if speed > 100:
                                 speed = 100
                             UPDATER.emit('display_feedrate', round(speed))
+                        elif k == "rapidrate":
+                            speed = key_answer[k]
+                            if speed > 100:
+                                speed = 100
+                            UPDATER.emit('display_rapidrate', round(speed))
+                        elif k == "temperature":
+                            speed = key_answer[k]
+                            if speed > 100:
+                                speed = 100
+                            UPDATER.emit('display_temperature', round(speed))
                         elif k == "inputs":
                             UPDATER.emit('display_inputs_binding', key_answer[k])
                         elif k == "encoder":
