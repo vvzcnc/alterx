@@ -50,6 +50,8 @@ class Main():
         UPDATER.add("diameter_multiplier", 1)
         UPDATER.add("display_feedrate",-1)
         UPDATER.add("display_spindlerate",-1)
+        UPDATER.add("display_rapidrate",-1)
+        UPDATER.add("display_temperature",-1)
         UPDATER.add("display_jog_fast")  
         UPDATER.add("display_button_binding")
         UPDATER.add("display_inputs_binding")
