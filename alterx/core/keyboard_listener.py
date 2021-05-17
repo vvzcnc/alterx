@@ -72,11 +72,11 @@ def listener_process(log, key, led, board):
 
             cmd=b"\xAB\xCD"+cmd+struct.pack("B",hash(cmd))+b"\xDC\xBA"
             ser.write(cmd)
-            answer = bytearray(ser.read_until(b"\x0D\x0A"))
+            answer = bytes(ser.read_until(b"\x0D\x0A"))
 
             if len(answer) == 15:
                 crc_r = struct.unpack("B",answer[12:13])[0]
-                crc = hash(str(answer[:12]))
+                crc = hash(answer[:12])
                 if crc == crc_r:
                     spindle = struct.unpack("<H",answer[:2])[0]
                     feedrate = struct.unpack("<H",answer[2:4])[0]
