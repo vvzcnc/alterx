@@ -23,7 +23,10 @@ def create_mo_files(dir):
             package_files.append(os.path.join(d, mo_file))
     return package_files
 
-if isPosix:
-    os.system("sh ./maintenance/comp_install.sh")
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
-create_mo_files(os.path.abspath("."))
+if isPosix:
+    os.system("cd "+dir_path+";sh "+os.path.join(dir_path,"maintenance","comp_install.sh"))
+
+create_mo_files(dir_path)
+
