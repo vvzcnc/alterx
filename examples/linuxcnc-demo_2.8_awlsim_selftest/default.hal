@@ -1,0 +1,501 @@
+# core HAL config file for simulation
+loadrt hostmot2
+# first load all the RT modules that will be needed
+# kinematics
+loadrt [KINS]KINEMATICS
+# motion controller, get name and thread periods from ini file
+loadrt [EMCMOT]EMCMOT base_period_nsec=[EMCMOT]BASE_PERIOD servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JOINTS
+# load 6 differentiators (for velocity and accel signals
+loadrt ddt names=ddt_x,ddt_xv,ddt_y,ddt_yv,ddt_z,ddt_zv
+# load additional blocks
+loadrt hypot names=vel_xy,vel_xyz
+
+loadrt ascope thread=[EMCMOT]SERVO_PERIOD
+
+#Load BK-SBET board
+loadrt hm2_eth board_ip=[HOSTMOT2](IP)
+
+addf hm2_[HOSTMOT2](BOARD).0.read servo-thread
+addf hm2_[HOSTMOT2](BOARD).0.write servo-thread
+
+setp hm2_[HOSTMOT2](BOARD).0.packet-error-limit 1
+setp hm2_[HOSTMOT2](BOARD).0.watchdog.timeout_ns 5000000
+
+addf ascope.sample servo-thread
+
+# add motion controller functions to servo thread
+addf motion-command-handler servo-thread
+addf motion-controller servo-thread
+# link the differentiator functions into the code
+addf ddt_x servo-thread
+addf ddt_xv servo-thread
+addf ddt_y servo-thread
+addf ddt_yv servo-thread
+addf ddt_z servo-thread
+addf ddt_zv servo-thread
+addf vel_xy servo-thread
+addf vel_xyz servo-thread
+
+# create HAL signals for position commands from motion module
+# loop position commands back to motion module feedback
+net Xpos joint.0.motor-pos-cmd => joint.0.motor-pos-fb ddt_x.in
+net Ypos joint.1.motor-pos-cmd => joint.1.motor-pos-fb ddt_y.in
+net Zpos joint.2.motor-pos-cmd => joint.2.motor-pos-fb ddt_z.in
+net Bpos joint.3.motor-pos-cmd => joint.3.motor-pos-fb
+
+# send the position commands thru differentiators to
+# generate velocity and accel signals
+net Xvel ddt_x.out => ddt_xv.in vel_xy.in0
+net Xacc <= ddt_xv.out
+net Yvel ddt_y.out => ddt_yv.in vel_xy.in1
+net Yacc <= ddt_yv.out
+net Zvel ddt_z.out => ddt_zv.in vel_xyz.in0
+net Zacc <= ddt_zv.out
+
+# Cartesian 2- and 3-axis velocities
+net XYvel vel_xy.out => vel_xyz.in1
+net XYZvel <= vel_xyz.out
+
+# estop loopback
+net estop-loop iocontrol.0.user-enable-out iocontrol.0.emc-enable-in
+
+# create signals for tool loading loopback
+net tool-prep-loop iocontrol.0.tool-prepare iocontrol.0.tool-prepared
+net tool-change-loop iocontrol.0.tool-change iocontrol.0.tool-changed
+
+loadrt or2 names=or2_0
+loadrt comp names=comp_x,comp_y,comp_z,comp_b
+
+loadusr -Wn awlsim awlsim-linuxcnc-hal --listen localhost:4151 linuxcnc-demo.awlpro
+
+net Xhomeswpos => comp_x.in0
+net Yhomeswpos => comp_y.in0
+net Zhomeswpos => comp_z.in0
+net Bhomeswpos => comp_b.in0
+
+sets Xhomeswpos 1
+sets Yhomeswpos .5
+sets Zhomeswpos 2
+sets Bhomeswpos 2.4
+
+net Xpos => comp_x.in1
+net Ypos => comp_y.in1
+net Zpos => comp_z.in1
+net Bpos => comp_b.in1
+
+setp comp_x.hyst .02
+setp comp_y.hyst .02
+setp comp_z.hyst .02
+setp comp_b.hyst .02
+
+net Xhomesw <= comp_x.out
+net Yhomesw <= comp_y.out => joint.1.home-sw-in
+net Zhomesw <= comp_z.out
+net Bhomesw <= comp_b.out => joint.3.home-sw-in
+
+net Xhomesw => or2_0.in0
+net Zhomesw => or2_0.in1
+net XZhomesw or2_0.out => joint.0.home-sw-in joint.2.home-sw-in
+
+addf comp_x servo-thread
+addf comp_y servo-thread
+addf comp_z servo-thread
+addf comp_b servo-thread
+
+addf or2_0 servo-thread
+
+setp awlsim.input.bit.0.0.active 1
+setp awlsim.input.bit.0.1.active 1
+setp awlsim.input.bit.0.2.active 1
+setp awlsim.input.bit.0.3.active 1
+setp awlsim.input.bit.0.4.active 1
+setp awlsim.input.bit.0.5.active 1
+setp awlsim.input.bit.0.6.active 1
+setp awlsim.input.bit.0.7.active 1
+
+setp awlsim.input.bit.1.0.active 1
+setp awlsim.input.bit.1.1.active 1
+setp awlsim.input.bit.1.2.active 1
+setp awlsim.input.bit.1.3.active 1
+setp awlsim.input.bit.1.4.active 1
+setp awlsim.input.bit.1.5.active 1
+setp awlsim.input.bit.1.6.active 1
+setp awlsim.input.bit.1.7.active 1
+
+setp awlsim.input.bit.2.0.active 1
+setp awlsim.input.bit.2.1.active 1
+setp awlsim.input.bit.2.2.active 1
+setp awlsim.input.bit.2.3.active 1
+setp awlsim.input.bit.2.4.active 1
+setp awlsim.input.bit.2.5.active 1
+setp awlsim.input.bit.2.6.active 1
+setp awlsim.input.bit.2.7.active 1
+
+setp awlsim.input.bit.3.0.active 1
+setp awlsim.input.bit.3.1.active 1
+setp awlsim.input.bit.3.2.active 1
+setp awlsim.input.bit.3.3.active 1
+setp awlsim.input.bit.3.4.active 1
+setp awlsim.input.bit.3.5.active 1
+setp awlsim.input.bit.3.6.active 1
+setp awlsim.input.bit.3.7.active 1
+
+setp awlsim.input.bit.4.0.active 1
+setp awlsim.input.bit.4.1.active 1
+setp awlsim.input.bit.4.2.active 1
+setp awlsim.input.bit.4.3.active 1
+setp awlsim.input.bit.4.4.active 1
+setp awlsim.input.bit.4.5.active 1
+setp awlsim.input.bit.4.6.active 1
+setp awlsim.input.bit.4.7.active 1
+
+setp awlsim.input.bit.5.0.active 1
+setp awlsim.input.bit.5.1.active 1
+setp awlsim.input.bit.5.2.active 1
+setp awlsim.input.bit.5.3.active 1
+setp awlsim.input.bit.5.4.active 1
+setp awlsim.input.bit.5.5.active 1
+setp awlsim.input.bit.5.6.active 1
+setp awlsim.input.bit.5.7.active 1
+
+setp awlsim.input.bit.6.0.active 1
+setp awlsim.input.bit.6.1.active 1
+setp awlsim.input.bit.6.2.active 1
+setp awlsim.input.bit.6.3.active 1
+setp awlsim.input.bit.6.4.active 1
+setp awlsim.input.bit.6.5.active 1
+setp awlsim.input.bit.6.6.active 1
+setp awlsim.input.bit.6.7.active 1
+
+setp awlsim.input.bit.7.0.active 1
+setp awlsim.input.bit.7.1.active 1
+setp awlsim.input.bit.7.2.active 1
+setp awlsim.input.bit.7.3.active 1
+setp awlsim.input.bit.7.4.active 1
+setp awlsim.input.bit.7.5.active 1
+setp awlsim.input.bit.7.6.active 1
+setp awlsim.input.bit.7.7.active 1
+
+setp awlsim.input.bit.8.0.active 1
+setp awlsim.input.bit.8.1.active 1
+setp awlsim.input.bit.8.2.active 1
+setp awlsim.input.bit.8.3.active 1
+setp awlsim.input.bit.8.4.active 1
+setp awlsim.input.bit.8.5.active 1
+setp awlsim.input.bit.8.6.active 1
+setp awlsim.input.bit.8.7.active 1
+
+setp awlsim.input.bit.9.0.active 1
+setp awlsim.input.bit.9.1.active 1
+setp awlsim.input.bit.9.2.active 1
+setp awlsim.input.bit.9.3.active 1
+#setp awlsim.input.bit.9.4.active 1
+#setp awlsim.input.bit.9.5.active 1
+#setp awlsim.input.bit.9.6.active 1
+#setp awlsim.input.bit.9.7.active 1
+
+
+setp awlsim.output.bit.0.0.active 1
+setp awlsim.output.bit.0.1.active 1
+setp awlsim.output.bit.0.2.active 1
+setp awlsim.output.bit.0.3.active 1
+setp awlsim.output.bit.0.4.active 1
+setp awlsim.output.bit.0.5.active 1
+setp awlsim.output.bit.0.6.active 1
+setp awlsim.output.bit.0.7.active 1
+
+setp awlsim.output.bit.1.0.active 1
+setp awlsim.output.bit.1.1.active 1
+setp awlsim.output.bit.1.2.active 1
+setp awlsim.output.bit.1.3.active 1
+setp awlsim.output.bit.1.4.active 1
+setp awlsim.output.bit.1.5.active 1
+setp awlsim.output.bit.1.6.active 1
+setp awlsim.output.bit.1.7.active 1
+
+setp awlsim.output.bit.2.0.active 1
+setp awlsim.output.bit.2.1.active 1
+setp awlsim.output.bit.2.2.active 1
+setp awlsim.output.bit.2.3.active 1
+setp awlsim.output.bit.2.4.active 1
+setp awlsim.output.bit.2.5.active 1
+setp awlsim.output.bit.2.6.active 1
+setp awlsim.output.bit.2.7.active 1
+
+setp awlsim.output.bit.3.0.active 1
+setp awlsim.output.bit.3.1.active 1
+setp awlsim.output.bit.3.2.active 1
+setp awlsim.output.bit.3.3.active 1
+setp awlsim.output.bit.3.4.active 1
+setp awlsim.output.bit.3.5.active 1
+setp awlsim.output.bit.3.6.active 1
+setp awlsim.output.bit.3.7.active 1
+
+setp awlsim.output.bit.4.0.active 1
+setp awlsim.output.bit.4.1.active 1
+setp awlsim.output.bit.4.2.active 1
+setp awlsim.output.bit.4.3.active 1
+setp awlsim.output.bit.4.4.active 1
+setp awlsim.output.bit.4.5.active 1
+setp awlsim.output.bit.4.6.active 1
+setp awlsim.output.bit.4.7.active 1
+
+setp awlsim.output.bit.5.0.active 1
+setp awlsim.output.bit.5.1.active 1
+setp awlsim.output.bit.5.2.active 1
+setp awlsim.output.bit.5.3.active 1
+setp awlsim.output.bit.5.4.active 1
+setp awlsim.output.bit.5.5.active 1
+setp awlsim.output.bit.5.6.active 1
+setp awlsim.output.bit.5.7.active 1
+
+setp awlsim.output.bit.6.0.active 1
+setp awlsim.output.bit.6.1.active 1
+setp awlsim.output.bit.6.2.active 1
+setp awlsim.output.bit.6.3.active 1
+setp awlsim.output.bit.6.4.active 1
+setp awlsim.output.bit.6.5.active 1
+setp awlsim.output.bit.6.6.active 1
+setp awlsim.output.bit.6.7.active 1
+
+setp awlsim.output.bit.7.0.active 1
+setp awlsim.output.bit.7.1.active 1
+setp awlsim.output.bit.7.2.active 1
+setp awlsim.output.bit.7.3.active 1
+setp awlsim.output.bit.7.4.active 1
+setp awlsim.output.bit.7.5.active 1
+setp awlsim.output.bit.7.6.active 1
+setp awlsim.output.bit.7.7.active 1
+
+setp awlsim.output.bit.8.0.active 1
+setp awlsim.output.bit.8.1.active 1
+setp awlsim.output.bit.8.2.active 1
+setp awlsim.output.bit.8.3.active 1
+setp awlsim.output.bit.8.4.active 1
+setp awlsim.output.bit.8.5.active 1
+setp awlsim.output.bit.8.6.active 1
+setp awlsim.output.bit.8.7.active 1
+
+setp awlsim.output.bit.9.0.active 1
+setp awlsim.output.bit.9.1.active 1
+setp awlsim.output.bit.9.2.active 1
+setp awlsim.output.bit.9.3.active 1
+#setp awlsim.output.bit.9.4.active 1
+#setp awlsim.output.bit.9.5.active 1
+#setp awlsim.output.bit.9.6.active 1
+#setp awlsim.output.bit.9.7.active 1
+
+setp awlsim.output.u8.10.active 1 # BROKEN LINE "0" = OK
+setp awlsim.output.bit.11.0.active 1 # STATUS bit FALSE = OK
+setp awlsim.output.bit.11.1.active 1 # COMPLETE bit TRUE = OK
+setp awlsim.output.bit.11.2.active 1 # STATUS bit TRUE = OK
+
+setp awlsim.output.bit.11.3.active 1 # DAC select 0
+setp awlsim.output.bit.11.4.active 1 # DAC select 1
+
+net dac_select_0 awlsim.output.bit.11.3
+net dac_select_1 awlsim.output.bit.11.4
+
+net message_error awlsim.output.bit.11.0
+net message_complete awlsim.output.bit.11.1
+net message_no_error awlsim.output.bit.11.2
+
+net input_0 awlsim.input.bit.0.0 hm2_SbET.0.SbIN.0.5.input00-00
+net input_1 awlsim.input.bit.0.1 hm2_SbET.0.SbIN.0.5.input00-01
+net input_2 awlsim.input.bit.0.2 hm2_SbET.0.SbIN.0.5.input00-02
+net input_3 awlsim.input.bit.0.3 hm2_SbET.0.SbIN.0.5.input00-03
+net input_4 awlsim.input.bit.0.4 hm2_SbET.0.SbIN.0.5.input00-04
+net input_5 awlsim.input.bit.0.5 hm2_SbET.0.SbIN.0.5.input00-05
+net input_6 awlsim.input.bit.0.6 hm2_SbET.0.SbIN.0.5.input00-06
+net input_7 awlsim.input.bit.0.7 hm2_SbET.0.SbIN.0.5.input00-07
+
+net input_8 awlsim.input.bit.1.0 hm2_SbET.0.SbIN.0.5.input00-08
+net input_9 awlsim.input.bit.1.1 hm2_SbET.0.SbIN.0.5.input00-09
+net input_10 awlsim.input.bit.1.2 hm2_SbET.0.SbIN.0.5.input00-10
+net input_11 awlsim.input.bit.1.3 hm2_SbET.0.SbIN.0.5.input00-11
+net input_12 awlsim.input.bit.1.4 hm2_SbET.0.SbIN.0.5.input00-12
+net input_13 awlsim.input.bit.1.5 hm2_SbET.0.SbIN.0.5.input00-13
+net input_14 awlsim.input.bit.1.6 hm2_SbET.0.SbIN.0.5.input00-14
+net input_15 awlsim.input.bit.1.7 hm2_SbET.0.SbIN.0.5.input00-15
+
+net input_16 awlsim.input.bit.2.0 hm2_SbET.0.SbIN.0.5.input00-16
+net input_17 awlsim.input.bit.2.1 hm2_SbET.0.SbIN.0.5.input00-17
+net input_18 awlsim.input.bit.2.2 hm2_SbET.0.SbIN.0.5.input00-18
+net input_19 awlsim.input.bit.2.3 hm2_SbET.0.SbIN.0.5.input00-19
+net input_20 awlsim.input.bit.2.4 hm2_SbET.0.SbIN.0.5.input00-20
+net input_21 awlsim.input.bit.2.5 hm2_SbET.0.SbIN.0.5.input00-21
+net input_22 awlsim.input.bit.2.6 hm2_SbET.0.SbIN.0.5.input00-22
+net input_23 awlsim.input.bit.2.7 hm2_SbET.0.SbIN.0.5.input00-23
+
+net input_24 awlsim.input.bit.3.0 hm2_SbET.0.SbIN.0.5.input00-24
+net input_25 awlsim.input.bit.3.1 hm2_SbET.0.SbIN.0.5.input00-25
+net input_26 awlsim.input.bit.3.2 hm2_SbET.0.SbIN.0.5.input00-26
+net input_27 awlsim.input.bit.3.3 hm2_SbET.0.SbIN.0.5.input00-27
+net input_28 awlsim.input.bit.3.4 hm2_SbET.0.SbIN.0.5.input00-28
+net input_29 awlsim.input.bit.3.5 hm2_SbET.0.SbIN.0.5.input00-29
+net input_30 awlsim.input.bit.3.6 hm2_SbET.0.SbIN.0.5.input00-30
+net input_31 awlsim.input.bit.3.7 hm2_SbET.0.SbIN.0.5.input00-31
+
+net input_32 awlsim.input.bit.4.0 hm2_SbET.0.SbIN.0.5.input01-00
+net input_33 awlsim.input.bit.4.1 hm2_SbET.0.SbIN.0.5.input01-01
+net input_34 awlsim.input.bit.4.2 hm2_SbET.0.SbIN.0.5.input01-02
+net input_35 awlsim.input.bit.4.3 hm2_SbET.0.SbIN.0.5.input01-03
+net input_36 awlsim.input.bit.4.4 hm2_SbET.0.SbIN.0.5.input01-04
+net input_37 awlsim.input.bit.4.5 hm2_SbET.0.SbIN.0.5.input01-05
+net input_38 awlsim.input.bit.4.6 hm2_SbET.0.SbIN.0.5.input01-06
+net input_39 awlsim.input.bit.4.7 hm2_SbET.0.SbIN.0.5.input01-07
+
+net input_40 awlsim.input.bit.5.0 hm2_SbET.0.SbIN.0.5.input01-08
+net input_41 awlsim.input.bit.5.1 hm2_SbET.0.SbIN.0.5.input01-09
+net input_42 awlsim.input.bit.5.2 hm2_SbET.0.SbIN.0.5.input01-10
+net input_43 awlsim.input.bit.5.3 hm2_SbET.0.SbIN.0.5.input01-11
+net input_44 awlsim.input.bit.5.4 hm2_SbET.0.SbIN.0.5.input01-12
+net input_45 awlsim.input.bit.5.5 hm2_SbET.0.SbIN.0.5.input01-13
+net input_46 awlsim.input.bit.5.6 hm2_SbET.0.SbIN.0.5.input01-14
+net input_47 awlsim.input.bit.5.7 hm2_SbET.0.SbIN.0.5.input01-15
+
+net input_48 awlsim.input.bit.6.0 hm2_SbET.0.SbIN.0.5.input01-16
+net input_49 awlsim.input.bit.6.1 hm2_SbET.0.SbIN.0.5.input01-17
+net input_50 awlsim.input.bit.6.2 hm2_SbET.0.SbIN.0.5.input01-18
+net input_51 awlsim.input.bit.6.3 hm2_SbET.0.SbIN.0.5.input01-19
+net input_52 awlsim.input.bit.6.4 hm2_SbET.0.SbIN.0.5.input01-20
+net input_53 awlsim.input.bit.6.5 hm2_SbET.0.SbIN.0.5.input01-21
+net input_54 awlsim.input.bit.6.6 hm2_SbET.0.SbIN.0.5.input01-22
+net input_55 awlsim.input.bit.6.7 hm2_SbET.0.SbIN.0.5.input01-23
+
+net input_56 awlsim.input.bit.7.0 hm2_SbET.0.SbIN.0.5.input01-24
+net input_57 awlsim.input.bit.7.1 hm2_SbET.0.SbIN.0.5.input01-25
+net input_58 awlsim.input.bit.7.2 hm2_SbET.0.SbIN.0.5.input01-26
+net input_59 awlsim.input.bit.7.3 hm2_SbET.0.SbIN.0.5.input01-27
+net input_60 awlsim.input.bit.7.4 hm2_SbET.0.SbIN.0.5.input01-28
+net input_61 awlsim.input.bit.7.5 hm2_SbET.0.SbIN.0.5.input01-29
+net input_62 awlsim.input.bit.7.6 hm2_SbET.0.SbIN.0.5.input01-30
+net input_63 awlsim.input.bit.7.7 hm2_SbET.0.SbIN.0.5.input01-31
+
+net input_64 awlsim.input.bit.8.0 hm2_SbET.0.encoder.00.input-b
+net input_65 awlsim.input.bit.8.1 hm2_SbET.0.encoder.00.input-a
+net input_66 awlsim.input.bit.8.2 hm2_SbET.0.encoder.01.input-b
+net input_67 awlsim.input.bit.8.3 hm2_SbET.0.encoder.01.input-a
+net input_68 awlsim.input.bit.8.4 hm2_SbET.0.encoder.02.input-b
+net input_69 awlsim.input.bit.8.5 hm2_SbET.0.encoder.02.input-a
+net input_70 awlsim.input.bit.8.6 hm2_SbET.0.encoder.03.input-b
+net input_71 awlsim.input.bit.8.7 hm2_SbET.0.encoder.03.input-a
+
+net input_72 awlsim.input.bit.9.0 hm2_SbET.0.encoder.00.input-index
+net input_73 awlsim.input.bit.9.1 hm2_SbET.0.encoder.01.input-index
+net input_74 awlsim.input.bit.9.2 hm2_SbET.0.encoder.02.input-index
+net input_75 awlsim.input.bit.9.3 hm2_SbET.0.encoder.03.input-index
+#net input_76 awlsim.input.bit.9.4
+#net input_77 awlsim.input.bit.9.5
+#net input_78 awlsim.input.bit.9.6
+#net input_79 awlsim.input.bit.9.7
+
+net output_0 awlsim.output.bit.0.0 hm2_SbET.0.SbQT.0.3.output00-00
+net output_1 awlsim.output.bit.0.1 hm2_SbET.0.SbQT.0.3.output00-01
+net output_2 awlsim.output.bit.0.2 hm2_SbET.0.SbQT.0.3.output00-02
+net output_3 awlsim.output.bit.0.3 hm2_SbET.0.SbQT.0.3.output00-03
+net output_4 awlsim.output.bit.0.4 hm2_SbET.0.SbQT.0.3.output00-04
+net output_5 awlsim.output.bit.0.5 hm2_SbET.0.SbQT.0.3.output00-05
+net output_6 awlsim.output.bit.0.6 hm2_SbET.0.SbQT.0.3.output00-06
+net output_7 awlsim.output.bit.0.7 hm2_SbET.0.SbQT.0.3.output00-07
+
+net output_8 awlsim.output.bit.1.0 hm2_SbET.0.SbQT.0.3.output00-08
+net output_9 awlsim.output.bit.1.1 hm2_SbET.0.SbQT.0.3.output00-09
+net output_10 awlsim.output.bit.1.2 hm2_SbET.0.SbQT.0.3.output00-10
+net output_11 awlsim.output.bit.1.3 hm2_SbET.0.SbQT.0.3.output00-11
+net output_12 awlsim.output.bit.1.4 hm2_SbET.0.SbQT.0.3.output00-12
+net output_13 awlsim.output.bit.1.5 hm2_SbET.0.SbQT.0.3.output00-13
+net output_14 awlsim.output.bit.1.6 hm2_SbET.0.SbQT.0.3.output00-14
+net output_15 awlsim.output.bit.1.7 hm2_SbET.0.SbQT.0.3.output00-15
+
+net output_16 awlsim.output.bit.2.0 hm2_SbET.0.SbQT.0.3.output00-16
+net output_17 awlsim.output.bit.2.1 hm2_SbET.0.SbQT.0.3.output00-17
+net output_18 awlsim.output.bit.2.2 hm2_SbET.0.SbQT.0.3.output00-18
+net output_19 awlsim.output.bit.2.3 hm2_SbET.0.SbQT.0.3.output00-19
+net output_20 awlsim.output.bit.2.4 hm2_SbET.0.SbQT.0.3.output00-20
+net output_21 awlsim.output.bit.2.5 hm2_SbET.0.SbQT.0.3.output00-21
+net output_22 awlsim.output.bit.2.6 hm2_SbET.0.SbQT.0.3.output00-22
+net output_23 awlsim.output.bit.2.7 hm2_SbET.0.SbQT.0.3.output00-23
+
+net output_24 awlsim.output.bit.3.0 hm2_SbET.0.SbQT.0.3.output01-00
+net output_25 awlsim.output.bit.3.1 hm2_SbET.0.SbQT.0.3.output01-01
+net output_26 awlsim.output.bit.3.2 hm2_SbET.0.SbQT.0.3.output01-02
+net output_27 awlsim.output.bit.3.3 hm2_SbET.0.SbQT.0.3.output01-03
+net output_28 awlsim.output.bit.3.4 hm2_SbET.0.SbQT.0.3.output01-04
+net output_29 awlsim.output.bit.3.5 hm2_SbET.0.SbQT.0.3.output01-05
+net output_30 awlsim.output.bit.3.6 hm2_SbET.0.SbQT.0.3.output01-06
+net output_31 awlsim.output.bit.3.7 hm2_SbET.0.SbQT.0.3.output01-07
+
+net output_32 awlsim.output.bit.4.0 hm2_SbET.0.SbQT.0.3.output01-08
+net output_33 awlsim.output.bit.4.1 hm2_SbET.0.SbQT.0.3.output01-09
+net output_34 awlsim.output.bit.4.2 hm2_SbET.0.SbQT.0.3.output01-10
+net output_35 awlsim.output.bit.4.3 hm2_SbET.0.SbQT.0.3.output01-11
+net output_36 awlsim.output.bit.4.4 hm2_SbET.0.SbQT.0.3.output01-12
+net output_37 awlsim.output.bit.4.5 hm2_SbET.0.SbQT.0.3.output01-13
+net output_38 awlsim.output.bit.4.6 hm2_SbET.0.SbQT.0.3.output01-14
+net output_39 awlsim.output.bit.4.7 hm2_SbET.0.SbQT.0.3.output01-15
+
+net output_40 awlsim.output.bit.5.0 hm2_SbET.0.SbQT.0.3.output01-16
+net output_41 awlsim.output.bit.5.1 hm2_SbET.0.SbQT.0.3.output01-17
+net output_42 awlsim.output.bit.5.2 hm2_SbET.0.SbQT.0.3.output01-18
+net output_43 awlsim.output.bit.5.3 hm2_SbET.0.SbQT.0.3.output01-19
+net output_44 awlsim.output.bit.5.4 hm2_SbET.0.SbQT.0.3.output01-20
+net output_45 awlsim.output.bit.5.5 hm2_SbET.0.SbQT.0.3.output01-21
+net output_46 awlsim.output.bit.5.6 hm2_SbET.0.SbQT.0.3.output01-22
+net output_47 awlsim.output.bit.5.7 hm2_SbET.0.SbQT.0.3.output01-23
+
+net output_48 awlsim.output.bit.6.0 hm2_SbET.0.SbQT.0.3.output02-00
+net output_49 awlsim.output.bit.6.1 hm2_SbET.0.SbQT.0.3.output02-01
+net output_50 awlsim.output.bit.6.2 hm2_SbET.0.SbQT.0.3.output02-02
+net output_51 awlsim.output.bit.6.3 hm2_SbET.0.SbQT.0.3.output02-03
+net output_52 awlsim.output.bit.6.4 hm2_SbET.0.SbQT.0.3.output02-04
+net output_53 awlsim.output.bit.6.5 hm2_SbET.0.SbQT.0.3.output02-05
+net output_54 awlsim.output.bit.6.6 hm2_SbET.0.SbQT.0.3.output02-06
+net output_55 awlsim.output.bit.6.7 hm2_SbET.0.SbQT.0.3.output02-07
+
+net output_56 awlsim.output.bit.7.0 hm2_SbET.0.SbQT.0.3.output02-08
+net output_57 awlsim.output.bit.7.1 hm2_SbET.0.SbQT.0.3.output02-09
+net output_58 awlsim.output.bit.7.2 hm2_SbET.0.SbQT.0.3.output02-10
+net output_59 awlsim.output.bit.7.3 hm2_SbET.0.SbQT.0.3.output02-11
+net output_60 awlsim.output.bit.7.4 hm2_SbET.0.SbQT.0.3.output02-12
+net output_61 awlsim.output.bit.7.5 hm2_SbET.0.SbQT.0.3.output02-13
+net output_62 awlsim.output.bit.7.6 hm2_SbET.0.SbQT.0.3.output02-14
+net output_63 awlsim.output.bit.7.7 hm2_SbET.0.SbQT.0.3.output02-15
+
+net output_64 awlsim.output.bit.8.0 hm2_SbET.0.SbQT.0.3.output02-16
+net output_65 awlsim.output.bit.8.1 hm2_SbET.0.SbQT.0.3.output02-17
+net output_66 awlsim.output.bit.8.2 hm2_SbET.0.SbQT.0.3.output02-18
+net output_67 awlsim.output.bit.8.3 hm2_SbET.0.SbQT.0.3.output02-19
+net output_68 awlsim.output.bit.8.4 hm2_SbET.0.SbQT.0.3.output02-20
+net output_69 awlsim.output.bit.8.5 hm2_SbET.0.SbQT.0.3.output02-21
+net output_70 awlsim.output.bit.8.6 hm2_SbET.0.SbQT.0.3.output02-22
+net output_71 awlsim.output.bit.8.7 hm2_SbET.0.SbQT.0.3.output02-23
+
+net output_72 awlsim.output.bit.9.0 hm2_SbET.0.SbAS.0.1.output-00
+net output_73 awlsim.output.bit.9.1 hm2_SbET.0.SbAS.0.1.output-01
+net output_74 awlsim.output.bit.9.2 hm2_SbET.0.SbAS.0.1.output-02
+net output_75 awlsim.output.bit.9.3 hm2_SbET.0.SbAS.0.1.output-03
+#net output_76 awlsim.output.bit.9.4
+#net output_77 awlsim.output.bit.9.5
+#net output_78 awlsim.output.bit.9.6
+#net output_79 awlsim.output.bit.9.7
+
+setp awlsim.config.ready 1
+
+loadrt mux4
+addf mux4.0 servo-thread
+
+setp mux4.0.in0 0
+setp mux4.0.in1 5
+setp mux4.0.in2 -5
+setp mux4.0.in3 -10
+
+net dac_select_0 mux4.0.sel0
+net dac_select_1 mux4.0.sel1
+
+net mux_dac mux4.0.out hm2_SbET.0.SbAS.0.1.aoutput-00 hm2_SbET.0.SbAS.0.1.aoutput-01 hm2_SbET.0.SbAS.0.1.aoutput-02 hm2_SbET.0.SbAS.0.1.aoutput-03
+
+net message_no_error hm2_SbET.0.SbAS.0.1.sysout-01 hm2_SbET.0.SbQT.0.3.sysout-01 hm2_SbET.0.SbIN.0.5.sysout-01
+net message_error hm2_SbET.0.SbAS.0.1.sysout-02 hm2_SbET.0.SbQT.0.3.sysout-02 hm2_SbET.0.SbIN.0.5.sysout-02
+net message_complete hm2_SbET.0.SbAS.0.1.sysout-00 hm2_SbET.0.SbQT.0.3.sysout-00 hm2_SbET.0.SbIN.0.5.sysout-00
+
